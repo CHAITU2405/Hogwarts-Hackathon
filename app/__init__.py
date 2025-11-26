@@ -63,3 +63,10 @@ def create_app():
     
     return app
 
+
+# Expose a top-level WSGI application callable so servers can import
+# the package `app` and find `app` (e.g. `gunicorn app:app`).
+# This will initialize the app at import-time which is suitable for
+# typical deployment environments like Render.
+app = create_app()
+
