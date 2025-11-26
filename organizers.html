@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hogwarts Hackathon - Organizers & Mentors</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Crimson+Text:ital,wght@0,400;1,400&display=swap" rel="stylesheet" />
+  <style>
+    /* --- Base Variables & Background --- */
+    :root { --gold: #d4af37; --bg-dark: #0d0d10; }
+    body { background: radial-gradient(circle at 50% 20%, #20202b 0%, #0d0d10 70%) fixed; color: #cfcfcf; overflow-x: hidden; }
+
+    /* --- Typography --- */
+    .cinzel { font-family: 'Cinzel Decorative', cursive; }
+    .crimson { font-family: 'Crimson Text', serif; }
+    
+    .section-header {
+      font-family: 'Cinzel Decorative';
+      font-weight: 900;
+      text-transform: uppercase;
+      line-height: 1;
+      color: #ffd700;
+      filter: url(#gold-texture);
+      font-size: 4rem;
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    @media (max-width: 768px) {
+      .section-header {
+        font-size: 2.5rem;
+        margin-bottom: 15px;
+      }
+    }
+
+    /* --- LEFT SIDE: Organizer Grid (Compacted) --- */
+    .organizer-grid {
+      display: grid;
+      gap: 20px; /* Reduced gap */
+      /* Fits more cards by reducing min-width */
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+      margin-bottom: 50px;
+      justify-items: center; /* Center cards in grid */
+    }
+    @media (max-width: 768px) {
+      .organizer-grid {
+        grid-template-columns: 1fr; /* Single column on mobile */
+        max-width: 400px; /* Limit width on mobile */
+        margin: 0 auto 50px; /* Center the grid */
+      }
+    }
+
+    .organizer-card {
+      position: relative;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 20px 15px; /* Reduced padding */
+      backdrop-filter: blur(8px);
+      transition: .3s;
+      display: flex; flex-direction: column; align-items: center; text-align: center;
+      text-decoration: none; color: inherit;
+      height: 100%; /* Fill grid cell */
+      min-height: 240px; /* Fixed minimum height for consistency */
+      width: 100%; /* Full width of grid cell */
+    }
+
+    /* Hover Lift */
+    .organizer-card:hover { 
+      transform: translateY(-5px); 
+      background: rgba(255, 255, 255, 0.06);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.6), 0 0 15px rgba(212,175,55,0.2); 
+    }
+
+    /* Compact Avatar */
+    .organizer-avatar {
+      width: 90px; height: 90px; /* Smaller size */
+      border-radius: 50%; overflow: hidden;
+      border: 2px solid rgba(212,175,55,0.5);
+      margin-bottom: 12px; background: #111; transition: .3s;
+      flex-shrink: 0; /* Prevent avatar from shrinking */
+    }
+    .organizer-card:hover .organizer-avatar { border-color: var(--gold); box-shadow: 0 0 15px var(--gold); }
+    .organizer-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+    /* Compact Text */
+    .organizer-name { font-family: 'Cinzel Decorative'; font-size: 1.1rem; color: var(--gold); margin: 0; margin-bottom: 5px; flex-shrink: 0; }
+    .organizer-role { font-family: 'Cinzel Decorative'; font-size: 0.65rem; letter-spacing: 1px; text-transform: uppercase; color: #bca979; margin-bottom: 8px; flex-shrink: 0; }
+    .organizer-bio { font-family: 'Crimson Text'; font-size: 0.8rem; line-height: 1.3; color: #bbb; display: -webkit-box; line-clamp: 3; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; margin-top: auto; /* Push bio to bottom */ flex-grow: 1; min-height: 3.9em; /* Ensure consistent height for 3 lines */ }
+
+    /* Neon Sweep SVG (Kept but scaled via CSS) */
+    .border-sweep { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; opacity: 0; transition: opacity .3s; }
+    .sweep-path { fill: none; stroke: var(--gold); stroke-width: 2; stroke-dasharray: 20 200; stroke-dashoffset: 0; }
+    .organizer-card:hover .border-sweep { opacity: 1; }
+    .organizer-card:hover .sweep-path { animation: sweep-around 2s linear infinite; }
+    @keyframes sweep-around { to { stroke-dashoffset: -220; } }
+
+    /* --- RIGHT SIDE: Mentors Sidebar --- */
+    .sidebar-sticky { position: sticky; top: 90px; }
+    
+    .mentor-container {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(212, 175, 55, 0.15);
+      border-radius: 16px;
+      padding: 20px;
+      backdrop-filter: blur(10px);
+      /* make container a column so header stays fixed and list can scroll */
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .mentor-header {
+      font-family: 'Cinzel Decorative'; color: var(--gold); 
+      font-size: 1.2rem; text-align: center; margin-bottom: 20px;
+      padding-bottom: 10px; border-bottom: 1px solid rgba(212,175,55,0.2);
+    }
+
+    .mentor-list {
+      display: flex; 
+      flex-direction: column; 
+      gap: 15px;
+      /* Keep the outer border fixed while allowing the names to scroll internally. 
+         Adjust the calc() value if your header/navigation height changes. */
+      max-height: calc(100vh - 260px);
+      overflow-y: auto;
+      padding-right: 8px; /* room for scrollbar */
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* Lightweight custom scrollbar to match theme */
+    .mentor-list::-webkit-scrollbar { width: 8px; }
+    .mentor-list::-webkit-scrollbar-track { background: transparent; }
+    .mentor-list::-webkit-scrollbar-thumb { background: rgba(212,175,55,0.12); border-radius: 8px; }
+    .mentor-list::-webkit-scrollbar-thumb:hover { background: rgba(212,175,55,0.22); }
+
+    .mentor-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 8px; border-radius: 50px;
+      transition: .3s;
+      border: 1px solid transparent;
+      text-decoration: none;
+      color: inherit;
+    }
+    
+    .mentor-item:hover {
+      background: rgba(212, 175, 55, 0.1);
+      border-color: rgba(212, 175, 55, 0.3);
+      transform: translateX(5px);
+    }
+
+    .mentor-img {
+      width: 45px; height: 45px;
+      border-radius: 50%; object-fit: cover;
+      border: 1px solid #666;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+      transition: .3s;
+    }
+    
+    .mentor-item:hover .mentor-img { border-color: var(--gold); box-shadow: 0 0 8px var(--gold); }
+
+    .mentor-info h5 { font-family: 'Cinzel Decorative'; font-size: 0.9rem; color: #e0e0e0; margin: 0; }
+    .mentor-info span { font-family: 'Crimson Text'; font-size: 0.75rem; color: #888; font-style: italic; }
+    .mentor-item:hover .mentor-info h5 { color: var(--gold); }
+
+    /* --- Nav & Button Styles (Preserved) --- */
+    .navbar { background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.1); padding: 10px 0; }
+    .navbar-brand { font-family: 'Cinzel Decorative'; color: var(--gold) !important; font-size: 1.5rem; }
+    .nav-link { color: #ccc !important; font-family: 'Cinzel Decorative'; font-size: 0.9rem; transition: .3s; }
+    .nav-link:hover { color: var(--gold) !important; text-shadow: 0 0 8px var(--gold); }
+    @media (max-width: 991px) {
+      .navbar { padding: 8px 0; }
+      .navbar-brand { font-size: 1.3rem; }
+      .navbar-toggler { border-color: rgba(212,175,55,0.3); }
+      .navbar-toggler-icon { background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(212, 175, 55, 0.8)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e"); }
+    }
+    
+    .register-btn {
+       border: 1px solid var(--gold); border-radius: 30px; padding: 5px 20px;
+       background: linear-gradient(45deg, #3a2d00, #1a1400); color: var(--gold) !important;
+       box-shadow: 0 0 10px rgba(212,175,55,0.2);
+    }
+    .register-btn:hover { box-shadow: 0 0 20px rgba(212,175,55,0.6); color: #fff !important; }
+
+    /* --- GLOBAL CURSOR RESET --- */
+    html, body, button, a, input, select, textarea, .btn, .card, div, span, li, i {
+      cursor: none !important;
+    }
+
+    /* --- Wand Cursor --- */
+    #wand { 
+      position: fixed; top: 0; left: 0; 
+      width: 50px; height: auto; 
+      pointer-events: none; z-index: 10000; will-change: transform; 
+      transform-origin: top left; 
+      filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.6)) drop-shadow(2px 3px 6px rgba(0,0,0,0.95)); 
+      display: none; 
+      animation: wandGlow 2s ease-in-out infinite;
+    }
+    #wand img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    @keyframes wandGlow {
+      0%, 100% { filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.6)) drop-shadow(2px 3px 6px rgba(0,0,0,0.95)); }
+      50% { filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.8)) drop-shadow(2px 3px 8px rgba(0,0,0,0.95)) drop-shadow(0 0 20px rgba(255, 255, 100, 0.4)); }
+    }
+    @media (min-width: 992px) { 
+      #wand { 
+        display: block !important; 
+      } 
+    }
+
+  </style>
+</head>
+<body>
+
+  <svg width="0" height="0" style="position:absolute">
+    <filter id="gold-texture"><feTurbulence type="fractalNoise" baseFrequency="0.5" numOctaves="3" /><feComposite operator="in" in2="SourceGraphic" result="composite" /><feColorMatrix type="matrix" values="0 0 0 0 0.83 0 0 0 0 0.68 0 0 0 0 0.21 0 0 0 1 0" /></filter>
+  </svg>
+
+  <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+    <div class="container">
+      <a class="navbar-brand" href="#">Hogwarts Hacks</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav"><span class="navbar-toggler-icon"></span></button>
+      <div id="nav" class="collapse navbar-collapse justify-content-end">
+        <ul class="navbar-nav align-items-center">
+          <li class="nav-item"><a class="nav-link" href="main.html">Great Hall</a></li>
+          <li class="nav-item"><a class="nav-link" href="main.html#houses">Houses</a></li>
+          <li class="nav-item"><a class="nav-link" href="teams.html">Teams</a></li>
+          <li class="nav-item"><a class="nav-link" href="leaderboard.html">Leaderboard</a></li>
+          <li class="nav-item"><a class="nav-link" href="#">Organizers</a></li>
+          <li class="nav-item"><a class="nav-link" href="timeline.html">Timeline</a></li>
+          <li class="nav-item"><a class="nav-link" href="faq.html">FAQs</a></li>
+          <li class="nav-item"><a class="nav-link" href="rules.html">Rules</a></li>
+          <li class="nav-item"><a class="nav-link register-btn" href="register.html">Register</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div id="wand"><img src="assets/wand.png" alt="Wand cursor"></div>
+
+  <div class="container py-5">
+    
+    <div class="row">
+      <div class="col-lg-9">
+        <h1 class="section-header">The Organizers</h1>
+        <p class="text-center mb-5 crimson" style="font-size: 1.1rem; color: #aaa; max-width: 600px; margin: 0 auto;">The architects of this magical gathering, weaving code and spells together.</p>
+
+        <div class="organizer-grid">
+          
+          <a class="organizer-card" href="https://www.linkedin.com/in/kushal-pavan-asuri-1548582a4?utm_source=share_via&utm_content=profile&utm_medium=member_android" target="_blank" rel="noopener noreferrer">
+            <svg class="border-sweep" viewBox="0 0 100 100" preserveAspectRatio="none"><rect class="sweep-path" x="2" y="2" width="96" height="96" rx="10"></rect></svg>
+            <div class="organizer-avatar"><img src="images/KushalPavan.png" alt="Wizard"></div>
+            <h3 class="organizer-name">Kushal Pavan Asuri</h3>
+            <div class="organizer-role">Head Lead</div>
+            <p class="organizer-bio">Event Organizing and Management</p>
+          </a>
+
+          <a class="organizer-card" href="https://www.linkedin.com/in/chaitanyapati/" target="_blank" rel="noopener noreferrer">
+            <svg class="border-sweep" viewBox="0 0 100 100" preserveAspectRatio="none"><rect class="sweep-path" x="2" y="2" width="96" height="96" rx="10"></rect></svg>
+            <div class="organizer-avatar"><img src="images/Chaitanya.jpg" alt="Wizard"></div>
+            <h3 class="organizer-name">Pati Chaitanya</h3>
+            <div class="organizer-role">Core Lead</div>
+            <p class="organizer-bio">Organizing and Website Development</p>
+          </a>
+
+          <a class="organizer-card" href="https://www.linkedin.com/in/spoorthy-o-94b321291?utm_source=share_via&utm_content=profile&utm_medium=member_android" target="_blank" rel="noopener noreferrer">
+            <svg class="border-sweep" viewBox="0 0 100 100" preserveAspectRatio="none"><rect class="sweep-path" x="2" y="2" width="96" height="96" rx="10"></rect></svg>
+            <div class="organizer-avatar"><img src="images/Spoorthy.jpg" alt="Wizard"></div>
+            <h3 class="organizer-name">Oduri Spoorthy</h3>
+            <div class="organizer-role">Core Lead</div>
+            <p class="organizer-bio">Organizing and Managing</p>
+          </a>
+
+          <a class="organizer-card" href="https://www.linkedin.com/in/b-vishnu-725684294/" target="_blank" rel="noopener noreferrer">
+            <svg class="border-sweep" viewBox="0 0 100 100" preserveAspectRatio="none"><rect class="sweep-path" x="2" y="2" width="96" height="96" rx="10"></rect></svg>
+            <div class="organizer-avatar"><img src="images/Vishnu.jpg" alt="Wizard"></div>
+            <h3 class="organizer-name">Bathakari Vishnu</h3>
+            <div class="organizer-role">Core Lead</div>
+            <p class="organizer-bio">Organizing and Management</p>
+          </a>
+
+          <a class="organizer-card" href="https://www.linkedin.com/in/manaswi-kanagala-4410b3298?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app" target="_blank" rel="noopener noreferrer">
+            <svg class="border-sweep" viewBox="0 0 100 100" preserveAspectRatio="none"><rect class="sweep-path" x="2" y="2" width="96" height="96" rx="10"></rect></svg>
+            <div class="organizer-avatar"><img src="images/Manaswi.png" alt="Wizard"></div>
+            <h3 class="organizer-name">Manaswi Kanagala</h3>
+            <div class="organizer-role">Core Lead</div>
+            <p class="organizer-bio">Design and Organizing</p>
+          </a>
+
+          <a class="organizer-card" href="https://www.linkedin.com/in/sripati-sri-krishna-manohar-1aa339286/" target="_blank" rel="noopener noreferrer">
+            <svg class="border-sweep" viewBox="0 0 100 100" preserveAspectRatio="none"><rect class="sweep-path" x="2" y="2" width="96" height="96" rx="10"></rect></svg>
+            <div class="organizer-avatar"><img src="images/Manohar.jpg" alt="Wizard"></div>
+            <h3 class="organizer-name">Manohar Sripati</h3>
+            <div class="organizer-role">Tech Lead</div>
+            <p class="organizer-bio">Resolving tech issues and queries</p>
+          </a>
+
+          <a class="organizer-card" href="https://www.linkedin.com/in/pritamudanda/" target="_blank" rel="noopener noreferrer">
+            <svg class="border-sweep" viewBox="0 0 100 100" preserveAspectRatio="none"><rect class="sweep-path" x="2" y="2" width="96" height="96" rx="10"></rect></svg>
+            <div class="organizer-avatar"><img src="images/Pritam.jpg" alt="Wizard"></div>
+            <h3 class="organizer-name">Udanda Pritam</h3>
+            <div class="organizer-role">Website Developer</div>
+            <p class="organizer-bio">Website Management and Maintenance</p>
+          </a>
+
+          <a class="organizer-card" href="https://www.instagram.com/satwik_muramalla?igsh=MXhnMW4zZHNwaDk2ZA==" target="_blank" rel="noopener noreferrer">
+            <svg class="border-sweep" viewBox="0 0 100 100" preserveAspectRatio="none"><rect class="sweep-path" x="2" y="2" width="96" height="96" rx="10"></rect></svg>
+            <div class="organizer-avatar"><img src="images/SatwikSponsor.jpg" alt="Wizard"></div>
+            <h3 class="organizer-name">Muramalla Satwik</h3>
+            <div class="organizer-role">Sponsorship</div>
+            <p class="organizer-bio">Sponsors Management</p>
+          </a>
+
+        </div>
+      </div>
+
+      <div class="col-lg-3">
+        <div class="sidebar-sticky">
+          <div class="mentor-container">
+            <div class="mentor-header">Council of Mentors</div>
+            <div class="mentor-list">
+              
+              <a class="mentor-item" href="https://www.linkedin.com/in/venkata-sai-varshith-s-1889442a6/" target="_blank" rel="noopener noreferrer">
+                <img src="images/Sai Varshith.jpg" class="mentor-img" alt="Mentor">
+                <div class="mentor-info">
+                  <h5>Sai Varshith</h5>
+                  <span>Finance Head</span>
+                </div>
+              </a>
+
+              <a class="mentor-item" href="https://www.linkedin.com/in/nikhil-vinod-389748335/" target="_blank" rel="noopener noreferrer">
+                <img src="images/Nikhil.jpg" class="mentor-img" alt="Mentor">
+                <div class="mentor-info">
+                  <h5>Nikhil Vinod</h5>
+                  <span>Tech Volunteer</span>
+                </div>
+              </a>
+              <a class="mentor-item" href="www.linkedin.com/in/tarun-siva-sai-seelaboyina-839102302
+                  " target="_blank" rel="noopener noreferrer">
+                <img src="images/tarun siva sai.jpg" class="mentor-img" alt="Mentor">
+                <div class="mentor-info">
+                  <h5>Tarun Siva Sai</h5>
+                  <span>co ordinator</span>
+                </div>
+              </a>
+
+             
+
+              <a class="mentor-item" href="https://www.instagram.com/_prasx._?igsh=MXR2YjFqbGExdnZ3cA%3D%3D&utm_source=qr" target="_blank" rel="noopener noreferrer">
+                <img src="images/prasannakumar.jpeg" class="mentor-img" alt="Mentor">
+                <div class="mentor-info">
+                  <h5>Prasanna Kumar</h5>
+                  <span>Social Media Team</span>
+                </div>
+              </a>
+
+             
+
+              <a class="mentor-item" href="https://www.linkedin.com/in/ravindra-babu-gunnu-b85b022b2?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app" target="_blank" rel="noopener noreferrer">
+                <img src="images/ravindra.jpg" class="mentor-img" alt="Mentor">
+                <div class="mentor-info">
+                  <h5>Ravindra Babu Gunnu</h5>
+                  <span>Tech Volunteer</span>
+                </div>
+              </a>
+
+              
+                <a class="mentor-item" href="https://www.linkedin.com/in/mounika-adari-20934b348?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app
+                  " target="_blank" rel="noopener noreferrer">
+                <img src="images/Mounika .jpg" class="mentor-img" alt="Mentor">
+                <div class="mentor-info">
+                  <h5>Mounika Adari</h5>
+                  <span>Non Tech Lead</span>
+                </div>
+              </a>
+
+              <a class="mentor-item" href="https://www.linkedin.com/in/maddili-dhishitha-304ab7348?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app" 
+              target="_blank" rel="noopener noreferrer">
+                <img src="images/dhishitha.png" class="mentor-img" alt="Mentor">
+                <div class="mentor-info">
+                  <h5>Disitha</h5>
+                  <span>co ordinator</span>
+                </div>
+              </a>
+
+              <a class="mentor-item" href="https://www.linkedin.com/in/pydi-bharani-798334348?utm_source=share_via&utm_content=profile&utm_medium=member_android
+                  " target="_blank" rel="noopener noreferrer">
+                <img src="images/Bharani Pydi.jpg" class="mentor-img" alt="Mentor">
+                <div class="mentor-info">
+                  <h5>Bharani </h5>
+                  <span>co ordinator</span>
+                </div>
+              </a>
+
+
+              <a class="mentor-item" href="https://www.linkedin.com/in/geetha-hari-priya-606a29299?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app
+                  " target="_blank" rel="noopener noreferrer">
+                <img src="images/Geetha.jpg" class="mentor-img" alt="Mentor">
+                <div class="mentor-info">
+                  <h5>Geetha </h5>
+                  <span>co ordinator</span>
+                </div>
+              </a>
+
+              <a class="mentor-item" href="https://www.linkedin.com/in/madhuri-gathala-a739a6320?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=ios_app"
+                   target="_blank" rel="noopener noreferrer">
+                <img src="images/Madhuri Gathala.jpeg" class="mentor-img" alt="Mentor">
+                <div class="mentor-info">
+                  <h5>Madhuri Gathala</h5>
+                  <span>co ordinator</span>
+                </div>
+              </a>
+
+              <a class="mentor-item" href="https://www.instagram.com/satwik0077?igsh=c2hzd3o2cmlnYWdx&utm_source=qr
+                  " target="_blank" rel="noopener noreferrer">
+                <img src="images/SATWIK.jpeg" class="mentor-img" alt="Mentor">
+                <div class="mentor-info">
+                  <h5>Satwik</h5>
+                  <span>co ordinator</span>
+                </div>
+              </a>
+
+              <a class="mentor-item" href="
+                  " target="_blank" rel="noopener noreferrer">
+                <img src="images/Harsha Kamaka.jpeg" class="mentor-img" alt="Mentor">
+                <div class="mentor-info">
+                  <h5>Harsha Kamaka</h5>
+                  <span>co ordinator</span>
+                </div>
+              </a>
+
+              <a class="mentor-item" href="
+                  " target="_blank" rel="noopener noreferrer">
+                <img src="images/shyni.jpg" class="mentor-img" alt="Mentor">
+                <div class="mentor-info">
+                  <h5>Yoshitha Shyni  </h5>
+                  <span>co ordinator</span>
+                </div>
+              </a>
+
+               <a class="mentor-item" href="https://www.linkedin.com/in/prasanthi-korlam" target="_blank" rel="noopener noreferrer">
+                <img src="images/prashanthi.jpg" class="mentor-img" alt="Mentor">
+                <div class="mentor-info">
+                  <h5>Korlam Prashanthi</h5>
+                  <span>Full Stack</span>
+                </div>
+              </a>
+
+              <a class="mentor-item" href="
+                  " target="_blank" rel="noopener noreferrer">
+                <img src="images/Teja Swaroop.jpeg" class="mentor-img" alt="Mentor">
+                <div class="mentor-info">
+                  <h5>Teja Swaroop   </h5>
+                  <span>co ordinator</span>
+                </div>
+              </a>
+
+              <a class="mentor-item" href="
+                  " target="_blank" rel="noopener noreferrer">
+                <img src="images/Prasanna Kumar .jpeg" class="mentor-img" alt="Mentor">
+                <div class="mentor-info">
+                  <h5>Prasana Kumar   </h5>
+                  <span>co ordinator</span>
+                </div>
+              </a>
+
+              
+
+              <a class="mentor-item" href="
+                  " target="_blank" rel="noopener noreferrer">
+                <img src="images/Vana Balaji.jpg" class="mentor-img" alt="Mentor">
+                <div class="mentor-info">
+                  <h5>Vana balaji  </h5>
+                  <span>co ordinator</span>
+                </div>
+              </a>
+
+              <a class="mentor-item" href="https://www.linkedin.com/in/adapa-mounica-7aa18b304?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app
+                  " target="_blank" rel="noopener noreferrer">
+                <img src="images/Adapa Mounica.jpg" class="mentor-img" alt="Mentor">
+                <div class="mentor-info">
+                  <h5>Adapa Mounica</h5>
+                  <span>co ordinator</span>
+                </div>
+              </a>
+
+              <a class="mentor-item" href="https://www.linkedin.com/in/rayavarapu-sindhuja-065174338?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app
+                  " target="_blank" rel="noopener noreferrer">
+                <img src="images/Rayavarapu Sindhuja.jpg" class="mentor-img" alt="Mentor">
+                <div class="mentor-info">
+                  <h5>Rayavarapu Sindhuja</h5>
+                  <span>co ordinator</span>
+                </div>
+              </a>
+
+              <a class="mentor-item" href="
+                  " target="_blank" rel="noopener noreferrer">
+                <img src="images/Lokesh Reddy.jpg" class="mentor-img" alt="Mentor">
+                <div class="mentor-info">
+                  <h5>Lokesh Reddy</h5>
+                  <span>co ordinator</span>
+                </div>
+              </a>
+
+              <a class="mentor-item" href="https://www.linkedin.com/in/harshitha-vardhini-588178326?utm_source=share_via&utm_content=profile&utm_medium=member_android
+                  " target="_blank" rel="noopener noreferrer">
+                <img src="images/HARSHITHA VARDHINI MADEMU.jpg" class="mentor-img" alt="Mentor">
+                <div class="mentor-info">
+                  <h5>Harshitha Vardhini</h5>
+                  <span>co ordinator</span>
+                </div>
+              </a>
+
+              <a class="mentor-item" href="https://www.linkedin.com/in/harshitha-pasupureddy-b9984a329?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app
+                  " target="_blank" rel="noopener noreferrer">
+                <img src="images/Harshitha Pasupureddy.jpg" class="mentor-img" alt="Mentor">
+                <div class="mentor-info">
+                  <h5>Harshitha Pasupureddy</h5>
+                  <span>co ordinator</span>
+                </div>
+              </a>
+
+              <a class="mentor-item" href="https://www.linkedin.com/in/anaghanjali-tangirala
+                  " target="_blank" rel="noopener noreferrer">
+                <img src="images/Anaghanjali Tangirala.jpg" class="mentor-img" alt="Mentor">
+                <div class="mentor-info">
+                  <h5> Anaghanjali Tangirala</h5>
+                  <span>co ordinator</span>
+                </div>
+              </a>
+
+              <a class="mentor-item" href="https://www.linkedin.com/in/dharpana-khaspa-7b1ab6348?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app
+                  " target="_blank" rel="noopener noreferrer">
+                <img src="images/Darpana Khaspa.jpg" class="mentor-img" alt="Mentor">
+                <div class="mentor-info">
+                  <h5>Darpana Khaspa</h5>
+                  <span>co ordinator</span>
+                </div>
+              </a>
+
+              <a class="mentor-item" href="https://www.linkedin.com/in/samanvitha-korada-59b000334?utm_source=share_via&utm_content=profile&utm_medium=member_android
+                  " target="_blank" rel="noopener noreferrer">
+                <img src="images/Samanvitha Korada.jpg" class="mentor-img" alt="Mentor">
+                <div class="mentor-info">
+                  <h5>Samanvitha Korada</h5>
+                  <span>co ordinator</span>
+                </div>
+              </a>
+
+              <a class="mentor-item" href="https://www.linkedin.com/in/akhila-vaddi-803085253?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app
+
+                  " target="_blank" rel="noopener noreferrer">
+                <img src="images/Akhila Vaddi.jpg" class="mentor-img" alt="Mentor">
+                <div class="mentor-info">
+                  <h5>Akhila Vaddi</h5>
+                  <span>co ordinator</span>
+                </div>
+              </a>
+
+               <a class="mentor-item" href="https://www.linkedin.com/in/tata-anantha-venkata-sai-prasanth-75a900298?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app" target="_blank" rel="noopener noreferrer">
+                <img src="images/saiprasanth.jpg" class="mentor-img" alt="Mentor">
+                <div class="mentor-info">
+                  <h5>Sai Prashanth</h5>
+                  <span>Logistics</span>
+                </div>
+              </a>
+
+              <a class="mentor-item" href="https://www.linkedin.com/in/sandhya-yedla-65204636a?utm_source=share_via&utm_content=profile&utm_medium=member_android
+                  " target="_blank" rel="noopener noreferrer">
+                <img src="images/Sandhya Yedla.jpg" class="mentor-img" alt="Mentor">
+                <div class="mentor-info">
+                  <h5>Sandhya Yedla</h5>
+                  <span>co ordinator</span>
+                </div>
+              </a>
+
+              <a class="mentor-item" href="https://www.linkedin.com/in/srimani-deepika-krishna
+                  " target="_blank" rel="noopener noreferrer">
+                <img src="images/Srimani.jpg" class="mentor-img" alt="Mentor">
+                <div class="mentor-info">
+                  <h5>Srimani Deepika</h5>
+                  <span>co ordinator</span>
+                </div>
+              </a>
+
+              <a class="mentor-item" href="https://www.linkedin.com/in/vinay-malla-8b1b03348?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app
+                  " target="_blank" rel="noopener noreferrer">
+                <img src="images/Vinay Malla.jpg" class="mentor-img" alt="Mentor">
+                <div class="mentor-info">
+                  <h5>Vinay Malla</h5>
+                  <span>co ordinator</span>
+                </div>
+              </a>
+
+
+              <a class="mentor-item" href="
+                  " target="_blank" rel="noopener noreferrer">
+                <img src="images/vasant kumar gopi.jpg" class="mentor-img" alt="Mentor">
+                <div class="mentor-info">
+                  <h5> vasant kumar gopi</h5>
+                  <span>co ordinator</span>
+                </div>
+              </a>
+
+
+              <a class="mentor-item" href="https://www.linkedin.com/in/asha-koyyala-108b05348?utm_source=share_via&utm_content=profile&utm_medium=member_android
+                  " target="_blank" rel="noopener noreferrer">
+                <img src="images/Asha jyothi Koyyala.jpg" class="mentor-img" alt="Mentor">
+                <div class="mentor-info">
+                  <h5>Asha jyothi Koyyala</h5>
+                  <span>co ordinator</span>
+                </div>
+              </a>
+
+
+              <a class="mentor-item" href="https://www.instagram.com/gamparaghini?igsh=MWZpd3I1aGQxMDg0aA==
+                  " target="_blank" rel="noopener noreferrer">
+                <img src="images/Raghini Gampa.jpg" class="mentor-img" alt="Mentor">
+                <div class="mentor-info">
+                  <h5>Raghini Gampa</h5>
+                  <span>co ordinator</span>
+                </div>
+              </a>
+
+              <a class="mentor-item" href="https://www.linkedin.com/in/penugonda-manoj-mithra
+                  " target="_blank" rel="noopener noreferrer">
+                <img src="images/Manoj.jpg" class="mentor-img" alt="Mentor">
+                <div class="mentor-info">
+                  <h5>Manoj</h5>
+                  <span>co ordinator</span>
+                </div>
+              </a>
+              <a class="mentor-item" href="https://www.linkedin.com/in/kavya-shree-bali-523684309
+                  " target="_blank" rel="noopener noreferrer">
+                <img src="images/Kavya Shree.jpg" class="mentor-img" alt="Mentor">
+                <div class="mentor-info">
+                  <h5>kavya sree</h5>
+                  <span>co ordinator</span>
+                </div>
+              </a>
+
+              <a class="mentor-item" href="
+                  " target="_blank" rel="noopener noreferrer">
+                <img src="images/Vaishu Preethi.jpg" class="mentor-img" alt="Mentor">
+                <div class="mentor-info">
+                  <h5>Vaishu Preethi</h5>
+                  <span>co ordinator</span>
+                </div>
+              </a>
+              <a class="mentor-item" href="https://www.linkedin.com/in/harshitha-kandula-678333348?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app
+                  " target="_blank" rel="noopener noreferrer">
+                <img src="images/Harshitha Kandula.jpg" class="mentor-img" alt="Mentor">
+                <div class="mentor-info">
+                  <h5>Harshitha Kandula</h5>
+                  <span>co ordinator</span>
+                </div>
+              </a>
+              
+              
+
+
+              
+              
+
+
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="mt-5 py-4 text-center text-muted border-top border-secondary">
+    <p class="cinzel mb-0">Mischief Managed &copy; 2025</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Wand cursor with sprinkles on movement
+    const wand = document.getElementById('wand');
+    const isDesktop = window.matchMedia("(min-width: 992px)");
+    const fixedAngle = 15 * (Math.PI / 180);
+    const wandWidth = 50;
+    const tipRelX = wandWidth / 2 - 20;
+    const tipRelY = -5;
+
+    // Ensure wand is visible on desktop
+    if (isDesktop.matches) {
+      wand.style.display = 'block';
+      wand.style.transform = 'translate(0px, 0px) rotate(15deg)';
+      
+      window.addEventListener('mousemove', (e) => {
+        const x = e.clientX;
+        const y = e.clientY;
+        wand.style.transform = `translate(${x}px, ${y}px) rotate(15deg)`;
+        
+        // Create trail particles at wand tip while moving
+        if (Math.random() > 0.5) {
+          const wandRect = wand.getBoundingClientRect();
+          const tipX = wandRect.left + tipRelX * Math.cos(fixedAngle) - tipRelY * Math.sin(fixedAngle);
+          const tipY = wandRect.top + tipRelX * Math.sin(fixedAngle) + tipRelY * Math.cos(fixedAngle);
+          
+          const trail = document.createElement('div');
+          trail.style.cssText = `
+            position: fixed;
+            left: ${tipX}px;
+            top: ${tipY}px;
+            width: 3px;
+            height: 3px;
+            background: var(--gold);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            box-shadow: 0 0 5px var(--gold);
+          `;
+          document.body.appendChild(trail);
+          
+          trail.animate([
+            { opacity: 0.8, transform: 'scale(1) translate(0, 0)' },
+            { opacity: 0, transform: 'scale(0.2) translate(0, 10px)' }
+          ], { duration: 500, easing: 'linear' }).onfinish = () => trail.remove();
+        }
+      });
+
+      window.addEventListener('click', (e) => {
+        const wandRect = wand.getBoundingClientRect();
+        const tipX = wandRect.left + tipRelX * Math.cos(fixedAngle) - tipRelY * Math.sin(fixedAngle);
+        const tipY = wandRect.top + tipRelX * Math.sin(fixedAngle) + tipRelY * Math.cos(fixedAngle);
+        
+        for (let i = 0; i < 8; i++) {
+          const sprinkle = document.createElement('div');
+          sprinkle.style.cssText = `
+            position: fixed;
+            left: ${tipX}px;
+            top: ${tipY}px;
+            width: 4px;
+            height: 4px;
+            background: #d4af37;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            box-shadow: 0 0 6px #d4af37;
+          `;
+          document.body.appendChild(sprinkle);
+          const angle2 = (Math.PI * 2 * i) / 8;
+          const distance = 30 + Math.random() * 20;
+          sprinkle.animate([
+            { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+            { transform: `translate(${Math.cos(angle2) * distance}px, ${Math.sin(angle2) * distance}px) scale(0)`, opacity: 0 }
+          ], { duration: 500, easing: 'ease-out' }).onfinish = () => sprinkle.remove();
+        }
+      });
+    }
+  </script>
+</body>
+</html> 

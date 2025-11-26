@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Hogwarts Hackathon Teams</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Crimson+Text:ital,wght@0,400;1,400&display=swap" rel="stylesheet" />
+<style>
+:root { --gold:#d4af37; --bg-dark:#121213; --parchment:#efe5cf; }
+html,body{margin:0;padding:0;background:#0d0d10;color:#ddd;font-family:'Crimson Text',serif;}
+body{background:radial-gradient(circle at 50% 30%, #1e1e2c 0%, #0a0a0d 80%) fixed;}
+.filter-bar{margin-top:26px;background:rgba(255,255,255,.04);border:1px solid rgba(212,175,55,.25);border-radius:14px;padding:14px 18px;backdrop-filter:blur(10px);max-width:880px;margin-left:auto;margin-right:auto;box-shadow:0 8px 24px rgba(0,0,0,.45);position:relative;z-index:60;} 
+.filter-inner{display:grid;grid-template-columns:minmax(190px,220px) 1fr;gap:34px;align-items:end;}
+.hp-select{width:100%;}
+.hp-select-button,.hp-search-input{box-sizing:border-box;min-height:46px;display:flex;align-items:center;}
+.hp-search-wrap{align-self:end;}
+@media (max-width: 680px){
+  .filter-inner{grid-template-columns:1fr;gap:18px;}
+  .hp-search-wrap{align-self:stretch;}
+}
+@media (max-width:560px){
+  .filter-bar{padding:12px 14px;}
+  .hp-select-button,.hp-search-input{min-height:44px;padding:10px 14px 10px 32px;}
+  .hp-search-input{font-size:.8rem;}
+  .hp-select-button{font-size:.8rem;}
+  .filter-group label{font-size:.7rem;letter-spacing:1.5px;}
+  .team-grid{gap:26px;margin-top:34px;}
+  .team-card{height:230px;padding:18px 14px 32px;}
+  .team-card .crest-bg,.team-card .crest-front{background-size:140px auto;background-position:right 18px center;}
+  .team-name{max-width:62%;font-size:clamp(1.05rem,4.2vw,1.25rem);top:18px;}
+}
+@media (max-width:420px){
+  .team-card{height:210px;padding:16px 12px 30px;}
+  .team-card .crest-bg,.team-card .crest-front{background-size:120px auto;background-position:right 14px center;}
+  .team-name{max-width:58%;left:16px;top:16px;font-size:clamp(1rem,4vw,1.15rem);}
+  .team-house{top:10px;right:10px;padding:4px 10px;font-size:.65rem;}
+  .hp-select-button,.hp-search-input{min-height:42px;}
+  .filter-bar{width:100%;}
+  .filter-inner{gap:14px;}
+  .team-grid{gap:22px;margin-top:30px;}
+}
+.filter-group.house-group{width:100%;}
+.filter-group label{display:block;font-family:'Cinzel Decorative';font-size:.75rem;letter-spacing:2px;color:var(--gold);margin-bottom:4px;text-transform:uppercase;}
+.filter-group select{background:rgba(0,0,0,.4);border:1px solid rgba(212,175,55,.4);color:var(--gold);font-family:'Crimson Text';}
+.filter-group select:focus{box-shadow:0 0 0 2px rgba(212,175,55,.5);border-color:var(--gold);} 
+/* Themed search input */
+.hp-search-wrap{position:relative;flex:1;min-width:240px;}
+.hp-search-input{width:100%;padding:10px 16px 10px 34px;background:linear-gradient(135deg,#2b2b30,#151518 55%,#2b2b30);border:1px solid rgba(212,175,55,.6);color:var(--gold);border-radius:10px;letter-spacing:1px;font-size:.85rem;font-family:'Cinzel Decorative';box-shadow:0 4px 12px rgba(0,0,0,.4),inset 0 0 6px rgba(212,175,55,.15);}
+.hp-search-wrap:before{content:'✶';position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:.75rem;color:var(--gold);opacity:.8;pointer-events:none;}
+.hp-search-input::placeholder{color:#b9a468;font-family:'Crimson Text';letter-spacing:0;}
+.hp-search-input:focus{outline:none;box-shadow:0 0 14px rgba(212,175,55,.35),0 4px 12px rgba(0,0,0,.5);background:linear-gradient(135deg,#3a3a42,#1d1d22 55%,#3a3a42);} 
+/* Custom HP Select */
+.hp-native-select{position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;opacity:0;}
+.hp-select{position:relative;min-width:170px;font-family:'Cinzel Decorative';}
+.hp-select-button{all:unset;display:block;width:100%;padding:10px 16px;background:linear-gradient(135deg,#2b2b30,#151518 55%,#2b2b30);border:1px solid rgba(212,175,55,.6);color:var(--gold);border-radius:10px;letter-spacing:1px;font-size:.85rem;cursor:pointer;position:relative;box-shadow:0 4px 12px rgba(0,0,0,.4),inset 0 0 6px rgba(212,175,55,.15);}
+.hp-select-button:after{content:'▼';position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:.65rem;color:var(--gold);transition:.3s;}
+.hp-select.open .hp-select-button:after{transform:translateY(-50%) rotate(180deg);} 
+.hp-select-button:hover{background:linear-gradient(135deg,#3a3a42,#1d1d22 55%,#3a3a42);box-shadow:0 0 14px rgba(212,175,55,.35);} 
+.hp-select-options{list-style:none;margin:6px 0 0;padding:6px 8px;position:absolute;left:0;right:0;top:100%;background:radial-gradient(circle at 50% 0%,#2a2420,#141313 85%);border:1px solid rgba(212,175,55,.6);border-radius:12px;box-shadow:0 20px 40px rgba(0,0,0,.6),inset 0 0 10px rgba(212,175,55,.12);display:none;max-height:220px;overflow-y:auto;z-index:40;}
+.hp-select.open .hp-select-options{display:block;animation:hpSelectFade .35s ease;} 
+@keyframes hpSelectFade{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:translateY(0);}} 
+.hp-option{padding:8px 10px 8px 26px;border-radius:8px;font-size:.85rem;color:var(--gold);cursor:pointer;position:relative;} 
+.hp-option[aria-selected='true']{background:rgba(212,175,55,.18);color:#fffceb;} 
+.hp-option:hover{background:rgba(212,175,55,.28);color:#fff;} 
+.hp-option:before{content:'✶';position:absolute;left:10px;top:50%;transform:translateY(-50%);opacity:.6;font-size:.6rem;color:var(--gold);} 
+.hp-option[data-value='']::before{content:'★';}
+.navbar{background:rgba(10,10,10,.9);border-bottom:1px solid rgba(212,175,55,.3);backdrop-filter:blur(8px);}
+.navbar-brand,.nav-link{font-family:'Cinzel Decorative';color:var(--gold)!important;}
+.nav-link:hover{color:#fff!important;text-shadow:0 0 12px var(--gold);} 
+/* Neon Register button */
+.register-btn{position:relative;display:inline-block;padding:8px 22px;margin-left:12px;border:1px solid rgba(255,215,100,.55);border-radius:999px;font-family:'Cinzel Decorative';letter-spacing:1px;text-transform:uppercase;font-size:.75rem;color:#ffe7b0!important;background:linear-gradient(130deg,#3a2d00,#1a1400 55%,#3a2d00);box-shadow:0 0 8px rgba(255,180,60,.4),inset 0 0 10px rgba(255,220,140,.15);overflow:hidden;transition:.35s;animation:pulseNeon 3.6s ease-in-out infinite}
+.register-btn:before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 28% 50%,rgba(255,230,140,.35),transparent 62%);opacity:.6;mix-blend-mode:screen;pointer-events:none}
+.register-btn:after{content:'';position:absolute;inset:0;border-radius:inherit;padding:2px;background:linear-gradient(110deg,rgba(255,220,140,.8),rgba(255,150,40,.4),rgba(255,230,120,.8));-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:.4}
+.register-btn:hover{background:linear-gradient(130deg,#ffbb4d,#ff9e29 55%,#ffbb4d);color:#111!important;box-shadow:0 0 14px #ffd23f,0 0 34px #ff9000,0 0 72px rgba(255,120,0,.6);text-shadow:none;transform:translateY(-2px)}
+@keyframes pulseNeon{0%{box-shadow:0 0 6px rgba(255,190,60,.4),0 0 18px rgba(255,140,0,.25)}50%{box-shadow:0 0 14px rgba(255,190,60,.65),0 0 36px rgba(255,140,0,.45),0 0 60px rgba(255,120,0,.35)}100%{box-shadow:0 0 6px rgba(255,190,60,.4),0 0 18px rgba(255,140,0,.25)}}
+.register-btn:focus{outline:none;box-shadow:0 0 16px #ffd23f,0 0 42px #ff9000}
+.header-title{font-family:'Cinzel Decorative';font-weight:900;text-transform:uppercase;color:var(--gold);font-size:3.5rem;filter:url(#gold-texture);word-spacing:0.2em;}
+.section-intro{max-width:900px;margin:8px auto 0;font-size:1.15rem;color:#c4c4c4;line-height:1.6;text-align:center;}
+/* Responsive heading & intro adjustments */
+@media (max-width: 600px){
+  .header-title{font-size:clamp(2.1rem,8.2vw,2.6rem);line-height:1.08;padding:0 6px;margin-top:14px;}
+  .section-intro{font-size:0.95rem;padding:0 10px;}
+  .filter-bar{margin-top:20px;}
+}
+@media (max-width: 420px){
+  .header-title{font-size:clamp(1.7rem,9.4vw,2.2rem);letter-spacing:1px;}
+  .section-intro{font-size:0.88rem;}
+}
+
+/* Team Cards (Magical Portrait Frames) */
+.team-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:34px;margin-top:44px;}
+@media (max-width: 480px){
+  .team-grid{gap:28px;margin-top:38px;}
+}
+/* Glassmorphism HP card */
+.team-card{position:relative;padding:22px 18px 38px;background:rgba(255,255,255,.06);backdrop-filter:blur(12px) saturate(120%);-webkit-backdrop-filter:blur(12px) saturate(120%);border:1px solid rgba(255,255,255,.18);border-radius:18px;overflow:visible;cursor:pointer;transition:.35s;box-shadow:0 10px 24px rgba(0,0,0,.55);perspective:900px;height:250px;display:flex;flex-direction:column;justify-content:flex-end;}
+.team-card:before{content:'';position:absolute;inset:0;border-radius:16px;background:radial-gradient(circle at 20% 10%,rgba(255,255,255,.15),rgba(255,255,255,0) 40%),radial-gradient(circle at 80% 90%,rgba(255,255,255,.08),rgba(255,255,255,0) 45%);mix-blend-mode:overlay;pointer-events:none;}
+.team-card:after{content:'';position:absolute;inset:0;border-radius:18px;box-shadow:inset 0 0 0 1px rgba(212,175,55,.35), 0 0 24px rgba(212,175,55,.08);pointer-events:none;}
+.team-card:hover{transform:translateY(-8px) scale(1.02);box-shadow:0 18px 36px rgba(0,0,0,.7);} 
+.team-house{position:absolute;right:12px;top:12px;font-size:.72rem;padding:4px 12px;border-radius:999px;font-family:'Cinzel Decorative';letter-spacing:1px;background:rgba(20,20,22,.7);color:var(--gold);border:1px solid rgba(212,175,55,.6);}
+.team-status{position:absolute;left:12px;bottom:12px;font-size:.65rem;padding:3px 10px;border-radius:999px;font-family:'Cinzel Decorative';letter-spacing:0.5px;background:rgba(20,20,22,.7);border:1px solid;text-transform:uppercase;z-index:10;}
+.team-status.pending{color:#ffa726;border-color:rgba(255,167,38,.6);}
+.team-status.approved{color:#66bb6a;border-color:rgba(102,187,106,.6);}
+.team-status.rejected{color:#ef5350;border-color:rgba(239,83,80,.6);text-decoration:line-through;} 
+/* Team name repositioned: always visible left side */
+/* Adjusted team name positioning & sizing to prevent overlap with crest */
+.team-name{font-family:'Cinzel Decorative';font-size:clamp(1.15rem,1.3vw+0.6rem,1.45rem);line-height:1.15;margin:0;color:var(--gold);letter-spacing:.8px;position:absolute;left:20px;top:22px;transform:none;z-index:6;opacity:1;text-align:left;pointer-events:none;max-width:68%;word-wrap:break-word;hyphens:auto;transition:color .45s ease, text-shadow .6s ease;}
+.member-list{display:none;}
+/* .view-btn removed: entire card now opens scroll */
+/* House crest background layer */
+.team-card .crest-bg{position:absolute;inset:0;pointer-events:none;opacity:.22;mix-blend-mode:multiply;background: var(--crest) no-repeat right 26px center; background-size: 180px auto; filter: saturate(120%);} 
+/* Animated crest front layer (appears on hover) */
+/* Crest front layer now same position/size as background; simple fade swap */
+.team-card .crest-front{position:absolute;inset:0;pointer-events:none;opacity:0;background: var(--crest) no-repeat right 26px center; background-size:180px auto;transition:opacity .6s ease;filter:drop-shadow(0 6px 14px rgba(0,0,0,.55)) brightness(1.08);} 
+/* Scale up smaller Muggles crest to visually match others */
+.team-card[data-house='Muggles'] .crest-bg,
+.team-card[data-house='Muggles'] .crest-front{background-size:220px auto;}
+@media (max-width: 720px){
+  .team-card[data-house='Muggles'] .crest-bg,
+  .team-card[data-house='Muggles'] .crest-front{background-size:170px auto;}
+}
+@media (max-width:560px){
+  .team-card[data-house='Muggles'] .crest-bg,
+  .team-card[data-house='Muggles'] .crest-front{background-size:150px auto;}
+}
+@media (max-width:420px){
+  .team-card[data-house='Muggles'] .crest-bg,
+  .team-card[data-house='Muggles'] .crest-front{background-size:130px auto;}
+}
+@media (max-width: 720px){
+  .team-name{max-width:60%;top:18px;font-size:clamp(1rem,2.6vw,1.25rem);}
+  .team-card .crest-bg, .team-card .crest-front{background-size:140px auto;background-position:right 18px center;}
+}
+.team-card:hover .crest-bg{opacity:0;} 
+.team-card:hover .crest-front{opacity:.9;} 
+@keyframes hpGlow{0%{text-shadow:0 0 4px #d4af37,0 0 10px #ffecb3;}50%{text-shadow:0 0 6px #ffd23f,0 0 14px #ffbf00,0 0 28px #ff9000;}100%{text-shadow:0 0 4px #d4af37,0 0 10px #ffecb3;}} 
+.team-card:hover .team-name{color:#fffceb;animation:hpGlow 1.6s ease-in-out infinite;} 
+/* Removed .view-btn hover styles */
+
+/* Portfolio Modal (Minimal Panel) */
+#portfolioModal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:5000;padding:40px;}
+#portfolioModal.active{display:flex;}
+.modal-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);z-index:1;}
+/* Clean minimal panel */
+.scroll-wrapper{position:relative;width:min(760px,92vw);max-height:86vh;background:#18191b;border:1px solid rgba(250,222,150,.3);border-radius:14px;padding:48px 48px 56px;font-family:'Crimson Text';color:#f4f4f4;overflow:auto;box-shadow:0 12px 42px rgba(0,0,0,.55);z-index:2;}
+.scroll-wrapper:before,.scroll-wrapper:after{display:none !important;}
+.scroll-inner{position:relative;}
+.crest-modal{display:flex;justify-content:center;margin:0 0 24px;}
+.crest-modal img{width:110px;height:auto;filter:drop-shadow(0 2px 6px rgba(0,0,0,.5));}
+.scroll-separator{height:1px;background:linear-gradient(to right,transparent,#c8a650 50%,transparent);margin:28px auto 24px;width:100%;opacity:.55;}
+.scroll-meta{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;margin:6px 0 2px;font-size:.75rem;font-family:'Cinzel Decorative';letter-spacing:2px;color:#bca979;}
+.scroll-title{font-family:'Cinzel Decorative';text-transform:uppercase;font-size:2.2rem;color:#e9d7a8;margin:0 0 18px;text-align:center;letter-spacing:3px;text-shadow:none;}
+.field-label{font-family:'Cinzel Decorative';color:#d9c08c;font-size:.8rem;margin-top:18px;margin-bottom:4px;letter-spacing:1px;text-shadow:none;text-transform:uppercase;}
+.field-value{background:#202124;border:1px solid rgba(255,255,255,.06);padding:10px 12px;border-radius:8px;font-size:.95rem;color:#e9e9e9;box-shadow:none;}
+#portfolioModal .participants li{color:#f1f1f1;text-shadow:none;}
+#portfolioModal .participants li:before{color:#d4af37;text-shadow:none;}
+/* Accent variables simplified (still allow house tint on bullets) */
+.scroll-wrapper{--accent:#dcbc64;--accent-glow:#e9d7a8;}
+.scroll-wrapper.house-Gryffindor{--accent:#dcbc64;}
+.scroll-wrapper.house-Slytherin{--accent:#dcbc64;}
+.scroll-wrapper.house-Ravenclaw{--accent:#dcbc64;}
+.scroll-wrapper.house-Hufflepuff{--accent:#dcbc64;}
+.participants{list-style:none;padding-left:0;margin:0;display:flex;flex-wrap:wrap;gap:8px 14px;}
+.participants li{position:relative;padding-left:18px;}
+.participants li:before{content:'✦';position:absolute;left:0;color:#7a5a22;}
+.project-link a{color:#6a4305;text-decoration:none;font-weight:bold;} .project-link a:hover{text-decoration:underline;color:#2c1a00;}
+.close-seal{position:absolute;top:-25px;right:-25px;width:70px;height:70px;border-radius:50%;background:#740001;color:#fff;font-family:'Cinzel Decorative';font-size:1.1rem;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,.5),inset 0 8px 14px rgba(255,255,255,.15),inset 0 -6px 10px rgba(0,0,0,.4);border:3px solid rgba(255,255,255,.3);z-index:3;} 
+.close-seal:hover{filter:brightness(1.2) drop-shadow(0 0 12px #ffcb3c);} 
+
+@keyframes popScroll {0%{transform:translateY(40px) scale(.9) rotateX(25deg);opacity:0;}60%{transform:translateY(-6px) scale(1.02);opacity:1;}100%{transform:translateY(0) scale(1) rotateX(0deg);}}
+#portfolioModal.active .scroll-wrapper{animation:popScroll .75s cubic-bezier(.22,.9,.3,1) forwards;}
+
+/* Hedwig flight */
+#hedwig{position:fixed;top:50%;left:-140px;width:120px;height:120px;background:url('assets/hedwig.png') center/contain no-repeat;z-index:6000;pointer-events:none;opacity:0;filter:drop-shadow(0 10px 18px rgba(0,0,0,.55));}
+#hedwig.flying{animation:hedwigFlight 2.8s cubic-bezier(.25,.9,.3,1) forwards;}
+@keyframes hedwigFlight{0%{opacity:0;transform:translate(-40px,-60px) scale(.7) rotate(-8deg);}15%{opacity:1;}55%{transform:translate(calc(50vw - 60px),-160px) scale(1) rotate(6deg);}80%{transform:translate(calc(50vw - 60px),-178px) scale(1) rotate(0deg);}100%{transform:translate(calc(50vw - 60px),-178px) scale(1);opacity:1;}}
+#hedwig.perched{position:absolute;top:-90px;left:50%;transform:translateX(-50%);width:110px;height:110px;opacity:1;animation:none;}
+
+/* Magical sparkles */
+.sparkle{position:absolute;width:5px;height:5px;background:var(--gold);border-radius:50%;pointer-events:none;box-shadow:0 0 10px var(--gold),0 0 4px #fff;animation:twinkle .9s linear forwards;}
+@keyframes twinkle{0%{transform:scale(.6);opacity:.9;}100%{transform:scale(.1) translateY(25px);opacity:0;}}
+
+footer{padding:40px;text-align:center;border-top:1px solid var(--gold);background:#0a0a0a;color:#777;margin-top:100px;}
+
+/* Wand cursor like main page */
+@media (min-width: 992px){
+  *, html, body, a, button, input, label, select, .btn { cursor: none !important; }
+  #wand { display:flex !important; }
+}
+#wand{
+  position:fixed;top:0;left:0;width:50px;height:auto;pointer-events:none;z-index:10000;
+  transform-origin:top left;
+  filter:drop-shadow(0 0 8px rgba(212,175,55,.6)) drop-shadow(2px 3px 6px rgba(0,0,0,.95));
+  display:none;
+  animation:wandGlow 2s ease-in-out infinite;
+}
+#wand img{
+  width:100%;height:auto;display:block;
+}
+@keyframes wandGlow{
+  0%,100%{filter:drop-shadow(0 0 8px rgba(212,175,55,.6)) drop-shadow(2px 3px 6px rgba(0,0,0,.95))}
+  50%{filter:drop-shadow(0 0 15px rgba(212,175,55,.8)) drop-shadow(2px 3px 8px rgba(0,0,0,.95)) drop-shadow(0 0 20px rgba(255,255,100,.4))}
+}
+/* Cursor trail like main page */
+.cursor-trail{position:fixed;width:3px;height:3px;background:var(--gold);border-radius:50%;pointer-events:none;z-index:10001;animation:fade-trail .5s linear forwards;box-shadow:0 0 5px var(--gold)}
+@keyframes fade-trail{0%{opacity:.8;transform:scale(1)}100%{opacity:0;transform:scale(.2) translate(0,10px)}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute"><filter id="gold-texture" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="3" result="noise" /><feDiffuseLighting in="noise" lighting-color="#d4af37" surfaceScale="3" result="coloredNoise"><feDistantLight azimuth="45" elevation="60" /></feDiffuseLighting><feSpecularLighting in="noise" surfaceScale="6" specularConstant="1" specularExponent="20" lighting-color="#ffecb3" result="specular"><fePointLight x="-5000" y="-10000" z="20000" /></feSpecularLighting><feComposite in="specular" in2="SourceAlpha" operator="in" result="specularText" /><feComposite in="coloredNoise" in2="SourceAlpha" operator="in" result="coloredText" /><feMerge><feMergeNode in="coloredText" /><feMergeNode in="specularText" /></feMerge></filter></svg>
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+  <div class="container">
+    <a class="navbar-brand" href="main.html">Hogwarts Hacks</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav"><span class="navbar-toggler-icon"></span></button>
+    <div id="nav" class="collapse navbar-collapse justify-content-end">
+      <ul class="navbar-nav align-items-center">
+        <li class="nav-item"><a class="nav-link" href="main.html">Great Hall</a></li>
+        <li class="nav-item"><a class="nav-link" href="main.html#houses">Houses</a></li>
+        <li class="nav-item"><a class="nav-link" href="#teams">Teams</a></li>
+        <li class="nav-item"><a class="nav-link" href="organizers.html">Organizers</a></li>
+        <li class="nav-item"><a class="nav-link" href="timeline.html">Timeline</a></li>
+        <li class="nav-item"><a class="nav-link" href="faq.html">FAQs</a></li>
+        <li class="nav-item"><a class="nav-link" href="rules.html">Rules</a></li>
+        <li class="nav-item"><a class="nav-link register-btn" href="register.html">Register</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+<div id="wand"><img src="assets/wand.png" alt="Wand cursor"></div>
+<main class="container py-5" id="teams">
+  <h1 class="text-center header-title">Participating    Teams</h1>
+  <p class="section-intro text-center">Explore the brave houses and inventive covens forging magic through code. Tap any portrait frame to unfurl its enchanted project scroll.</p>
+  <div class="filter-bar" id="filterBar">
+    <div class="filter-inner">
+      <div class="filter-group house-group">
+        <label for="houseFilter">House</label>
+        <select id="houseFilter" class="hp-native-select" aria-hidden="true" tabindex="-1">
+          <option value="">All Houses</option>
+          <option value="Gryffindor">Gryffindor</option>
+          <option value="Slytherin">Slytherin</option>
+          <option value="Ravenclaw">Ravenclaw</option>
+          <option value="Hufflepuff">Hufflepuff</option>
+          <option value="Muggles">Muggles</option>
+        </select>
+        <div class="hp-select" id="hpHouseSelect">
+          <button type="button" class="hp-select-button" aria-haspopup="listbox" aria-expanded="false" id="hpSelectBtn">All Houses</button>
+          <ul class="hp-select-options" role="listbox" aria-labelledby="hpSelectBtn">
+            <li class="hp-option" data-value="" role="option" aria-selected="true">All Houses</li>
+            <li class="hp-option" data-value="Gryffindor" role="option" aria-selected="false">Gryffindor</li>
+            <li class="hp-option" data-value="Slytherin" role="option" aria-selected="false">Slytherin</li>
+            <li class="hp-option" data-value="Ravenclaw" role="option" aria-selected="false">Ravenclaw</li>
+            <li class="hp-option" data-value="Hufflepuff" role="option" aria-selected="false">Hufflepuff</li>
+            <li class="hp-option" data-value="Muggles" role="option" aria-selected="false">Muggles</li>
+          </ul>
+        </div>
+      </div>
+      <div class="filter-group hp-search-wrap">
+        <label for="teamSearch">Search</label>
+        <input id="teamSearch" type="text" placeholder="Type team name..." class="hp-search-input" />
+      </div>
+    </div>
+  </div>
+
+  <div class="team-grid" id="teamGrid"></div>
+</main>
+
+<!-- Modal -->
+<div id="portfolioModal" aria-hidden="true">
+  <div class="modal-backdrop"></div>
+  <div class="scroll-wrapper">
+    <div class="close-seal" id="closeSeal" title="Close">✕</div>
+    <div class="scroll-inner" id="scrollContent">
+      <!-- Dynamic content goes here -->
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="container">
+    <p>Mischief Managed &copy; 2025 Hogwarts Hackathon</p>
+    <small>"I solemnly swear this code is up to good."</small>
+  </div>
+</footer>
+
+<script>
+// Teams will be loaded from API via api-integration.js
+const grid = document.getElementById('teamGrid');
+const modal = document.getElementById('portfolioModal');
+const scrollContent = document.getElementById('scrollContent');
+const closeSeal = document.getElementById('closeSeal');
+
+// Initialize custom HP select
+const houseSelect = document.getElementById('houseFilter');
+if (houseSelect) {
+  function initHpSelect(select){
+    const hp = document.getElementById('hpHouseSelect');
+    if(!hp) return;
+    const btn = hp.querySelector('.hp-select-button');
+    const list = hp.querySelector('.hp-select-options');
+    btn.addEventListener('click', ()=>{
+      hp.classList.toggle('open');
+      btn.setAttribute('aria-expanded', hp.classList.contains('open'));
+      btn.focus();
+    });
+    list.addEventListener('click', e => {
+      const opt = e.target.closest('.hp-option');
+      if(!opt) return;
+      const val = opt.dataset.value;
+      select.value = val;
+      list.querySelectorAll('.hp-option').forEach(li=> li.setAttribute('aria-selected', li===opt ? 'true':'false'));
+      btn.textContent = opt.textContent;
+      hp.classList.remove('open');
+      btn.setAttribute('aria-expanded','false');
+      select.dispatchEvent(new Event('change',{bubbles:true}));
+    });
+    document.addEventListener('click', e => { if(!hp.contains(e.target)){ hp.classList.remove('open'); btn.setAttribute('aria-expanded','false'); }});
+    hp.addEventListener('keydown', e => {
+      const options = Array.from(list.querySelectorAll('.hp-option'));
+      let currentIndex = options.findIndex(o => o.getAttribute('aria-selected')==='true');
+      if(e.key==='ArrowDown'){ e.preventDefault(); if(!hp.classList.contains('open')){ hp.classList.add('open'); btn.setAttribute('aria-expanded','true'); return;} currentIndex = Math.min(options.length-1, currentIndex+1); }
+      else if(e.key==='ArrowUp'){ e.preventDefault(); currentIndex = Math.max(0, currentIndex-1); }
+      else if(e.key==='Enter'){ e.preventDefault(); if(!hp.classList.contains('open')){ hp.classList.add('open'); btn.setAttribute('aria-expanded','true'); return;} options[currentIndex].click(); return; }
+      else if(e.key==='Escape'){ hp.classList.remove('open'); btn.setAttribute('aria-expanded','false'); return; }
+      options.forEach((o,i)=> o.setAttribute('aria-selected', i===currentIndex ? 'true':'false'));
+      btn.textContent = options[currentIndex].textContent;
+    });
+    // Make component focusable
+    hp.setAttribute('tabindex','0');
+  }
+  initHpSelect(houseSelect);
+}
+
+function openPortfolio(card){
+  const members = card.dataset.members.split('|');
+  const status = card.dataset.status || 'pending';
+  const statusColor = status === 'approved' ? '#66bb6a' : status === 'rejected' ? '#ef5350' : '#ffa726';
+  // Extract crest URL from CSS custom property
+  const crestStyle = getComputedStyle(card).getPropertyValue('--crest');
+  const crestUrl = crestStyle.replace(/url\((['\"]?)(.*?)\1\)/,'$2').trim();
+  const html = `\n      <div class='crest-modal'><img src='${crestUrl}' alt='${card.dataset.house} crest'></div>\n      <h2 class='scroll-title'>${card.dataset.name}</h2>\n      <p class='text-center' style='font-style:italic;font-size:1.05rem;margin-bottom:6px;color:#2d200c'>${card.dataset.description}</p>\n      <div class='scroll-meta'><span>House: ${card.dataset.house}</span><span>Participants: ${members.length}</span><span>Status: ${status.toUpperCase()}</span></div>\n      <div class='scroll-separator'></div>\n      <div class='row g-3'>\n        <div class='col-12'>\n          <div class='field-label'>House</div>\n          <div class='field-value'>${card.dataset.house}</div>\n        </div>\n        <div class='col-12'>\n          <div class='field-label'>Status</div>\n          <div class='field-value' style='text-transform:uppercase;color:${statusColor};font-weight:bold;'>${status}</div>\n        </div>\n        <div class='col-12'>\n          <div class='field-label'>Participants</div>\n          <div class='field-value'>\n            <ul class='participants'>${members.map(m=>`<li>${m}</li>`).join('')}</ul>\n          </div>\n        </div>\n        <div class='col-12'>\n          <div class='field-label'>Project URL</div>\n          <div class='field-value project-link'><a href='${card.dataset.url}' target='_blank' rel='noopener'>${card.dataset.url}</a></div>\n        </div>\n      </div>`;
+  scrollContent.innerHTML = html;
+  modal.classList.add('active');
+  spawnSparkles(14);
+  flyHedwig();
+  const wrapper = document.querySelector('.scroll-wrapper');
+  if(wrapper){
+    wrapper.classList.remove('house-Gryffindor','house-Slytherin','house-Ravenclaw','house-Hufflepuff','house-Muggles');
+    wrapper.classList.add('house-'+card.dataset.house);
+  }
+}
+
+function closePortfolio(){ modal.classList.remove('active'); }
+function flyHedwig(){
+  let owl = document.getElementById('hedwig');
+  if(!owl){
+    owl = document.createElement('div');
+    owl.id = 'hedwig';
+    document.body.appendChild(owl);
+  }
+  owl.classList.remove('perched');
+  owl.classList.add('flying');
+  owl.addEventListener('animationend',()=>{
+    const wrapper = document.querySelector('.scroll-wrapper');
+    if(wrapper){ wrapper.appendChild(owl); }
+    owl.classList.remove('flying');
+    owl.classList.add('perched');
+  },{once:true});
+}
+// Remove owl when closing modal so it reflys next time
+function removeHedwig(){
+  const owl = document.getElementById('hedwig');
+  if(!owl) return;
+  owl.remove();
+}
+
+grid.addEventListener('click', e => {
+  const card = e.target.closest('.team-card');
+  if(!card) return; openPortfolio(card);
+});
+closeSeal.addEventListener('click', ()=>{ closePortfolio(); removeHedwig(); });
+modal.addEventListener('click', e => { if(e.target === modal.querySelector('.modal-backdrop')) { closePortfolio(); removeHedwig(); }});
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') { closePortfolio(); removeHedwig(); }});
+
+function spawnSparkles(count){
+  for(let i=0;i<count;i++){
+    const s=document.createElement('div');
+    s.className='sparkle';
+    const x=(Math.random()*100)+'%';
+    const y=(Math.random()*100)+'%';
+    s.style.left=x; s.style.top=y; modal.appendChild(s);
+    setTimeout(()=>s.remove(),900);
+  }
+}
+// Wand follow
+const wand = document.getElementById('wand');
+const isDesktop = window.matchMedia("(min-width: 992px)");
+window.addEventListener('mousemove', (e)=>{
+  if (isDesktop.matches) {
+    wand.style.transform = `translate(${e.clientX}px, ${e.clientY}px) rotate(15deg)`;
+    const mobile = window.matchMedia('(max-width:600px)').matches;
+    const chance = mobile ? 0.25 : 0.5; // reduce trail density on mobile
+    if(Math.random()> (1 - chance)){
+      const wandRect = wand.getBoundingClientRect();
+      const angle = 15 * (Math.PI / 180); // Convert to radians
+      
+      // The tip is at the top center of the wand image
+      // Tip position relative to top-left: (width/2, 0)
+      // Adjust up and left to match visual tip
+      const tipRelX = (wandRect.width / 2) - 20; // Move more to the left
+      const tipRelY = -5; // Move down slightly
+      
+      // Apply rotation transformation around origin (0,0)
+      const tipX = wandRect.left + tipRelX * Math.cos(angle) - tipRelY * Math.sin(angle);
+      const tipY = wandRect.top + tipRelX * Math.sin(angle) + tipRelY * Math.cos(angle);
+      
+      const d=document.createElement('div');
+      d.className='cursor-trail';
+      d.style.left = `${tipX}px`;
+      d.style.top  = `${tipY}px`;
+      document.body.appendChild(d);
+      setTimeout(()=>d.remove(),500);
+    }
+  }
+});
+
+// Click sprinkle animation
+window.addEventListener('click', (e) => {
+  if (!isDesktop.matches) return;
+  // Skip if clicking on buttons, links, or interactive elements
+  if (e.target.closest('a') || e.target.closest('button') || e.target.closest('.btn') || 
+      e.target.closest('.team-card') || e.target.closest('.hp-select') || e.target.closest('input')) return;
+  
+  const wandRect = wand.getBoundingClientRect();
+  const angle = 15 * (Math.PI / 180);
+  const tipRelX = (wandRect.width / 2) - 20;
+  const tipRelY = -5;
+  const tipX = wandRect.left + tipRelX * Math.cos(angle) - tipRelY * Math.sin(angle);
+  const tipY = wandRect.top + tipRelX * Math.sin(angle) + tipRelY * Math.cos(angle);
+  
+  // Create burst of sprinkles on click
+  for (let i = 0; i < 8; i++) {
+    const sprinkle = document.createElement('div');
+    sprinkle.style.cssText = `
+      position: fixed;
+      left: ${tipX}px;
+      top: ${tipY}px;
+      width: 4px;
+      height: 4px;
+      background: #d4af37;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9999;
+      box-shadow: 0 0 6px #d4af37;
+    `;
+    document.body.appendChild(sprinkle);
+    const angle2 = (Math.PI * 2 * i) / 8;
+    const distance = 30 + Math.random() * 20;
+    sprinkle.animate([
+      { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+      { transform: `translate(${Math.cos(angle2) * distance}px, ${Math.sin(angle2) * distance}px) scale(0)`, opacity: 0 }
+    ], { duration: 500, easing: 'ease-out' }).onfinish = () => sprinkle.remove();
+  }
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="api-integration.js"></script>
+</body>
+</html>

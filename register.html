@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hogwarts Hackathon - Registration</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Crimson+Text:ital,wght@0,400;1,400&family=Pinyon+Script&family=Libre+Barcode+128+Text&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* --- THEME VARIABLES --- */
+        :root {
+            --gold: #d4af37;
+            --bg-dark: #0b0b0b;
+            --ink-color: #2c1b18;
+            --parchment-base: #f3e9d2; 
+            
+            /* Ticket Colors */
+            --ticket-paper: #fdf5e6;
+            --ticket-ink: #3e2723;
+            --ticket-gold: #b8860b;
+        }
+
+        /* --- GLOBAL CURSOR HIDE (Desktop Only) --- */
+        @media (min-width: 992px) {
+            *, *::before, *::after, 
+            html, body, a, button, input, select, textarea, label, .btn, .form-select,
+            .file-upload-wrapper, .btn-file-custom, .custom-select-trigger, .custom-option {
+                cursor: none !important;
+            }
+            
+            /* FORCE HIDE SYSTEM CURSOR ON FILE INPUT */
+            input[type="file"] { cursor: none !important; }
+            
+            #wand { display: flex !important; }
+        }
+
+        html, body {
+            width: 100%; margin: 0; padding: 0;
+            overflow-x: hidden; 
+            background-color: var(--bg-dark);
+        }
+
+        /* --- CONTENT WRAPPER --- */
+        #site-wrapper {
+            position: relative;
+            width: 100%;
+            min-height: 100vh;
+            background: radial-gradient(circle at center, #1f1f35 0%, #000000 100%), url('https://www.transparenttextures.com/patterns/stardust.png');
+            background-attachment: fixed;
+            transition: transform 0.2s ease;
+            will-change: transform;
+            display: flex; flex-direction: column;
+        }
+
+        /* --- LIGHTING --- */
+        #ambient-light {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            pointer-events: none; z-index: 9990;
+            background: radial-gradient(circle 350px at var(--x, 50%) var(--y, 50%), rgba(255, 255, 255, 0.02) 0%, rgba(0, 0, 0, 0.1) 30%, rgba(0, 0, 0, 0.85) 100%);
+            transition: opacity 1s ease; opacity: 0;
+        }
+        body.magic-on #ambient-light { opacity: 1; }
+
+        /* --- WAND --- */
+        #wand { 
+            position: fixed; top: 0; left: 0; 
+            width: 50px; height: auto; 
+            pointer-events: none; z-index: 20005; 
+            will-change: transform; transform-origin: top left; 
+            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.9)) drop-shadow(0 0 8px rgba(212, 175, 55, 0.6));
+            display: none;
+            animation: wandGlow 2s ease-in-out infinite;
+        }
+        #wand img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        @keyframes wandGlow {
+            0%, 100% { filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.9)) drop-shadow(0 0 8px rgba(212, 175, 55, 0.6)); }
+            50% { filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.9)) drop-shadow(0 0 15px rgba(212, 175, 55, 0.8)) drop-shadow(0 0 20px rgba(255, 255, 100, 0.4)); }
+        }
+
+        .cursor-trail {
+            position: fixed; width: 3px; height: 3px; background: var(--gold); border-radius: 50%; pointer-events: none; z-index: 20004;
+            animation: fade-trail 0.5s linear forwards; box-shadow: 0 0 5px var(--gold); display: none;
+        }
+        @media (min-width: 992px) { .cursor-trail { display: block; } }
+        @keyframes fade-trail { 0% { opacity: 0.8; transform: scale(1); } 100% { opacity: 0; transform: scale(0.2) translate(0, 10px); } }
+
+        /* --- FORM STYLES --- */
+        .registration-section { padding: 60px 20px; flex-grow: 1; display: flex; justify-content: center; align-items: center; }
+        
+        .parchment-form {
+            position: relative; width: 100%; max-width: 900px;
+            background-color: var(--parchment-base);
+            background-image: url('https://www.transparenttextures.com/patterns/aged-paper.png');
+            padding: 60px 40px; border: 2px solid var(--border-color); border-radius: 4px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8); filter: url(#wrinkle-paper) contrast(1.05); z-index: 5;
+        }
+
+        .form-header { text-align: center; margin-bottom: 40px; border-bottom: 2px solid var(--ink-color); padding-bottom: 20px; }
+        .form-header h2 { font-family: 'Cinzel Decorative'; color: var(--ink-color); font-size: 2.5rem; }
+        .section-title { font-family: 'Cinzel Decorative'; color: #5d4037; font-size: 1.4rem; margin-top: 30px; margin-bottom: 15px; border-bottom: 1px solid rgba(93, 64, 55, 0.3); }
+        
+        .magic-input {
+            width: 100%; background: transparent; border: none; border-bottom: 2px solid rgba(44, 27, 24, 0.3);
+            font-family: 'Cinzel Decorative', cursive; font-weight: 700; font-size: 1rem; color: var(--ink-color); padding: 8px 5px; transition: 0.3s; border-radius: 0;
+        }
+        .magic-input:focus { outline: none; border-bottom: 2px solid var(--gold); background: rgba(212, 175, 55, 0.05); }
+
+        /* --- DROPDOWN CSS --- */
+        #houseSelect { z-index: 100 !important; }
+        #teamSizeSelect { z-index: 50 !important; }
+
+        .custom-select-wrapper { position: relative; user-select: none; width: 100%; }
+        
+        .custom-select-trigger { 
+            position: relative; display: flex; justify-content: space-between; align-items: center; width: 100%; 
+            padding: 10px 15px; font-family: 'Cinzel Decorative', serif; font-weight: 700; 
+            font-size: 1rem; color: var(--ink-color); border-bottom: 2px solid rgba(44, 27, 24, 0.3); 
+            background: transparent; transition: 0.3s; cursor: pointer; 
+        }
+        .custom-select-trigger:after { content: '▼'; font-size: 0.8rem; color: var(--ink-color); }
+        
+        .custom-options { 
+            position: absolute; top: 100%; left: 0; right: 0; 
+            background-color: #f3e9d2 !important; /* Solid Background */
+            background-image: none !important;
+            border: 2px solid #3e2723; border-top: none; 
+            z-index: 9999; 
+            opacity: 0; visibility: hidden; 
+            max-height: 0; overflow: hidden; 
+            transform: scaleY(0); transform-origin: top; 
+            transition: all 0.3s ease-in-out; 
+            box-shadow: 0 15px 30px rgba(0,0,0,0.9); 
+        }
+        
+        @media (min-width: 992px) { 
+            .custom-select-wrapper:hover .custom-options { opacity: 1 !important; visibility: visible; max-height: 300px; transform: scaleY(1); } 
+        }
+        .custom-select-wrapper.open .custom-options { opacity: 1 !important; visibility: visible; max-height: 300px; transform: scaleY(1); }
+        
+        .custom-option { 
+            padding: 12px 15px; display: block; 
+            font-family: 'Cinzel Decorative', cursive; font-weight: 700; color: var(--ink-color); 
+            transition: 0.2s; border-bottom: 1px dashed rgba(62, 39, 35, 0.2); 
+            cursor: pointer; background-color: #f3e9d2 !important; 
+        }
+        .custom-option:hover { background-color: rgba(212, 175, 55, 0.2) !important; color: #000; padding-left: 25px; }
+
+        /* File Input */
+        .file-upload-wrapper { position: relative; overflow: hidden; display: inline-block; width: 100%; margin-top: 5px; }
+        .file-upload-wrapper input[type=file] { 
+            font-size: 100px; position: absolute; left: 0; top: 0; opacity: 0; width: 100%; height: 100%; 
+            z-index: 2; cursor: none !important; 
+        }
+        .btn-file-custom { background: transparent; border: 2px dashed var(--ink-color); color: var(--ink-color); padding: 10px; width: 100%; text-align: center; font-family: 'Cinzel Decorative'; font-weight: 700; transition: 0.3s; display: block; position: relative; z-index: 1; }
+        .file-upload-wrapper:hover .btn-file-custom { background: rgba(212, 175, 55, 0.1); border-color: var(--gold); color: #000; }
+
+        .magic-label { font-family: 'Cinzel Decorative'; color: #3e2723; font-weight: bold; font-size: 0.9rem; margin-bottom: 2px; display: block; }
+        .btn-submit { width: 100%; margin-top: 40px; padding: 15px; background: transparent; border: 2px solid var(--ink-color); color: var(--ink-color); font-family: 'Cinzel Decorative'; font-size: 1.5rem; transition: 0.3s; cursor: pointer; }
+        .btn-submit:hover { background: var(--ink-color); color: var(--parchment-base); box-shadow: 0 0 15px rgba(44, 27, 24, 0.5); }
+
+        .navbar { background-color: rgba(10, 10, 10, 0.9); border-bottom: 1px solid rgba(212, 175, 55, 0.3); padding: 1rem 0; z-index: 100; backdrop-filter: blur(10px); }
+        .navbar-brand, .nav-link { font-family: 'Cinzel Decorative'; color: var(--gold); transition: 0.3s; }
+        .form-check-input { background-color: #333; border-color: #666; width: 3em; height: 1.5em; cursor: pointer; }
+        .form-check-input:checked { background-color: var(--gold); border-color: var(--gold); }
+        footer { padding: 40px; text-align: center; border-top: 1px solid var(--gold); background: #0a0a0a; position: relative; z-index: 10; color: #777; }
+
+        /* =========================================
+           TICKET OVERLAY CSS
+           ========================================= */
+        #ticket-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); z-index: 20000; display: none;
+            align-items: center; justify-content: center; flex-direction: column;
+            backdrop-filter: blur(10px); animation: fadeIn 0.5s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        /* DYNAMIC HOUSE COLORS */
+        .hogwarts-ticket.gryffindor { --house-color: #740001; --house-accent: #d3a625; --ticket-bg: #fff5f5; }
+        .hogwarts-ticket.slytherin  { --house-color: #1a472a; --house-accent: #5d5d5d; --ticket-bg: #f5fff5; }
+        .hogwarts-ticket.ravenclaw  { --house-color: #0e1a40; --house-accent: #946b2d; --ticket-bg: #f5faff; }
+        .hogwarts-ticket.hufflepuff { --house-color: #372e29; --house-accent: #ecb939; --ticket-bg: #fffdf0; }
+        .hogwarts-ticket.muggles    { --house-color: #3e2723; --house-accent: #b8860b; --ticket-bg: #fdf5e6; }
+
+        /* TICKET CONTAINER */
+        .hogwarts-ticket {
+            width: 900px; height: 380px;
+            background-color: var(--ticket-bg);
+            background-image: url('https://www.transparenttextures.com/patterns/cream-paper.png');
+            border: 3px solid var(--house-color);
+            border-radius: 6px;
+            position: relative; display: flex;
+            box-shadow: 0 30px 80px rgba(0,0,0,1);
+            font-family: 'Cinzel Decorative', cursive;
+            filter: url(#wrinkle-paper) contrast(1.1) sepia(0.2);
+            animation: slideUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+            color: var(--house-color);
+            padding: 10px;
+        }
+
+        /* Inner Border */
+        .ticket-inner {
+            width: 100%; height: 100%;
+            border: 2px solid var(--house-color);
+            display: flex;
+        }
+
+        /* LEFT BLOCK (STUB) */
+        .ticket-left {
+            width: 27%;
+            border-right: 2px dashed var(--house-color);
+            background: rgba(0,0,0,0.02);
+            position: relative;
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center;
+        }
+
+        /* PLATFORM NUMBER LAYOUT */
+        .platform-info-container {
+            position: absolute;
+            top: 15px; left: 15px;
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        .platform-label {
+            font-family: 'Crimson Text', serif;
+            font-weight: 700; font-size: 0.7rem;
+            color: var(--house-color); text-transform: uppercase;
+            margin-bottom: 2px; letter-spacing: 1px;
+        }
+
+        /* FRACTION CIRCLE */
+        .platform-circle {
+            width: 85px; height: 85px; 
+            border: 3px solid var(--house-color);
+            background: #000;
+            border-radius: 50%;
+            display: flex; flex-direction: row; 
+            align-items: center; justify-content: center;
+            color: var(--ticket-paper); gap: 3px;
+        }
+        .platform-num-big {
+            font-size: 3rem; line-height: 1; font-weight: 900; margin-bottom: 5px;
+        }
+        .platform-num-small {
+            font-size: 1.5rem; line-height: 1; font-weight: 900; margin-top: 5px;
+        }
+        .fraction-line { width: 100%; height: 2px; background-color: var(--ticket-paper); margin: 2px 0; }
+        .fraction-stack { display: flex; flex-direction: column; align-items: center; font-size: 1.2rem; font-weight: 900; line-height: 1; }
+
+        /* Centered Logo */
+        #ticketHouseLogoContainer {
+            width: 100%; display: flex; justify-content: center; align-items: center;
+            margin-top: 40px;
+        }
+        #ticketHouseLogo {
+            width: 140px; height: auto; display: block;
+            filter: contrast(1.1) sepia(0.3) drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+        }
+
+        .ticket-stub-footer {
+            position: absolute; bottom: 10px; width: 100%; text-align: center;
+            font-family: 'Crimson Text', serif; font-size: 0.9rem; font-weight: bold;
+            color: var(--house-color); text-transform: uppercase; letter-spacing: 1px;
+        }
+
+        /* RIGHT MAIN */
+        .ticket-right {
+            width: 73%; padding: 30px 50px;
+            display: flex; flex-direction: column; position: relative;
+        }
+
+        .ticket-header-box {
+            text-align: center; border-bottom: 3px double var(--house-accent);
+            padding-bottom: 10px; margin-bottom: 30px;
+        }
+        .ticket-title {
+            font-size: 2.8rem; font-weight: 900; letter-spacing: 3px;
+            color: var(--house-color); text-shadow: 1px 1px 0px var(--house-accent);
+        }
+
+        .ticket-trip-info {
+            flex-grow: 1; display: flex; flex-direction: column; justify-content: center; gap: 5px;
+        }
+
+        .main-trip-line {
+            font-family: 'Pinyon Script', cursive; font-size: 3.2rem; color: var(--house-color);
+            line-height: 1; white-space: nowrap; text-align: center;
+        }
+        
+        .sub-trip-line {
+            font-family: 'Cinzel Decorative'; font-weight: 700; font-size: 1.2rem;
+            text-transform: uppercase; color: var(--house-color);
+            margin-top: 10px; text-align: center; letter-spacing: 2px;
+        }
+
+        .ticket-footer {
+            margin-top: auto; border-top: 1px solid var(--house-accent);
+            padding-top: 8px; text-align: center;
+        }
+        .ticket-instructions {
+            font-family: 'Crimson Text', serif; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; font-weight: bold;
+            color: var(--house-color); opacity: 0.9;
+        }
+
+        .success-msg-container {
+            margin-top: 30px; text-align: center; color: var(--gold);
+            font-family: 'Cinzel Decorative'; font-size: 1.4rem;
+            text-shadow: 0 0 10px rgba(0,0,0,0.8); animation: fadeIn 2s ease;
+        }
+        .close-ticket-btn {
+            margin-top: 20px; background: transparent; border: 1px solid var(--gold);
+            color: var(--gold); padding: 10px 30px; font-family: 'Cinzel Decorative';
+            cursor: pointer; transition: all 0.3s; text-transform: uppercase; letter-spacing: 2px;
+        }
+        .close-ticket-btn:hover { background: var(--gold); color: #000; }
+
+        /* --- MOBILE RESPONSIVE (FIXED) --- */
+        @media (max-width: 768px) {
+            .hogwarts-ticket { 
+                width: 90%; 
+                max-width: 360px; /* Constrain width */
+                height: auto; 
+                min-height: 500px; /* Ensure enough height */
+                flex-direction: column; 
+                padding: 5px;
+            }
+            
+            .ticket-inner { flex-direction: column; }
+
+            /* Stack Stub on Top */
+            .ticket-left { 
+                width: 100%; 
+                height: 180px; /* Fixed height for Stub */
+                border-right: none; 
+                border-bottom: 2px dashed var(--house-color); 
+                padding: 10px; 
+            }
+
+            /* Adjust Platform Info for Mobile */
+            .platform-info-container {
+                position: absolute; top: 10px; left: 10px;
+            }
+            .platform-circle { width: 70px; height: 70px; }
+            .platform-num-big { font-size: 2.2rem; }
+            .fraction-stack { font-size: 1rem; }
+
+            /* Adjust Logo for Mobile */
+            #ticketHouseLogoContainer { margin-top: 0; }
+            #ticketHouseLogo { width: 100px; }
+
+            /* Stack Main on Bottom */
+            .ticket-right { 
+                width: 100%; 
+                padding: 20px 10px; 
+                text-align: center;
+            }
+
+            .ticket-title { font-size: 2rem; letter-spacing: 1px; }
+            .main-trip-line { font-size: 2.2rem; white-space: normal; line-height: 1.2; }
+            .sub-trip-line { font-size: 1rem; }
+            
+            .ticket-instructions { font-size: 0.6rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="magic-viewport"></div>
+    <div id="flash-overlay"></div>
+    <div id="ambient-light"></div>
+
+    <svg width="0" height="0" style="position: absolute;">
+        <filter id="wrinkle-paper" x="0%" y="0%" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="3" result="noise" /><feDiffuseLighting in="noise" lighting-color="#fff" surfaceScale="1.5"><feDistantLight azimuth="45" elevation="50" /></feDiffuseLighting><feComposite operator="in" in2="SourceGraphic" result="textured"/><feBlend mode="multiply" in="textured" in2="SourceGraphic"/></filter>
+    </svg>
+
+    <div id="wand"><img src="assets/wand.png" alt="Wand cursor"></div>
+
+    <div id="site-wrapper">
+        <nav class="navbar navbar-expand-lg sticky-top navbar-dark">
+            <div class="container">
+                <a class="navbar-brand" href="index.html">Hogwarts Hacks</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"><span class="navbar-toggler-icon"></span></button>
+                <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+                    <ul class="navbar-nav align-items-center">
+                        <li class="nav-item me-4">
+                            <div class="form-check form-switch mb-0 d-flex align-items-center">
+                                <input class="form-check-input" type="checkbox" id="magicToggle">
+                                <label class="form-check-label" for="magicToggle">Try Magic</label>
+                            </div>
+                        </li>
+                        <li class="nav-item"><a class="nav-link" href="main.html">Great Hall</a></li>
+                        <li class="nav-item"><a class="nav-link active" href="#">Registration</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <section class="registration-section">
+            <div class="parchment-form">
+                <div class="form-header">
+                    <h2><i class="fas fa-scroll"></i> Team Contract</h2>
+                    <p style="font-family: 'Pinyon Script', cursive; font-size: 1.6rem; color: var(--ink-color);">
+                        "I solemnly swear that I am up to no good code."
+                    </p>
+                </div>
+
+                <form id="registrationForm">
+                    <h4 class="section-title">Team Details</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="magic-label">Team Name</label>
+                                <input type="text" id="teamNameInput" class="magic-input" placeholder="e.g., Dumbledore's Army" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group" style="z-index: 100;"> 
+                                <label class="magic-label">Select House</label>
+                                <div class="custom-select-wrapper" id="houseSelect">
+                                    <div class="custom-select-trigger"><span>Choose House</span></div>
+                                    <div class="custom-options">
+                                        <span class="custom-option" data-value="gryffindor">Gryffindor(FinTech)</span>
+                                        <span class="custom-option" data-value="slytherin">Slytherin(Cyber Security)</span>
+                                        <span class="custom-option" data-value="ravenclaw">Ravenclaw(Smart Education)</span>
+                                        <span class="custom-option" data-value="hufflepuff">Hufflepuff(Agriculture)</span>
+                                        <span class="custom-option" data-value="muggles">Muggles(Tourism)</span>
+                                    </div>
+                                    <input type="hidden" name="house" id="houseInput" value="muggles">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                             <div class="form-group" style="z-index: 50;"> 
+                                <label class="magic-label">Team Size</label>
+                                <div class="custom-select-wrapper" id="teamSizeSelect">
+                                    <div class="custom-select-trigger"><span>4 Wizards</span></div>
+                                    <div class="custom-options">
+                                        <span class="custom-option" data-value="1">1 Wizard</span>
+                                        <span class="custom-option" data-value="2">2 Wizards</span>
+                                        <span class="custom-option" data-value="3">3 Wizards</span>
+                                        <span class="custom-option" data-value="4" class="selected">4 Wizards</span>
+                                    </div>
+                                    <input type="hidden" name="team_size" id="teamSizeInput" value="4">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="membersContainer"></div>
+
+                    <h4 class="section-title">Gringotts Transaction</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="magic-label">UTR / Transaction ID</label>
+                                <input type="text" class="magic-input" placeholder="e.g., UPI12345678" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="magic-label">Payment Screenshot</label>
+                                <div class="file-upload-wrapper">
+                                    <input type="file" id="paymentProof" accept="image/*" required onchange="updateFileName('paymentProof', 'paymentLabel')">
+                                    <label for="paymentProof" id="paymentLabel" class="btn-file-custom">
+                                        <i class="fas fa-file-invoice-dollar"></i> Upload Proof
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-submit">
+                        <i class="fas fa-feather-alt"></i> Seal The Contract
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <footer>
+            <div class="container">
+                <p>Mischief Managed &copy; 2025 Hogwarts Hackathon</p>
+            </div>
+        </footer>
+    </div>
+
+    <div id="ticket-overlay">
+        <div class="hogwarts-ticket" id="finalTicket">
+            
+            <div class="ticket-inner">
+                
+                <div class="ticket-left">
+                    <div class="platform-info-container">
+                        <span class="platform-label">PLATFORM</span>
+                        
+                        <div class="platform-circle">
+                            <span class="platform-num-big">9</span>
+                            <div class="fraction-stack">
+                                <span>3</span>
+                                <div class="fraction-line"></div>
+                                <span>4</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="ticketHouseLogoContainer">
+                        <img id="ticketHouseLogo" src="" alt="House Logo">
+                    </div>
+
+                    <div class="ticket-stub-footer">LONDON</div>
+                </div>
+
+                <div class="ticket-right">
+                    <div class="ticket-header-box">
+                        <div class="ticket-title">HOGWARTS EXPRESS</div>
+                    </div>
+
+                    <div class="ticket-trip-info">
+                        <div class="main-trip-line">
+                            <span id="ticketTeamName">Wizarding World</span> to Hogwarts
+                        </div>
+                        
+                        <div class="sub-trip-line">One Way Trip</div>
+                    </div>
+
+                    <div class="ticket-footer">
+                        <span class="ticket-instructions">Instructed to follow the rules and regulations of Hogwarts</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="success-msg-container">
+            <i class="fas fa-check-circle"></i> Your ticket has been issued successfully.
+        </div>
+
+        <button class="close-ticket-btn" onclick="closeTicket()">Return to Grounds</button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        const isDesktop = window.matchMedia("(min-width: 992px)");
+        const toggleBtn = document.getElementById('magicToggle');
+        const wand = document.getElementById('wand');
+        const lightLayer = document.getElementById('ambient-light');
+        const membersContainer = document.getElementById('membersContainer');
+        
+        let magicEnabled = false;
+
+        toggleBtn.addEventListener('change', (e) => {
+            magicEnabled = e.target.checked;
+            if (magicEnabled) { document.body.classList.add('magic-on'); } else { document.body.classList.remove('magic-on'); }
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (isDesktop.matches) {
+                const x = e.clientX; const y = e.clientY;
+                wand.style.transform = `translate(${x}px, ${y}px) rotate(15deg)`;
+                lightLayer.style.setProperty('--x', `${x}px`);
+                lightLayer.style.setProperty('--y', `${y}px`);
+                
+                if(Math.random() > 0.5) {
+                    const wandRect = wand.getBoundingClientRect();
+                    const angle = 15 * (Math.PI / 180); // Convert to radians
+                    
+                    // The tip is at the top center of the wand image
+                    // Tip position relative to top-left: (width/2, 0)
+                    // Adjust up and left to match visual tip
+                    const tipRelX = (wandRect.width / 2) - 20; // Move more to the left
+                    const tipRelY = -5; // Move down slightly
+                    
+                    // Apply rotation transformation around origin (0,0)
+                    const tipX = wandRect.left + tipRelX * Math.cos(angle) - tipRelY * Math.sin(angle);
+                    const tipY = wandRect.top + tipRelX * Math.sin(angle) + tipRelY * Math.cos(angle);
+                    
+                    const trail = document.createElement('div');
+                    trail.classList.add('cursor-trail');
+                    trail.style.left = `${tipX}px`; 
+                    trail.style.top = `${tipY}px`;
+                    document.body.appendChild(trail); 
+                    setTimeout(() => trail.remove(), 500);
+                }
+            }
+        });
+        
+        // Click sprinkle animation
+        window.addEventListener('click', (e) => {
+            if (!isDesktop.matches) return;
+            // Skip if clicking on form elements, buttons, or links
+            if (e.target.closest('a') || e.target.closest('button') || e.target.closest('.btn') || 
+                e.target.closest('input') || e.target.closest('select') || e.target.closest('.custom-select-wrapper')) return;
+            
+            const wandRect = wand.getBoundingClientRect();
+            const angle = 15 * (Math.PI / 180);
+            const tipRelX = (wandRect.width / 2) - 20;
+            const tipRelY = -5;
+            const tipX = wandRect.left + tipRelX * Math.cos(angle) - tipRelY * Math.sin(angle);
+            const tipY = wandRect.top + tipRelX * Math.sin(angle) + tipRelY * Math.cos(angle);
+            
+            // Create burst of sprinkles on click
+            for (let i = 0; i < 8; i++) {
+                const sprinkle = document.createElement('div');
+                sprinkle.style.cssText = `
+                    position: fixed;
+                    left: ${tipX}px;
+                    top: ${tipY}px;
+                    width: 4px;
+                    height: 4px;
+                    background: #d4af37;
+                    border-radius: 50%;
+                    pointer-events: none;
+                    z-index: 9999;
+                    box-shadow: 0 0 6px #d4af37;
+                `;
+                document.body.appendChild(sprinkle);
+                const angle2 = (Math.PI * 2 * i) / 8;
+                const distance = 30 + Math.random() * 20;
+                sprinkle.animate([
+                    { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+                    { transform: `translate(${Math.cos(angle2) * distance}px, ${Math.sin(angle2) * distance}px) scale(0)`, opacity: 0 }
+                ], { duration: 500, easing: 'ease-out' }).onfinish = () => sprinkle.remove();
+            }
+        });
+
+        /* Dropdown Logic */
+        document.querySelectorAll('.custom-select-wrapper').forEach(wrapper => {
+            const trigger = wrapper.querySelector('.custom-select-trigger');
+            trigger.addEventListener('click', function(e) {
+                e.stopPropagation(); 
+                document.querySelectorAll('.custom-select-wrapper').forEach(other => {
+                    if (other !== wrapper) other.classList.remove('open');
+                });
+                wrapper.classList.toggle('open');
+            });
+        });
+
+        document.querySelectorAll('.custom-option').forEach(option => {
+            option.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const wrapper = this.closest('.custom-select-wrapper');
+                if(!wrapper) return;
+                
+                wrapper.querySelector('.custom-option.selected')?.classList.remove('selected');
+                this.classList.add('selected');
+                
+                const text = this.textContent;
+                const value = this.getAttribute('data-value');
+                
+                wrapper.querySelector('.custom-select-trigger span').textContent = text;
+                wrapper.querySelector('input[type="hidden"]').value = value;
+                
+                if(wrapper.id === 'teamSizeSelect') renderMembers(value);
+                wrapper.classList.remove('open'); 
+            });
+        });
+
+        window.addEventListener('click', function(e) {
+            if (!e.target.closest('.custom-select-wrapper')) {
+                document.querySelectorAll('.custom-select-wrapper').forEach(wrapper => {
+                    wrapper.classList.remove('open');
+                });
+            }
+        });
+
+        function renderMembers(count) {
+            membersContainer.innerHTML = ''; 
+            for (let i = 1; i <= count; i++) {
+                const memberHTML = `
+                    <div class="member-block mt-4">
+                        <h4 class="section-title">Wizard ${i} ${i == 1 ? '(Leader)' : ''}</h4>
+                        <div class="row">
+                            <div class="col-md-4"><div class="form-group"><label class="magic-label">Full Name</label><input type="text" class="magic-input" required></div></div>
+                            <div class="col-md-4"><div class="form-group"><label class="magic-label">Owl Post (Email)</label><input type="email" class="magic-input" required></div></div>
+                            <div class="col-md-4"><div class="form-group"><label class="magic-label">Magical Contact</label><input type="tel" class="magic-input" required></div></div>
+                        </div>
+                    </div>`;
+                membersContainer.insertAdjacentHTML('beforeend', memberHTML);
+            }
+        }
+        renderMembers(4); 
+
+        function updateFileName(inputId, labelId) {
+            const input = document.getElementById(inputId);
+            const label = document.getElementById(labelId);
+            if(input.files && input.files.length > 0) {
+                label.innerHTML = `<i class="fas fa-check"></i> ${input.files[0].name}`;
+                label.style.borderColor = 'var(--gold)';
+            }
+        }
+
+        /* TICKET LOGIC - Handled by api-integration.js after successful database submission */
+        // The form submission is now handled by api-integration.js
+        // This ensures the ticket only shows after data is confirmed saved in database
+        
+        function closeTicket() {
+            const ticketOverlay = document.getElementById('ticket-overlay');
+            if (ticketOverlay) {
+                ticketOverlay.style.display = 'none';
+            }
+        }
+    </script>
+    
+    <!-- API Integration - Must be loaded after all other scripts -->
+    <script src="api-integration.js"></script>
+</body>
+</html>

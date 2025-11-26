@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin Review — Hogwarts Hacks</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Crimson+Text:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+  <style>
+    :root{--gold:#d4af37;--bg:#0d0d10}
+    body{background:radial-gradient(circle at 50% 20%,#20202b 0%,#0d0d10 70%);color:#e6e6e6;font-family:'Crimson Text',serif;padding-top:0;margin:0}
+    html{margin:0;padding:0}
+    .card{background:rgba(255,255,255,0.03);border:1px solid rgba(212,175,55,0.08)}
+    h1,h2{font-family:'Cinzel Decorative';color:var(--gold)}
+    label{font-family:'Cinzel Decorative';color:#d9c08c}
+    .navbar{background:rgba(10,10,10,0.95);border-bottom:1px solid rgba(212,175,55,0.3);padding:15px 0;backdrop-filter:blur(10px);box-shadow:0 2px 10px rgba(0,0,0,0.3);margin:0;position:sticky;top:0;z-index:1000}
+    .navbar-brand{font-family:'Cinzel Decorative';color:var(--gold)!important;font-size:1.6rem;font-weight:700;text-decoration:none;transition:all 0.3s;letter-spacing:0.5px}
+    .navbar-brand:hover{color:var(--gold)!important;text-shadow:0 0 10px rgba(212,175,55,0.5);transform:scale(1.02)}
+    .admin-badge{border:1px solid var(--gold);padding:3px 10px;border-radius:4px;font-size:0.75rem;margin-left:12px;color:var(--gold);font-weight:normal;letter-spacing:0.5px}
+    .nav-link{color:#aaa!important;transition:color 0.3s}
+    .nav-link:hover{color:var(--gold)!important}
+    .navbar .btn{font-family:'Cinzel Decorative';transition:all 0.3s;font-weight:600;padding:8px 20px;font-size:0.9rem;letter-spacing:0.5px;border-width:2px}
+    .navbar .btn-outline-warning{border-color:var(--gold);color:var(--gold);background:transparent}
+    .navbar .btn-outline-warning:hover{background:var(--gold);color:#000;box-shadow:0 0 15px rgba(212,175,55,0.5);transform:translateY(-2px)}
+    .navbar .btn-outline-secondary{border-color:#666;color:#aaa;background:transparent}
+    .navbar .btn-outline-secondary:hover{background:#666;color:#fff;border-color:#888;transform:translateY(-2px)}
+    .round-box{border-radius:10px;padding:12px;background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);border:1px solid rgba(255,255,255,0.03)}
+    .criterion{display:grid;grid-template-columns: 1fr 120px 1fr 36px;gap:8px;align-items:start}
+    .criterion .close-crit{cursor:pointer;color:#ffdddd}
+    textarea{resize:vertical}
+    .totals{font-weight:700;color:var(--gold)}
+    .small-muted{font-size:.85rem;color:#bfb3a0}
+    .btn-gold{background:linear-gradient(90deg,#b5831b,#d4af37);color:#111;border:0}
+    .export-area{white-space:pre-wrap;background:#0b0b0c;padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);max-height:220px;overflow:auto}
+    @media (max-width:720px){ .criterion{grid-template-columns:1fr 100px; grid-auto-rows:auto} .criterion > *:nth-child(3){grid-column:1/-1} .criterion > *:nth-child(4){grid-column:1/-1} }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg sticky-top navbar-dark">
+    <div class="container-fluid px-5">
+      <a class="navbar-brand" href="admin.html">Hogwarts Hacks <span class="admin-badge">Admin</span></a>
+      <div class="d-flex align-items-center gap-3">
+        <a href="admin.html" class="btn btn-sm btn-outline-warning">Dashboard</a>
+        <a href="login.html" class="btn btn-sm btn-outline-secondary" onclick="logout()">Logout</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container" style="padding-top:30px">
+    <div class="row mb-4">
+      <div class="col-12">
+        <h1>Evaluator Admin — Review Entry</h1>
+        <p class="small-muted">Select a team, add marks and feedback for three review rounds. You can add multiple criteria per round. Data is stored in your browser and can be exported.</p>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-lg-6">
+        <div class="card p-3">
+          <div class="mb-3">
+            <label for="teamSelect">Team</label>
+            <select id="teamSelect" class="form-select" aria-label="Select team"></select>
+          </div>
+
+          <div id="rounds">
+            <!-- Rounds will be injected here -->
+          </div>
+
+          <div class="d-flex gap-2 mt-3">
+            <button id="saveBtn" class="btn btn-gold">Save Review</button>
+            <button id="clearBtn" class="btn btn-secondary">Clear</button>
+            <button id="exportBtn" class="btn btn-outline-light">Export JSON</button>
+          </div>
+
+          <div class="mt-3 small-muted">Saved reviews are stored in your browser (localStorage) — use Export to download JSON.</div>
+        </div>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="card p-3">
+          <h2>Saved / Export</h2>
+          <div class="mb-2 small-muted">Current review (JSON)</div>
+          <div id="exportArea" class="export-area">No review selected.</div>
+          <div class="mt-3 d-flex gap-2">
+            <button id="downloadJson" class="btn btn-gold">Download JSON</button>
+            <button id="downloadCsv" class="btn btn-outline-light">Download Excel (3 Sheets)</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+<script>
+// Get API base URL
+function getApiBaseUrl() {
+  const protocol = window.location.protocol;
+  const hostname = window.location.hostname;
+  const port = window.location.port;
+  const fullHost = window.location.host;
+
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return `http://localhost:5000/api`;
+  }
+
+  if (hostname.includes('devtunnels.ms')) {
+    // If hostname contains -5000, Flask is serving from same tunnel
+    // Use same protocol and host (no port needed, tunnel handles routing)
+    if (hostname.includes('-5000')) {
+      return `${protocol}//${hostname}/api`;
+    } else {
+      // Frontend on different tunnel, try to construct backend URL
+      // Or use same origin if Flask serves both
+      return `${protocol}//${hostname}${port ? ':' + port : ''}/api`;
+    }
+  }
+
+  // For port forwarding or other external access
+  // Use same protocol as frontend, backend on port 5000
+  return `${protocol}//${hostname}:5000/api`;
+}
+
+const API_BASE_URL = getApiBaseUrl();
+
+// Load teams from API (only approved teams)
+let teams = [];
+async function loadTeams() {
+  try {
+    const apiUrl = `${API_BASE_URL}/admin/teams`;
+    console.log('Loading teams from:', apiUrl);
+    console.log('Current page URL:', window.location.href);
+    
+    const response = await fetch(apiUrl, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      mode: 'cors',
+      credentials: 'omit'
+    });
+    
+    console.log('Response status:', response.status, response.statusText);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('HTTP Error:', response.status, errorText);
+      throw new Error(`HTTP ${response.status}: ${errorText || response.statusText}`);
+    }
+    
+    const data = await response.json();
+    console.log('Teams response:', data);
+    
+    if (data.success && data.teams) {
+      teams = data.teams.map(t => ({ id: t.id.toString(), name: `${t.team_name} (${t.house})` }));
+      console.log('Mapped teams:', teams);
+      const teamSelect = document.getElementById('teamSelect');
+      teamSelect.innerHTML = '<option value="">Select a team...</option>';
+      teams.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t.id;
+        opt.textContent = t.name;
+        teamSelect.appendChild(opt);
+      });
+      
+      // Initialize with first team if available
+      if (teams.length > 0) {
+        loadDraft(teams[0].id);
+      }
+      render(); // Always render the 3 rounds, even if no teams
+    } else {
+      console.error('No teams in response or error:', data);
+      if (data.error) {
+        alert(`Error: ${data.error}`);
+      }
+      // No teams loaded, but still show the 3 rounds
+      render();
+    }
+  } catch (error) {
+    console.error('Error loading teams:', error);
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      apiUrl: `${API_BASE_URL}/admin/teams`,
+      currentUrl: window.location.href
+    });
+    alert(`Error loading teams: ${error.message}\n\nPlease check:\n1. Backend server is running\n2. API URL is correct\n3. Check browser console (F12) for details`);
+    // Even on error, show the 3 rounds
+    render();
+  }
+}
+
+const teamSelect = document.getElementById('teamSelect');
+
+// Structure to hold review data
+function emptyRound(){ return { criteria: [] }; }
+function emptyReview(){ return { teamId: teams.length > 0 ? teams[0].id : '', rounds: [emptyRound(), emptyRound(), emptyRound()], meta: { evaluator: '', timestamp: null } }; }
+
+let current = emptyReview();
+
+const roundsContainer = document.getElementById('rounds');
+
+function render(){
+  teamSelect.value = current.teamId;
+  roundsContainer.innerHTML = '';
+  current.rounds.forEach((rnd, idx) => {
+    const r = document.createElement('div'); r.className = 'mb-3';
+    r.innerHTML = `<div class="d-flex justify-content-between align-items-center mb-2">
+      <div><label class="mb-0">Round ${idx+1}</label><div class="small-muted">Add criteria, marks and feedback</div></div>
+      <div><button class="btn btn-sm btn-outline-light add-crit" data-round="${idx}">+ Add criterion</button></div>
+    </div>
+    <div class="round-box" data-round="${idx}"></div>
+    <div class="mt-2 d-flex justify-content-between align-items-center">
+      <div class="totals">Total: <span class="total-val">0</span></div>
+      <button class="btn btn-sm btn-gold submit-round" data-round="${idx}">Submit Review ${idx+1}</button>
+    </div>`;
+    roundsContainer.appendChild(r);
+
+    const box = r.querySelector('.round-box');
+    // render criteria
+    if(rnd.criteria.length===0){
+      const p = document.createElement('div'); p.className='small-muted'; p.textContent='No criteria yet. Click "Add criterion".'; box.appendChild(p);
+    }
+    rnd.criteria.forEach((cIdx, cpos) => {
+      // Each criterion is an object {name, marks, feedback}
+    });
+    rnd.criteria.forEach((crit, cpos)=>{
+      const el = document.createElement('div'); el.className = 'criterion mb-2';
+      el.innerHTML = `
+        <input class="form-control crit-name" placeholder="Criterion (e.g., Innovation)" value="${escapeHtml(crit.name||'')}">
+        <input type="number" min="0" class="form-control crit-marks" placeholder="Marks" value="${crit.marks||''}">
+        <textarea class="form-control crit-feedback" rows="2" placeholder="Feedback">${escapeHtml(crit.feedback||'')}</textarea>
+        <div class="text-end"><button class="btn btn-sm btn-danger close-crit" title="Remove">✕</button></div>
+      `;
+      // remove button
+      el.querySelector('.close-crit').addEventListener('click', ()=>{ current.rounds[idx].criteria.splice(cpos,1); render(); });
+      // update inputs
+      el.querySelector('.crit-name').addEventListener('input', e=>{ current.rounds[idx].criteria[cpos].name = e.target.value; saveDraft(); updateExportArea(); });
+      el.querySelector('.crit-marks').addEventListener('input', e=>{ 
+        const v = parseFloat(e.target.value) || 0;
+        current.rounds[idx].criteria[cpos].marks = v;
+        // Update total for this specific round only
+        updateTotalsForElement(r);
+        saveDraft(); 
+        updateExportArea(); 
+      });
+      el.querySelector('.crit-feedback').addEventListener('input', e=>{ current.rounds[idx].criteria[cpos].feedback = e.target.value; saveDraft(); updateExportArea(); });
+      box.appendChild(el);
+    });
+    updateTotalsForElement(r);
+  });
+  updateExportArea();
+}
+
+function updateTotals(){
+  document.querySelectorAll('.round-box').forEach((box)=>{
+    const parent = box.parentElement;
+    updateTotalsForElement(parent);
+  });
+}
+
+function updateTotalsForElement(parent){
+  const roundBox = parent.querySelector('.round-box');
+  if (!roundBox) return;
+  
+  const roundIdx = parseInt(roundBox.dataset.round, 10);
+  if (isNaN(roundIdx)) return;
+  
+  // Calculate total for this specific round only
+  const total = (current.rounds[roundIdx].criteria || []).reduce((sum, crit) => {
+    const marks = parseFloat(crit.marks) || 0;
+    return sum + marks;
+  }, 0);
+  
+  const totalValEl = parent.querySelector('.total-val');
+  if (totalValEl) {
+    totalValEl.textContent = total;
+  }
+}
+
+function addCriterion(roundIdx){
+  current.rounds[roundIdx].criteria.push({ name:'', marks:0, feedback:'' }); render();
+}
+
+// helpers
+function escapeHtml(s){ return (s||'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'); }
+
+// wire events
+teamSelect.addEventListener('change', ()=>{ current.teamId = teamSelect.value; saveDraft(); updateExportArea(); });
+
+// delegate add criterion buttons
+roundsContainer.addEventListener('click', e=>{
+  const add = e.target.closest('.add-crit'); if(add){ addCriterion(parseInt(add.dataset.round,10)); }
+});
+
+// Save/load to localStorage
+const STORAGE_KEY = 'hogwarts_reviews_v1';
+function saveDraft(){
+  current.meta.timestamp = new Date().toISOString();
+  localStorage.setItem(STORAGE_KEY+'_'+current.teamId, JSON.stringify(current));
+}
+
+function loadDraft(teamId){
+  const raw = localStorage.getItem(STORAGE_KEY+'_'+teamId);
+  if(raw){ 
+    try{ 
+      const obj = JSON.parse(raw); 
+      current = obj;
+      // Ensure marks are numbers, not strings (from JSON parsing)
+      current.rounds.forEach(round => {
+        if (round.criteria) {
+          round.criteria.forEach(crit => {
+            if (typeof crit.marks === 'string') {
+              crit.marks = parseFloat(crit.marks) || 0;
+            } else if (crit.marks === null || crit.marks === undefined) {
+              crit.marks = 0;
+            }
+          });
+        }
+      });
+      return;
+    }catch(e){
+      console.error('Error parsing draft:', e);
+    }
+  }
+  current = emptyReview(); 
+  current.teamId = teamId; // default rounds empty
+}
+
+teamSelect.addEventListener('change', ()=>{ loadDraft(teamSelect.value); render(); });
+
+// Submit individual round
+roundsContainer.addEventListener('click', async e=>{
+  const submitBtn = e.target.closest('.submit-round');
+  if(submitBtn){
+    const roundIdx = parseInt(submitBtn.dataset.round, 10);
+    if (!current.teamId) {
+      alert('Please select a team first.');
+      return;
+    }
+    
+    const round = current.rounds[roundIdx];
+    const totalMarks = (round.criteria || []).reduce((s, c) => s + (parseFloat(c.marks) || 0), 0);
+    const combinedFeedback = (round.criteria || []).map(c => 
+      `${c.name || 'Criterion'}: ${c.feedback || 'No feedback'}`
+    ).join('\n\n');
+    
+    if (round.criteria.length === 0) {
+      alert('Please add at least one criterion before submitting.');
+      return;
+    }
+    
+    try {
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Submitting...';
+      
+      const response = await fetch(`${API_BASE_URL}/admin/review-marks`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          team_id: parseInt(current.teamId),
+          review_number: roundIdx + 1,
+          marks: totalMarks,
+          feedback: combinedFeedback || 'No feedback provided',
+          criteria: round.criteria || []
+        })
+      });
+      
+      const data = await response.json();
+      if (response.ok && data.success) {
+        // Reset marks to 0 but keep criteria names and feedback
+        round.criteria.forEach(crit => {
+          crit.marks = 0;
+        });
+        saveDraft();
+        render(); // Re-render to show reset marks
+        
+        // Show appropriate message based on whether it was an update or new entry
+        const message = data.is_update 
+          ? `Review ${roundIdx + 1} updated successfully! (Previous review was updated)`
+          : `Review ${roundIdx + 1} submitted successfully!`;
+        alert(message);
+      } else {
+        alert(data.error || 'Error submitting review. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error submitting review:', error);
+      alert('Error submitting review. Please check your connection and try again.');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = `Submit Review ${roundIdx + 1}`;
+    }
+  }
+});
+
+// Buttons
+document.getElementById('saveBtn').addEventListener('click', ()=>{ saveDraft(); alert('Saved locally for team'); });
+document.getElementById('clearBtn').addEventListener('click', ()=>{ if(confirm('Clear this review for the selected team?')){ localStorage.removeItem(STORAGE_KEY+'_'+current.teamId); loadDraft(current.teamId); render(); } });
+
+// Export area and downloads
+const exportArea = document.getElementById('exportArea');
+function updateExportArea(){ exportArea.textContent = JSON.stringify(current, null, 2); }
+
+document.getElementById('exportBtn').addEventListener('click', ()=>{ updateExportArea(); alert('Review rendered in the right pane as JSON — use Download to save.'); });
+
+document.getElementById('downloadJson').addEventListener('click', ()=>{
+  const data = JSON.stringify(current, null, 2); const blob=new Blob([data],{type:'application/json'});
+  const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=(current.teamId||'review') + '.json'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+});
+
+document.getElementById('downloadCsv').addEventListener('click', async ()=>{
+  try {
+    const response = await fetch(`${API_BASE_URL}/admin/review-marks/export`);
+    
+    if (!response.ok) {
+      // If not Excel, try JSON fallback
+      const data = await response.json();
+      if (!data.success) {
+        alert('Error fetching review data.');
+        return;
+      }
+      
+      // Fallback: Create CSV with 3 sections
+      let csvContent = '';
+      function createReviewSheet(reviewNumber, reviews) {
+        if (!reviews || reviews.length === 0) {
+          return `=== REVIEW ${reviewNumber} ===\nTeam Name,Total Marks\n\n`;
+        }
+        const allCriteria = new Set();
+        reviews.forEach(review => {
+          if (review.criteria && review.criteria.length > 0) {
+            review.criteria.forEach(crit => {
+              if (crit.name) allCriteria.add(crit.name);
+            });
+          }
+        });
+        const criteriaList = Array.from(allCriteria);
+        let header = 'Team Name';
+        criteriaList.forEach(crit => {
+          header += `,"${crit.replace(/"/g, '""')}"`;
+        });
+        header += ',Total Marks\n';
+        let rows = '';
+        reviews.forEach(review => {
+          let row = `"${review.team_name.replace(/"/g, '""')}"`;
+          criteriaList.forEach(critName => {
+            const crit = (review.criteria || []).find(c => c.name === critName);
+            const marks = crit ? (crit.marks || 0) : 0;
+            row += `,"${marks}"`;
+          });
+          row += `,"${review.total_marks || 0}"\n`;
+          rows += row;
+        });
+        return `=== REVIEW ${reviewNumber} ===\n${header}${rows}\n`;
+      }
+      csvContent += createReviewSheet(1, data.data[1] || []);
+      csvContent += createReviewSheet(2, data.data[2] || []);
+      csvContent += createReviewSheet(3, data.data[3] || []);
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'review_marks.csv';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      return;
+    }
+    
+    // Download Excel file
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'review_marks.xlsx';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error('Error downloading file:', error);
+    alert('Error downloading file. Please try again.');
+  }
+});
+
+// Check admin session
+window.addEventListener('DOMContentLoaded', () => {
+  const isAdmin = sessionStorage.getItem('isAdmin') === 'true';
+  if (!isAdmin) {
+    window.location.href = '/admin-login';
+  }
+});
+
+function logout() {
+  sessionStorage.removeItem('isAdmin');
+  sessionStorage.removeItem('userName');
+  window.location.href = '/admin-login';
+}
+
+// Initialize - load teams first
+loadTeams();
+
+</script>
+</body>
+</html>

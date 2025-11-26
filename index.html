@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Problem Statements - Hogwarts Hackathon</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Crimson+Text:ital,wght@0,400;1,400&family=Pinyon+Script&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --gold: #d4af37;
+            --bg-dark: #0b0b0b;
+            --card-bg: rgba(20, 20, 20, 0.8);
+            --text-grey: #a0a0a0;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            background: radial-gradient(circle at center, #1f1f35 0%, #000000 100%), url('https://www.transparenttextures.com/patterns/stardust.png');
+            background-attachment: fixed;
+            color: #eee;
+            min-height: 100vh;
+            overflow-x: hidden;
+            cursor: none; /* Hide default cursor for wand */
+        }
+
+        /* --- WAND CURSOR (Desktop) --- */
+        @media (min-width: 992px) {
+            *, html, body, a, button, input, label, select { cursor: none !important; }
+            #wand { display: flex !important; }
+        }
+        #wand { 
+            position: fixed; top: 0; left: 0; 
+            width: 50px; height: auto; 
+            pointer-events: none; z-index: 10000; will-change: transform; 
+            transform-origin: top left; 
+            filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.6)) drop-shadow(2px 3px 6px rgba(0,0,0,0.95)); 
+            display: none; 
+            animation: wandGlow 2s ease-in-out infinite;
+        }
+        #wand img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        @keyframes wandGlow {
+            0%, 100% { filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.6)) drop-shadow(2px 3px 6px rgba(0,0,0,0.95)); }
+            50% { filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.8)) drop-shadow(2px 3px 8px rgba(0,0,0,0.95)) drop-shadow(0 0 20px rgba(255, 255, 100, 0.4)); }
+        }
+        
+        .cursor-trail {
+            position: fixed; width: 3px; height: 3px; background: var(--gold); border-radius: 50%; pointer-events: none; z-index: 9999;
+            animation: fade-trail 0.5s linear forwards; box-shadow: 0 0 5px var(--gold); display: none;
+        }
+        @media (min-width: 992px) { .cursor-trail { display: block; } }
+        @keyframes fade-trail { 0% { opacity: 0.8; transform: scale(1); } 100% { opacity: 0; transform: scale(0.2) translate(0, 10px); } }
+
+        /* --- NAVBAR --- */
+        .navbar { 
+            background: rgba(10, 10, 10, 0.9); 
+            border-bottom: 1px solid rgba(212, 175, 55, 0.3); 
+            backdrop-filter: blur(10px); 
+        }
+        .navbar-brand, .nav-link { font-family: 'Cinzel Decorative'; color: var(--gold); transition: 0.3s; }
+        .nav-link:hover { color: #fff; text-shadow: 0 0 15px var(--gold); }
+        .user-profile { font-family: 'Crimson Text'; color: #ccc; font-style: italic; }
+
+        /* --- HERO SECTION --- */
+        .hero-section {
+            text-align: center;
+            padding: 80px 20px 40px;
+        }
+        .hero-title {
+            font-family: 'Cinzel Decorative';
+            font-size: 3.5rem;
+            color: var(--gold);
+            text-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+            margin-bottom: 10px;
+        }
+        .hero-subtitle {
+            font-family: 'Pinyon Script';
+            font-size: 2rem;
+            color: #ccc;
+        }
+
+        /* --- FILTER BUTTONS --- */
+        .filter-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 50px;
+        }
+
+        .filter-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid #444;
+            color: #aaa;
+            padding: 10px 25px;
+            border-radius: 30px;
+            font-family: 'Cinzel Decorative';
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .filter-btn:hover, .filter-btn.active {
+            background: var(--gold);
+            color: #000;
+            border-color: var(--gold);
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+        }
+
+        /* --- PROBLEM CARDS GRID --- */
+        .problem-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            padding-bottom: 60px;
+        }
+
+        .magic-card {
+            background: var(--card-bg);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 8px;
+            padding: 25px;
+            position: relative;
+            transition: all 0.4s ease;
+            display: flex;
+            flex-direction: column;
+            backdrop-filter: blur(5px);
+        }
+
+        .magic-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--gold);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(212, 175, 55, 0.05);
+        }
+
+        /* Card Header */
+        .card-domain {
+            position: absolute; top: 15px; right: 15px;
+            font-family: 'Cinzel Decorative';
+            font-size: 0.7rem;
+            color: var(--gold);
+            border: 1px solid var(--gold);
+            padding: 2px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .card-title {
+            font-family: 'Cinzel Decorative';
+            font-size: 1.4rem;
+            color: #fff;
+            margin-top: 10px;
+            margin-bottom: 15px;
+            line-height: 1.3;
+        }
+
+        .card-desc {
+            font-family: 'Crimson Text';
+            font-size: 1.1rem;
+            color: var(--text-grey);
+            flex-grow: 1;
+            margin-bottom: 20px;
+        }
+
+        /* Stats & Footer */
+        .card-stats {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 15px;
+            margin-top: auto;
+        }
+
+        .participant-count {
+            display: flex;
+            align-items: center;
+            color: #888;
+            font-family: 'Crimson Text';
+            font-size: 1rem;
+        }
+        .participant-count i { margin-right: 8px; color: var(--gold); }
+
+        .select-btn {
+            background: transparent;
+            color: var(--gold);
+            border: 1px solid var(--gold);
+            padding: 5px 15px;
+            font-family: 'Cinzel Decorative';
+            font-size: 0.9rem;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+        .select-btn:hover {
+            background: var(--gold);
+            color: #000;
+            box-shadow: 0 0 10px var(--gold);
+        }
+        
+        /* Animation for filtering */
+        .fade-in { animation: fadeIn 0.5s ease forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    </style>
+</head>
+<body>
+
+    <div id="wand"><img src="assets/wand.png" alt="Wand cursor"></div>
+
+    <nav class="navbar navbar-expand-lg sticky-top navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="home.html">Hogwarts Hacks</a>
+            <div class="d-flex align-items-center">
+                <span class="user-profile me-3 d-none d-md-block" id="welcomeText">Welcome</span>
+                <a href="login.html" class="btn btn-sm btn-outline-warning" style="font-family: 'Cinzel Decorative'; border-color: var(--gold); color: var(--gold);">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="hero-section">
+            <h1 class="hero-title">The Quest Board</h1>
+            <p class="hero-subtitle">"Choose your challenge wisely"</p>
+        </div>
+
+        <div class="filter-container">
+            <button class="filter-btn active" onclick="filterSelection('all')">All Realms</button>
+            <button class="filter-btn" onclick="filterSelection('web')"><i class="fa-solid fa-spider me-2"></i>Web Wizardry</button>
+            <button class="filter-btn" onclick="filterSelection('ai')"><i class="fa-solid fa-brain me-2"></i>Artificial Intellect</button>
+            <button class="filter-btn" onclick="filterSelection('app')"><i class="fa-solid fa-mobile-screen me-2"></i>Mobile Magic</button>
+            <button class="filter-btn" onclick="filterSelection('blockchain')"><i class="fa-solid fa-link me-2"></i>Chain of Secrets</button>
+        </div>
+
+        <div class="problem-grid" id="problemContainer">
+            <!-- Problem statements will be loaded dynamically -->
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // --- WAND CURSOR LOGIC ---
+        const wand = document.getElementById('wand');
+        const isDesktop = window.matchMedia("(min-width: 992px)");
+
+        if (isDesktop.matches) {
+            window.addEventListener('mousemove', (e) => {
+                const x = e.clientX;
+                const y = e.clientY;
+                const angle = 15 * (Math.PI / 180); // Convert to radians
+                wand.style.transform = `translate(${x}px, ${y}px) rotate(${15}deg)`;
+                
+                // Create trail particles at wand tip
+                const wandRect = wand.getBoundingClientRect();
+                const tipRelX = (wandRect.width / 2) - 20; // Move more to the left
+                const tipRelY = -5; // Move down slightly
+                
+                // Apply rotation transformation around origin (0,0)
+                const tipX = wandRect.left + tipRelX * Math.cos(angle) - tipRelY * Math.sin(angle);
+                const tipY = wandRect.top + tipRelX * Math.sin(angle) + tipRelY * Math.cos(angle);
+                
+                const trail = document.createElement('div');
+                trail.classList.add('cursor-trail');
+                trail.style.left = `${tipX}px`;
+                trail.style.top = `${tipY}px`;
+                document.body.appendChild(trail);
+                setTimeout(() => trail.remove(), 500);
+            });
+        }
+
+        // Check if logged in
+        const teamId = sessionStorage.getItem('teamId');
+        const teamName = sessionStorage.getItem('teamName');
+        const house = sessionStorage.getItem('house');
+        
+        if (!teamId || !teamName) {
+            window.location.href = 'login.html';
+        } else {
+            document.getElementById('welcomeText').textContent = `Welcome, ${teamName}`;
+        }
+        
+        // Load problem statements
+        async function loadProblemStatements() {
+            try {
+                const response = await fetch(`/api/admin/problem-statements?house=${house || ''}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const container = document.getElementById('problemContainer');
+                    container.innerHTML = '';
+                    
+                    if (data.statements.length === 0) {
+                        container.innerHTML = '<p style="color: #aaa; text-align: center; grid-column: 1/-1; font-family: \'Crimson Text\';">No problem statements available yet.</p>';
+                        return;
+                    }
+                    
+                    // Get current team selection
+                    let currentSelectedId = null;
+                    try {
+                        const teamResponse = await fetch(`/api/teams/${teamId}`);
+                        const teamData = await teamResponse.json();
+                        if (teamData.success && teamData.team.selected_problem_statement_id) {
+                            currentSelectedId = teamData.team.selected_problem_statement_id;
+                            sessionStorage.setItem('selectedProblemId', currentSelectedId);
+                        }
+                    } catch (e) {
+                        console.error('Error fetching team data:', e);
+                    }
+                    
+                    data.statements.forEach(stmt => {
+                        const card = document.createElement('div');
+                        card.className = `magic-card filter-item ${stmt.domain}`;
+                        card.setAttribute('data-stmt-id', stmt.id);
+                        
+                        // Check if this team has already selected this statement
+                        const isSelected = currentSelectedId && parseInt(currentSelectedId) === stmt.id;
+                        const hasAnySelection = currentSelectedId !== null; // Team has selected any statement
+                        
+                        let buttonText = 'Select Quest';
+                        let buttonClass = 'select-btn';
+                        let buttonDisabled = false;
+                        let buttonStyle = '';
+                        
+                        if (isSelected) {
+                            buttonText = 'Applied ✓';
+                            buttonClass = 'select-btn';
+                            card.style.border = '2px solid var(--gold)';
+                            card.style.boxShadow = '0 0 20px rgba(212, 175, 55, 0.5)';
+                            buttonDisabled = true;
+                            buttonStyle = 'opacity:0.6;cursor:not-allowed;';
+                        } else if (hasAnySelection) {
+                            // Team has selected a different statement - disable all other buttons
+                            buttonText = 'Already Applied';
+                            buttonDisabled = true;
+                            buttonStyle = 'opacity:0.4;cursor:not-allowed;background:transparent;border-color:#666;color:#666;';
+                        }
+                        
+                        card.innerHTML = `
+                            <span class="card-domain">${stmt.domain.charAt(0).toUpperCase() + stmt.domain.slice(1)}</span>
+                            <h3 class="card-title">${stmt.title}</h3>
+                            <p class="card-desc">${stmt.description}</p>
+                            <div class="card-stats">
+                                <span class="participant-count" title="Wizards opted"><i class="fa-solid fa-users"></i> ${stmt.selected_count || 0} Chosen</span>
+                                <button class="${buttonClass}" onclick="selectProblemStatement(${stmt.id}, '${stmt.house || ''}')" ${buttonDisabled ? `disabled style="${buttonStyle}"` : ''}>${buttonText}</button>
+                            </div>
+                        `;
+                        container.appendChild(card);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading problem statements:', error);
+            }
+        }
+        
+        // Load team's current selection
+        async function loadTeamSelection() {
+            if (!teamId) return null;
+            
+            try {
+                const response = await fetch(`/api/teams/${teamId}`);
+                const data = await response.json();
+                if (data.success && data.team.selected_problem_statement_id) {
+                    sessionStorage.setItem('selectedProblemId', data.team.selected_problem_statement_id);
+                    return data.team.selected_problem_statement_id;
+                }
+            } catch (error) {
+                console.error('Error loading team selection:', error);
+            }
+            return null;
+        }
+        
+        // Select problem statement (Apply for quest)
+        async function selectProblemStatement(stmtId, stmtHouse) {
+            if (!teamId) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // Check if already selected this exact statement
+            const currentSelected = sessionStorage.getItem('selectedProblemId');
+            if (currentSelected && parseInt(currentSelected) === stmtId) {
+                alert('You have already applied for this problem statement! You cannot apply again.');
+                return;
+            }
+            
+            // Prevent any resubmission - if already selected any statement, don't allow change
+            if (currentSelected) {
+                alert('You have already applied for a problem statement. You cannot change your selection or apply again.');
+                return;
+            }
+            
+            // First time application
+            if (confirm('Are you sure you want to apply for this problem statement? This action cannot be undone.')) {
+                try {
+                    const response = await fetch('/api/select-problem-statement', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            team_id: parseInt(teamId),
+                            problem_statement_id: stmtId
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    if (data.success) {
+                        alert('Successfully applied for this problem statement!');
+                        // Store selected problem ID
+                        sessionStorage.setItem('selectedProblemId', stmtId);
+                        // Update house if changed
+                        if (data.team.house !== house) {
+                            sessionStorage.setItem('house', data.team.house);
+                            location.reload();
+                        } else {
+                            loadProblemStatements();
+                        }
+                    } else {
+                        alert(data.error || 'Failed to apply for problem statement');
+                    }
+                } catch (error) {
+                    console.error('Error selecting problem statement:', error);
+                    alert('Error applying for problem statement. Please try again.');
+                }
+            }
+        }
+        
+        // Load on page load
+        loadTeamSelection().then(() => {
+            loadProblemStatements();
+        });
+        
+        // --- FILTER LOGIC ---
+        function filterSelection(category) {
+            const cards = document.getElementsByClassName("filter-item");
+            const buttons = document.getElementsByClassName("filter-btn");
+
+            // Update Active Button
+            for (let i = 0; i < buttons.length; i++) {
+                buttons[i].classList.remove("active");
+                if (buttons[i].innerText.toLowerCase().includes(category) || 
+                   (category === 'all' && buttons[i].innerText.includes('All'))) {
+                    buttons[i].classList.add("active");
+                }
+            }
+            // Add active class manually to clicked button (simplified)
+            event.currentTarget.classList.add("active");
+
+            // Filter Cards
+            for (let i = 0; i < cards.length; i++) {
+                cards[i].style.display = "none";
+                cards[i].classList.remove("fade-in");
+                
+                if (category === "all" || cards[i].classList.contains(category)) {
+                    cards[i].style.display = "flex";
+                    // Small delay to trigger animation reflow
+                    setTimeout(() => {
+                        cards[i].classList.add("fade-in");
+                    }, 10);
+                }
+            }
+        }
+    </script>
+</body>
+</html>

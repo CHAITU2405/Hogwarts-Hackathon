@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Identify Yourself - Hogwarts Hackathon</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Crimson+Text:ital,wght@0,400;1,400&family=Pinyon+Script&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --bg-dark: #050505;
+            --parchment: #d1c4a9;
+            --ink: #2a1b15;
+            --gold: #d4af37;
+        }
+
+        body {
+            margin: 0; padding: 0;
+            width: 100vw; height: 100vh;
+            background-color: var(--bg-dark);
+            background-image: radial-gradient(circle at 50% 50%, #1a1a1a 0%, #000 100%);
+            overflow: hidden;
+            display: flex; flex-direction: column;
+        }
+
+        /* --- NAVBAR --- */
+        .navbar { 
+            background-color: rgba(10, 10, 10, 0.9); 
+            border-bottom: 1px solid rgba(212, 175, 55, 0.3); 
+            padding: 1rem 0; 
+            z-index: 100; 
+            backdrop-filter: blur(10px); 
+            flex-shrink: 0;
+        }
+        .navbar-brand, .nav-link { font-family: 'Cinzel Decorative'; color: var(--gold); transition: 0.3s; }
+        .nav-link:hover { color: #fff; text-shadow: 0 0 15px var(--gold); }
+        .navbar-toggler-icon { filter: invert(1); }
+
+        /* --- WRAPPER --- */
+        .content-wrapper {
+            flex-grow: 1;
+            display: flex; align-items: center; justify-content: center;
+            perspective: 1000px;
+            position: relative; width: 100%;
+        }
+
+        /* --- WAND CURSOR --- */
+        @media (min-width: 992px) {
+            *, html, body, input, button { cursor: none !important; }
+            #wand { display: flex !important; }
+        }
+        #wand { 
+            position: fixed; top: 0; left: 0; 
+            width: 50px; height: auto; 
+            pointer-events: none; z-index: 10000; will-change: transform; 
+            transform-origin: top left; 
+            filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.6)) drop-shadow(2px 3px 6px rgba(0,0,0,0.95)); 
+            display: none; 
+            animation: wandGlow 2s ease-in-out infinite;
+        }
+        #wand img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        @keyframes wandGlow {
+            0%, 100% { filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.6)) drop-shadow(2px 3px 6px rgba(0,0,0,0.95)); }
+            50% { filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.8)) drop-shadow(2px 3px 8px rgba(0,0,0,0.95)) drop-shadow(0 0 20px rgba(255, 255, 100, 0.4)); }
+        }
+        
+        .cursor-trail {
+            position: fixed; width: 3px; height: 3px; background: var(--gold); border-radius: 50%; pointer-events: none; z-index: 9999;
+            animation: fade-trail 0.5s linear forwards; box-shadow: 0 0 5px var(--gold); display: none;
+        }
+        @media (min-width: 992px) { .cursor-trail { display: block; } }
+        @keyframes fade-trail { 0% { opacity: 0.8; transform: scale(1); } 100% { opacity: 0; transform: scale(0.2) translate(0, 10px); } }
+
+        /* --- THE MAP --- */
+        .map-container {
+            position: relative;
+            width: 360px; height: 500px;
+            transform-style: preserve-3d;
+            transition: transform 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+            z-index: 10;
+        }
+
+        /* FLAPS */
+        .map-flap {
+            position: absolute; top: 0; 
+            width: 50%; height: 100%;
+            background-color: var(--parchment);
+            background-image: url('https://www.transparenttextures.com/patterns/aged-paper.png');
+            border: 1px solid #8d6e63;
+            z-index: 20;
+            transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+            backface-visibility: hidden;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            box-shadow: inset 0 0 40px rgba(62, 39, 35, 0.4);
+            filter: url(#wrinkle-paper); 
+        }
+
+        .flap-left { left: 0; transform-origin: left center; border-right: 1px solid rgba(0,0,0,0.2); }
+        .flap-right { right: 0; transform-origin: right center; border-left: 1px solid rgba(0,0,0,0.2); }
+
+        .flap-content {
+            font-family: 'Cinzel Decorative', cursive; color: var(--ink);
+            font-size: 1.5rem; text-align: center; opacity: 0.9;
+            padding: 10px; text-shadow: 1px 1px 0px rgba(255,255,255,0.2);
+        }
+        
+        .flap-sub { font-family: 'Crimson Text', serif; font-size: 0.9rem; font-style: italic; color: #5d4037; margin-top: 10px; }
+
+        /* INNER FORM */
+        .map-inner {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-color: #e6d3b3; 
+            background-image: url('https://www.transparenttextures.com/patterns/aged-paper.png');
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            padding: 30px;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5), inset 0 0 60px rgba(0,0,0,0.3);
+            z-index: 5;
+            filter: url(#wrinkle-paper) contrast(1.1);
+            overflow: hidden; 
+        }
+
+        .map-container:hover .flap-left, .map-container.open .flap-left { transform: rotateY(-180deg); }
+        .map-container:hover .flap-right, .map-container.open .flap-right { transform: rotateY(180deg); }
+        
+        /* FORM ELEMENTS */
+        .ink-title {
+            font-family: 'Cinzel Decorative', cursive; font-size: 1.8rem;
+            color: var(--ink); border-bottom: 2px solid var(--ink);
+            padding-bottom: 10px; margin-bottom: 40px; text-transform: uppercase;
+            position: relative; z-index: 10;
+        }
+
+        .ink-field { position: relative; width: 100%; margin-bottom: 35px; z-index: 10; }
+
+        .ink-input {
+            width: 100%; background: transparent; border: none;
+            border-bottom: 1px dashed rgba(62, 39, 35, 0.5);
+            font-family: 'Crimson Text', serif; 
+            font-size: 1.4rem; font-weight: 600;
+            color: var(--ink); padding: 5px 40px 5px 10px;
+            outline: none; transition: border-bottom 0.3s;
+        }
+
+        .ink-input::placeholder { color: transparent; }
+        
+        .ink-label {
+            position: absolute; left: 10px; top: 5px;
+            font-family: 'Cinzel Decorative'; font-size: 0.9rem;
+            color: rgba(62, 39, 35, 0.6); pointer-events: none;
+            transition: 0.3s ease all; text-transform: uppercase;
+        }
+
+        .ink-input:focus ~ .ink-label, .ink-input:valid ~ .ink-label {
+            top: -20px; font-size: 0.7rem; color: var(--ink); font-weight: bold;
+        }
+        .ink-input:focus { border-bottom: 2px solid var(--ink); }
+
+        /* SORTING HAT TOGGLE */
+        .password-toggle {
+            position: absolute; right: 0px; top: 0px;
+            background: none; border: none; padding: 5px;
+            color: rgba(62, 39, 35, 0.6); cursor: pointer;
+            z-index: 15; transition: all 0.3s;
+            font-size: 1.5rem;
+        }
+        .password-toggle:hover { color: var(--ink); transform: scale(1.1); }
+        .password-toggle.reveal-active { 
+            color: var(--gold); 
+            filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.6));
+            transform: scale(1.15) rotate(-5deg);
+        }
+
+        /* CENTERED KEY BUTTON */
+        .seal-btn {
+            width: 70px; height: 70px;
+            background: radial-gradient(circle at 30% 30%, #b71c1c, #7f0000);
+            border-radius: 50%; border: 2px dashed rgba(255,255,255,0.2);
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.4);
+            display: flex; align-items: center; justify-content: center;
+            color: rgba(0,0,0,0.3); font-size: 1.5rem;
+            cursor: none; transition: transform 0.2s;
+            margin: 20px auto 0 auto; z-index: 10; position: relative;
+        }
+        .seal-btn:hover { transform: scale(1.1) rotate(10deg); color: rgba(255,255,255,0.4); }
+        .seal-btn:active { transform: scale(0.95); }
+
+        /* SPARKLES */
+        .sparkle {
+            position: absolute; width: 4px; height: 4px;
+            background: #fff; border-radius: 50%; pointer-events: none;
+            animation: float-up 0.8s ease-out forwards; z-index: 100;
+        }
+        @keyframes float-up {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-40px) scale(0); }
+        }
+
+        /* UTILS */
+        .hint { position: absolute; bottom: 20px; color: #666; font-family: 'Cinzel Decorative'; font-size: 0.8rem; opacity: 0.5; z-index: 10; }
+        #lumos-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: radial-gradient(circle at var(--x) var(--y), rgba(255, 255, 255, 0.15), transparent 40%); pointer-events: none; opacity: 0; transition: opacity 0.5s; z-index: 2; }
+    </style>
+</head>
+<body>
+
+    <svg width="0" height="0" style="position: absolute;">
+        <filter id="wrinkle-paper" x="0%" y="0%" width="100%" height="100%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="4" result="noise" />
+            <feDiffuseLighting in="noise" lighting-color="#fff" surfaceScale="2">
+                <feDistantLight azimuth="45" elevation="60" />
+            </feDiffuseLighting>
+            <feComposite operator="in" in2="SourceGraphic" result="textured"/>
+            <feBlend mode="multiply" in="textured" in2="SourceGraphic"/>
+        </filter>
+    </svg>
+
+    <div id="wand"><img src="assets/wand.png" alt="Wand cursor"></div>
+    <div id="lumos-overlay"></div>
+
+    <nav class="navbar navbar-expand-lg sticky-top navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="main.html">Hogwarts Hacks</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"><span class="navbar-toggler-icon"></span></button>
+            <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+                <ul class="navbar-nav align-items-center">
+                    <li class="nav-item"><a class="nav-link" href="main.html">Great Hall</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Houses</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="content-wrapper">
+        <div class="map-container" id="map">
+            
+            <div class="map-flap flap-left">
+                <span class="flap-content">Hover or Click<br><span class="flap-sub">to open parchment</span></span>
+            </div>
+            <div class="map-flap flap-right">
+                <span class="flap-content">And Login<br><span class="flap-sub">to reveal secrets</span></span>
+            </div>
+
+            <div class="map-inner">
+                <h2 class="ink-title">Who Goes There?</h2>
+
+                <form id="magicForm" onsubmit="handleLogin(event)">
+                    
+                    <div class="ink-field">
+                        <input type="text" class="ink-input" id="username" required autocomplete="off">
+                        <label class="ink-label">Wizard Identity (Team Lead Name)</label>
+                    </div>
+
+                    <div class="ink-field">
+                        <input type="password" class="ink-input" id="password" required>
+                        <label class="ink-label">The Secret Spell (UTR)</label>
+                        
+                        <button type="button" class="password-toggle" id="toggleBtn" title="Reveal Password">
+                            <i class="fa-solid fa-hat-wizard" id="toggleIcon"></i>
+                        </button>
+                    </div>
+
+                    <div id="errorMessage" style="color: #c62828; font-family: 'Crimson Text'; text-align: center; margin-top: 10px; display: none;"></div>
+
+                    <button type="submit" class="seal-btn" title="Break Seal to Enter">
+                        <i class="fa-solid fa-key"></i>
+                    </button>
+
+                </form>
+                
+                <div class="hint">"I solemnly swear that I am up to no good."</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const wand = document.getElementById('wand');
+        const map = document.getElementById('map');
+        const lumosOverlay = document.getElementById('lumos-overlay');
+        const passwordInput = document.getElementById('password');
+        const toggleBtn = document.getElementById('toggleBtn');
+        const isDesktop = window.matchMedia("(min-width: 992px)");
+
+        // 1. WAND MOVEMENT
+        if (isDesktop.matches) {
+            window.addEventListener('mousemove', (e) => {
+                const x = e.clientX;
+                const y = e.clientY;
+                const angle = 15 * (Math.PI / 180); // Convert to radians
+                wand.style.transform = `translate(${x}px, ${y}px) rotate(${15}deg)`;
+                lumosOverlay.style.setProperty('--x', x + 'px');
+                lumosOverlay.style.setProperty('--y', y + 'px');
+                
+                // Create trail particles at wand tip
+                const wandRect = wand.getBoundingClientRect();
+                const tipRelX = (wandRect.width / 2) - 20; // Move more to the left
+                const tipRelY = -5; // Move down slightly
+                
+                // Apply rotation transformation around origin (0,0)
+                const tipX = wandRect.left + tipRelX * Math.cos(angle) - tipRelY * Math.sin(angle);
+                const tipY = wandRect.top + tipRelX * Math.sin(angle) + tipRelY * Math.cos(angle);
+                
+                const trail = document.createElement('div');
+                trail.classList.add('cursor-trail');
+                trail.style.left = `${tipX}px`;
+                trail.style.top = `${tipY}px`;
+                document.body.appendChild(trail);
+                setTimeout(() => trail.remove(), 500);
+            });
+        }
+
+        // 2. MAP UNFOLD
+        map.addEventListener('click', (e) => {
+            if (e.target.closest('input') || e.target.closest('button')) return;
+            map.classList.toggle('open');
+            if(map.classList.contains('open')) {
+                setTimeout(() => document.getElementById('username').focus(), 800);
+            }
+        });
+
+        // 3. SORTING HAT PASSWORD TOGGLE
+        toggleBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            
+            if (type === 'text') {
+                toggleBtn.classList.add('reveal-active');
+            } else {
+                toggleBtn.classList.remove('reveal-active');
+            }
+        });
+
+        // 4. SPARKLE EFFECT
+        const inputs = document.querySelectorAll('.ink-input');
+        inputs.forEach(input => {
+            input.addEventListener('input', (e) => {
+                if(!isDesktop.matches) return;
+                
+                for(let i=0; i<3; i++) {
+                    const rect = input.getBoundingClientRect();
+                    const sparkle = document.createElement('div');
+                    sparkle.classList.add('sparkle');
+                    const randomX = Math.random() * rect.width;
+                    sparkle.style.left = (rect.left + randomX) + 'px';
+                    sparkle.style.top = (rect.top + 25) + 'px';
+                    sparkle.style.background = Math.random() > 0.5 ? '#d4af37' : '#fff';
+                    document.body.appendChild(sparkle);
+                    setTimeout(() => sparkle.remove(), 800);
+                }
+
+                if(input.id === 'password') {
+                    const length = e.target.value.length;
+                    const opacity = Math.min(length * 0.05, 0.4);
+                    lumosOverlay.style.opacity = opacity;
+                }
+            });
+        });
+
+        passwordInput.addEventListener('blur', () => {
+            lumosOverlay.style.opacity = 0;
+        });
+
+        // Check if this is admin login (via URL parameter)
+        const urlParams = new URLSearchParams(window.location.search);
+        const isAdminLogin = urlParams.get('admin') === 'true' || window.location.pathname.includes('admin-login');
+        
+        // Update form labels if admin login
+        if (isAdminLogin) {
+            const title = document.querySelector('.ink-title');
+            if (title) title.textContent = 'Admin Access';
+            
+            const usernameLabel = document.querySelector('#username').parentElement.querySelector('.ink-label');
+            if (usernameLabel) {
+                usernameLabel.textContent = 'Admin Username';
+            }
+            
+            const passwordLabel = document.querySelector('#password').parentElement.querySelector('.ink-label');
+            if (passwordLabel) {
+                passwordLabel.textContent = 'Admin Password';
+            }
+            
+            const hint = document.querySelector('.hint');
+            if (hint) hint.textContent = '"Only those worthy may enter."';
+        }
+        
+        // Login form handler
+        async function handleLogin(event) {
+            event.preventDefault();
+            
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const errorDiv = document.getElementById('errorMessage');
+            
+            errorDiv.style.display = 'none';
+            
+            if (!username || !password) {
+                errorDiv.textContent = isAdminLogin ? 'Please enter both username and password' : 'Please enter both team name and UTR';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password,
+                        is_admin: isAdminLogin
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    if (data.is_admin) {
+                        // Admin login - redirect to admin page
+                        sessionStorage.setItem('isAdmin', 'true');
+                        sessionStorage.setItem('adminName', data.admin.name);
+                        window.location.href = 'admin.html';
+                    } else {
+                        // Team login - store team info and redirect to index page
+                        sessionStorage.setItem('teamId', data.team.id);
+                        sessionStorage.setItem('teamName', data.team.team_name);
+                        sessionStorage.setItem('house', data.team.house);
+                        sessionStorage.removeItem('isAdmin');
+                        window.location.href = 'index.html';
+                    }
+                } else {
+                    errorDiv.textContent = data.error || 'Login failed. Please check your credentials.';
+                    errorDiv.style.display = 'block';
+                }
+            } catch (error) {
+                errorDiv.textContent = 'Connection error. Please try again.';
+                errorDiv.style.display = 'block';
+                console.error('Login error:', error);
+            }
+        }
+    </script>
+</body>
+</html>

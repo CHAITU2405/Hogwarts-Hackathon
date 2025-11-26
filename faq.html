@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magical Hackathon - Chamber of Secrets</title>
+    <!-- Added Bootstrap for shared navbar -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Pinyon+Script&display=swap" rel="stylesheet">
+   
+    <style>
+        /* --- 1. THEME VARIABLES --- */
+        :root {
+            --gold: #d4af37;
+            --bg-dark: #0b0b0b;
+            --stick-color: #190404;
+            --parchment-bg: #d8c3a5; 
+            --faq-text: #1a0f0d;
+        }
+
+        html, body {
+            width: 100%; margin: 0; padding: 0;
+            overflow-x: hidden; 
+            background-color: var(--bg-dark);
+            cursor: none !important; 
+        }
+
+        /* --- 2. BACKGROUND --- */
+        #site-wrapper {
+            position: relative;
+            width: 100%;
+            min-height: 100vh;
+            background: radial-gradient(circle at center, #1f1f35 0%, #000000 100%), url('https://www.transparenttextures.com/patterns/stardust.png');
+            background-attachment: fixed;
+            padding-bottom: 50px;
+        }
+
+        /* --- 3. CUSTOM WAND --- */
+        @media (min-width: 992px) {
+            *, html, body, a, button, input, label, select { cursor: none !important; }
+            #wand { display: flex !important; }
+        }
+        
+        /* Cursor trail for wand */
+        .cursor-trail {
+            position: fixed;
+            width: 3px;
+            height: 3px;
+            background: var(--gold);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            animation: fade-trail 0.5s linear forwards;
+            box-shadow: 0 0 5px var(--gold);
+        }
+        @keyframes fade-trail {
+            0% { opacity: 0.8; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0.2) translate(0, 10px); }
+        }
+        
+        #wand { 
+            position: fixed; top: 0; left: 0; width: 50px; height: auto; 
+            pointer-events: none; z-index: 10000; 
+            will-change: transform; transform-origin: top left; 
+            filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.6)) drop-shadow(2px 3px 6px rgba(0,0,0,0.95)); 
+            display: none; 
+            animation: wandGlow 2s ease-in-out infinite;
+        }
+        #wand img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        @keyframes wandGlow {
+            0%, 100% { filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.6)) drop-shadow(2px 3px 6px rgba(0,0,0,0.95)); }
+            50% { filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.8)) drop-shadow(2px 3px 8px rgba(0,0,0,0.95)) drop-shadow(0 0 20px rgba(255, 255, 100, 0.4)); }
+        }
+
+        /* --- 4. HEADER --- */
+        .header-section {
+            margin-top: 50px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .harry-potter-title { 
+            font-family: 'Cinzel Decorative'; 
+            font-weight: 900; 
+            text-transform: uppercase; 
+            line-height: 1; 
+            color: #ffd700; 
+            font-size: 3rem; 
+            position: relative; 
+            z-index: 2;
+            text-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
+        }
+
+        /* --- 5. FAQ SCROLL COMPONENT (COMPACT) --- */
+        .faq-container {
+            width: 90%;
+            max-width: 600px; 
+            display: flex;
+            flex-direction: column;
+            gap: 25px; 
+            z-index: 5;
+            margin: 0 auto; /* re-center scroll list */
+        }
+
+        .scroll-item {
+            position: relative;
+            cursor: none; 
+            filter: drop-shadow(0 15px 25px rgba(0,0,0,0.6)); 
+            transition: transform 0.3s ease;
+        }
+        
+        .scroll-item:active { transform: scale(0.98); }
+
+        /* -- SCROLL HEADER (MODERATE TEXTURE) -- */
+        .scroll-head {
+            height: 50px;
+            background-color: var(--parchment-bg);
+            
+            /* UPDATED TEXTURE STACK:
+               1. Smoother SVG Noise (surfaceScale 2.5, opacity 0.5) - Subtler wrinkles
+               2. Linear Gradient for 3D Cylinder shading
+            */
+            background-image: 
+                url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='paperBump'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.04' numOctaves='3' result='noise'/%3E%3CfeDiffuseLighting in='noise' lighting-color='%23f5e6d3' surfaceScale='2.5'%3E%3CfeDistantLight azimuth='45' elevation='40'/%3E%3C/feDiffuseLighting%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23paperBump)' opacity='0.5'/%3E%3C/svg%3E"),
+                linear-gradient(to bottom, rgba(255,255,255,0.4) 0%, transparent 40%, rgba(0,0,0,0.2) 100%);
+            
+            background-size: 200px 200px, 100% 100%;
+            
+            display: flex; align-items: center; justify-content: center;
+            position: relative; z-index: 3; border-radius: 4px; padding: 0 40px;
+            
+            border: 1px solid rgba(0,0,0,0.2);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .question-text {
+            color: var(--faq-text);
+            font-family: 'Cinzel Decorative', cursive;
+            font-weight: 700;
+            font-size: 0.95rem; 
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            user-select: none;
+            /* White shadow helps text stand out on textured background */
+            text-shadow: 0 1px 0 rgba(255,255,255,0.6); 
+        }
+
+        /* -- Sticks -- */
+        .handle {
+            position: absolute; 
+            top: -7px; 
+            width: 22px; 
+            height: 64px; 
+            background-color: var(--stick-color); border-radius: 6px;
+            background: linear-gradient(90deg, #000000 0%, var(--stick-color) 30%, #3a1a1a 50%, var(--stick-color) 70%, #000000 100%);
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.9); z-index: 4;
+        }
+        .handle.left { left: -10px; }
+        .handle.right { right: -10px; }
+        
+        .handle::after, .handle::before {
+            content: ''; position: absolute; left: 2px; right: 2px; height: 3px;
+            background: linear-gradient(90deg, #8a6e1e, var(--gold), #8a6e1e);
+            border-radius: 2px;
+            box-shadow: 0 0 4px var(--gold);
+        }
+        .handle::before { top: 8px; }
+        .handle::after { bottom: 8px; }
+
+        /* -- Body (Smoother Wrinkles inside) -- */
+        .scroll-body {
+            background-color: var(--parchment-bg);
+            
+            /* Inside texture */
+            background-image: 
+                url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='paperBump'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.03' numOctaves='3' result='noise'/%3E%3CfeDiffuseLighting in='noise' lighting-color='%23f5e6d3' surfaceScale='1.8'%3E%3CfeDistantLight azimuth='45' elevation='50'/%3E%3C/feDiffuseLighting%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23paperBump)' opacity='0.6'/%3E%3C/svg%3E"),
+                radial-gradient(circle at center, transparent 40%, rgba(60, 45, 30, 0.3) 100%);
+
+            background-size: 300px 300px, 100% 100%;
+            margin: 0 12px; 
+            max-height: 0; overflow: hidden;
+            position: relative; top: -4px; z-index: 1;
+            transition: max-height 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+            box-shadow: inset 0 10px 30px rgba(0,0,0,0.25);
+            border-bottom-left-radius: 5px; border-bottom-right-radius: 5px;
+        }
+
+        .answer-content {
+            padding: 25px 35px; 
+            color: #1a0f0d !important;
+            font-family: "Cinzel Decorative"; 
+            font-size: 1.1rem; 
+            font-weight: 300; 
+            line-height: 1.1;
+            
+            text-shadow: 
+                0 1px 1px rgba(255,255,255, 0.9), 
+                0 0 10px rgba(212, 175, 55, 0.8),
+                0 0 30px rgba(212, 175, 55, 0.5);
+
+            opacity: 0; transform: translateY(-10px);
+            transition: opacity 1.5s ease 0.3s, transform 1.5s ease 0.3s;
+        }
+
+        /* --- DESKTOP HOVER LOGIC (> 992px) --- */
+        @media (min-width: 992px) {
+            .scroll-item:hover { transform: scale(1.02); }
+            
+            .scroll-item:hover .scroll-body {
+                max-height: 600px;
+                border-bottom: 5px solid var(--stick-color);
+            }
+            .scroll-item:hover .answer-content {
+                opacity: 1; transform: translateY(0);
+            }
+            .scroll-item:hover .scroll-head {
+                box-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
+                border-color: rgba(212, 175, 55, 0.8);
+            }
+        }
+
+        /* --- MOBILE OPEN LOGIC --- */
+        .scroll-item.open .scroll-body {
+            max-height: 600px;
+            border-bottom: 5px solid var(--stick-color);
+        }
+        .scroll-item.open .answer-content {
+            opacity: 1; transform: translateY(0);
+        }
+
+        .footer-spacer { height: 100px; }
+
+        /* Navbar styles copied from teams.html for consistency */
+        .navbar{background-color:rgba(10,10,10,.9);border-bottom:1px solid rgba(212,175,55,.3);padding:1rem 0;z-index:100;backdrop-filter:blur(10px);}        
+        .navbar-brand,.nav-link{font-family:'Cinzel Decorative';color:var(--gold)!important;}
+        .nav-link:hover{color:#fff!important;text-shadow:0 0 12px var(--gold);} 
+        .form-check-input { background-color: #333; border-color: #666; width: 3em; height: 1.5em; }
+        .form-check-input:checked { background-color: var(--gold); border-color: var(--gold); }
+        .form-check-label { font-family: 'Cinzel Decorative'; color: var(--gold); margin-left: 8px; padding-top: 2px;}
+        .register-btn{position:relative;display:inline-block;padding:8px 22px;margin-left:12px;border:1px solid rgba(255,215,100,.55);border-radius:999px;font-family:'Cinzel Decorative';letter-spacing:1px;text-transform:uppercase;font-size:.75rem;color:#ffe7b0!important;background:linear-gradient(130deg,#3a2d00,#1a1400 55%,#3a2d00);box-shadow:0 0 8px rgba(255,180,60,.4),inset 0 0 10px rgba(255,220,140,.15);overflow:hidden;transition:.35s;animation:pulseNeon 3.6s ease-in-out infinite}
+        .register-btn:before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 28% 50%,rgba(255,230,140,.35),transparent 62%);opacity:.6;mix-blend-mode:screen;pointer-events:none}
+        .register-btn:after{content:'';position:absolute;inset:0;border-radius:inherit;padding:2px;background:linear-gradient(110deg,rgba(255,220,140,.8),rgba(255,150,40,.4),rgba(255,230,120,.8));-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:.4}
+        .register-btn:hover{background:linear-gradient(130deg,#ffbb4d,#ff9e29 55%,#ffbb4d);color:#111!important;box-shadow:0 0 14px #ffd23f,0 0 34px #ff9000,0 0 72px rgba(255,120,0,.6);text-shadow:none;transform:translateY(-2px)}
+        @keyframes pulseNeon{0%{box-shadow:0 0 6px rgba(255,190,60,.4),0 0 18px rgba(255,140,0,.25)}50%{box-shadow:0 0 14px rgba(255,190,60,.65),0 0 36px rgba(255,140,0,.45),0 0 60px rgba(255,120,0,.35)}100%{box-shadow:0 0 6px rgba(255,190,60,.4),0 0 18px rgba(255,140,0,.25)}}
+        .register-btn:focus{outline:none;box-shadow:0 0 16px #ffd23f,0 0 42px #ff9000}
+    </style>
+</head>
+<body>
+
+    <div id="wand"><img src="assets/wand.png" alt="Wand cursor"></div>
+
+    <div id="site-wrapper">
+
+        <!-- Navbar replicated from main.html -->
+        <nav class="navbar navbar-expand-lg sticky-top navbar-dark">
+            <div class="container">
+                <a class="navbar-brand" href="main.html">Hogwarts Hackathon</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"><span class="navbar-toggler-icon"></span></button>
+                <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+                    <ul class="navbar-nav align-items-center">
+                        <li class="nav-item me-4">
+                            <div class="form-check form-switch mb-0 d-flex align-items-center">
+                                <input class="form-check-input" type="checkbox" id="magicToggle" disabled>
+                                <label class="form-check-label" for="magicToggle">Try Magic</label>
+                            </div>
+                        </li>
+                        <li class="nav-item"><a class="nav-link" href="main.html#home">Great Hall</a></li>
+                        <li class="nav-item"><a class="nav-link" href="main.html#houses">Houses</a></li>
+                        <li class="nav-item"><a class="nav-link" href="teams.html">Teams</a></li>
+                        <li class="nav-item"><a class="nav-link" href="organizers.html">Organizers</a></li>
+                        <li class="nav-item"><a class="nav-link" href="timeline.html">Timeline</a></li>
+                        <li class="nav-item"><a class="nav-link" href="faq.html">FAQs</a></li>
+                        <li class="nav-item"><a class="nav-link" href="rules.html">Rules</a></li>
+                        <li class="nav-item"><a class="nav-link register-btn" href="register.html">Register</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <div class="header-section">
+            <div class="harry-potter-title">Chamber of Secrets</div>
+            <div style="font-family:'Cinzel Decorative'; color: var(--gold); margin-top:10px;">Commonly Asked Questions</div>
+        </div>
+
+        <div class="faq-container">
+
+            <div class="scroll-item" onclick="toggleScrollMobile(this)">
+                <div class="scroll-head">
+                    <div class="handle left"></div>
+                    <div class="question-text">How do I enter the Hackathon?</div>
+                    <div class="handle right"></div>
+                </div>
+                <div class="scroll-body">
+                    <div class="answer-content">
+                        One does not simply walk into the coding chamber. You must register via the enchanted portal (Devfolio) before the hourglass runs empty.
+                    </div>
+                </div>
+            </div>
+
+            <div class="scroll-item" onclick="toggleScrollMobile(this)">
+                <div class="scroll-head">
+                    <div class="handle left"></div>
+                    <div class="question-text">Is Polyjuice Potion allowed?</div>
+                    <div class="handle right"></div>
+                </div>
+                <div class="scroll-body">
+                    <div class="answer-content">
+                        Identity theft is strictly prohibited by the Ministry. You must code as your true self. However, Draught of Living Death (Energy Drinks) is permitted.
+                    </div>
+                </div>
+            </div>
+
+            <div class="scroll-item" onclick="toggleScrollMobile(this)">
+                <div class="scroll-head">
+                    <div class="handle left"></div>
+                    <div class="question-text">What about Muggle Technology?</div>
+                    <div class="handle right"></div>
+                </div>
+                <div class="scroll-body">
+                    <div class="answer-content">
+                        While we prefer wands, we understand the necessity of Laptops and WiFi. Bring your own devices, but beware of Pixies in the network.
+                    </div>
+                </div>
+            </div>
+
+            <div class="scroll-item" onclick="toggleScrollMobile(this)">
+                <div class="scroll-head">
+                    <div class="handle left"></div>
+                    <div class="question-text">What is the Team Size?</div>
+                    <div class="handle right"></div>
+                </div>
+                <div class="scroll-body">
+                    <div class="answer-content">
+                        A minimum of 2 wizards and a maximum of 4. Choose your housemates wisely, for the path to victory is treacherous for the lone wolf.
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="footer-spacer"></div>
+    </div>
+
+    <script>
+        // --- 1. WAND LOGIC ---
+        const wand = document.getElementById('wand');
+        const isDesktop = window.matchMedia("(min-width: 992px)");
+        
+        window.addEventListener('mousemove', function(e) {
+            if (isDesktop.matches) {
+                const x = e.clientX;
+                const y = e.clientY;
+                wand.style.transform = `translate(${x}px, ${y}px) rotate(15deg)`;
+                
+                // Create trail particles
+                if (Math.random() > 0.6) {
+                    const wandRect = wand.getBoundingClientRect();
+                    const angle = 15 * (Math.PI / 180);
+                    const tipRelX = (wandRect.width / 2) - 20;
+                    const tipRelY = -5;
+                    const tipX = wandRect.left + tipRelX * Math.cos(angle) - tipRelY * Math.sin(angle);
+                    const tipY = wandRect.top + tipRelX * Math.sin(angle) + tipRelY * Math.cos(angle);
+                    
+                    const trail = document.createElement('div');
+                    trail.classList.add('cursor-trail');
+                    trail.style.left = `${tipX}px`;
+                    trail.style.top = `${tipY}px`;
+                    document.body.appendChild(trail);
+                    setTimeout(() => trail.remove(), 500);
+                }
+            }
+        });
+
+        window.addEventListener('click', function(e) {
+            if (!isDesktop.matches) return;
+            // Skip if clicking on buttons, links, or FAQ items
+            if (e.target.closest('a') || e.target.closest('button') || e.target.closest('.btn') || 
+                e.target.closest('.scroll-item')) return;
+            
+            const wandRect = wand.getBoundingClientRect();
+            const angle = 15 * (Math.PI / 180);
+            const tipRelX = (wandRect.width / 2) - 20;
+            const tipRelY = -5;
+            const tipX = wandRect.left + tipRelX * Math.cos(angle) - tipRelY * Math.sin(angle);
+            const tipY = wandRect.top + tipRelX * Math.sin(angle) + tipRelY * Math.cos(angle);
+            
+            // Create burst of sprinkles on click
+            for (let i = 0; i < 8; i++) {
+                const sprinkle = document.createElement('div');
+                sprinkle.style.cssText = `
+                    position: fixed;
+                    left: ${tipX}px;
+                    top: ${tipY}px;
+                    width: 4px;
+                    height: 4px;
+                    background: #d4af37;
+                    border-radius: 50%;
+                    pointer-events: none;
+                    z-index: 9999;
+                    box-shadow: 0 0 6px #d4af37;
+                `;
+                document.body.appendChild(sprinkle);
+                const angle2 = (Math.PI * 2 * i) / 8;
+                const distance = 30 + Math.random() * 20;
+                sprinkle.animate([
+                    { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+                    { transform: `translate(${Math.cos(angle2) * distance}px, ${Math.sin(angle2) * distance}px) scale(0)`, opacity: 0 }
+                ], { duration: 500, easing: 'ease-out' }).onfinish = () => sprinkle.remove();
+            }
+        });
+
+        // --- 2. MOBILE INTERACTION LOGIC ---
+        
+        function toggleScrollMobile(element) {
+            if (window.innerWidth < 992) {
+                const isAlreadyOpen = element.classList.contains('open');
+                document.querySelectorAll('.scroll-item').forEach(el => el.classList.remove('open'));
+                if (!isAlreadyOpen) {
+                    element.classList.add('open');
+                }
+            }
+        }
+
+        document.addEventListener('click', function(event) {
+            if (window.innerWidth < 992) {
+                if (!event.target.closest('.scroll-item')) {
+                    document.querySelectorAll('.scroll-item.open').forEach(el => {
+                        el.classList.remove('open');
+                    });
+                }
+            }
+        });
+    </script>
+    <!-- Bootstrap JS for navbar collapse -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

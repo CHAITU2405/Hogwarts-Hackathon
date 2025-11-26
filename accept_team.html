@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registered Fellowships - Hogwarts Hackathon</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Crimson+Text:ital,wght@0,400;1,400&family=Pinyon+Script&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --gold: #d4af37;
+            --bg-dark: #0b0b0b;
+            --parchment: #d1c4a9;
+            --ink: #2a1b15;
+            --table-bg: rgba(20, 20, 20, 0.95);
+            --success: #2e7d32;
+            --danger: #c62828;
+        }
+
+        /* --- GLOBAL CURSOR RESET --- */
+        html, body, button, a, input, select, textarea, .btn, .card, div, span, li, th, td, i {
+            cursor: none !important;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            background: radial-gradient(circle at center, #1f1f35 0%, #000000 100%), url('https://www.transparenttextures.com/patterns/stardust.png');
+            background-attachment: fixed;
+            color: #eee;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* --- WAND CURSOR --- */
+        @media (min-width: 992px) {
+            *, html, body, a, button, input, label, select { cursor: none !important; }
+            #wand { display: flex !important; }
+        }
+        #wand { 
+            position: fixed; top: 0; left: 0; 
+            width: 50px; height: auto; 
+            pointer-events: none; z-index: 10000; will-change: transform; 
+            transform-origin: top left; 
+            filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.6)) drop-shadow(2px 3px 6px rgba(0,0,0,0.95)); 
+            display: none; 
+            animation: wandGlow 2s ease-in-out infinite;
+        }
+        #wand img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        @keyframes wandGlow {
+            0%, 100% { filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.6)) drop-shadow(2px 3px 6px rgba(0,0,0,0.95)); }
+            50% { filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.8)) drop-shadow(2px 3px 8px rgba(0,0,0,0.95)) drop-shadow(0 0 20px rgba(255, 255, 100, 0.4)); }
+        }
+        
+        .cursor-trail {
+            position: fixed; width: 3px; height: 3px; background: var(--gold); border-radius: 50%; pointer-events: none; z-index: 9999;
+            animation: fade-trail 0.5s linear forwards; box-shadow: 0 0 5px var(--gold); display: none;
+        }
+        @media (min-width: 992px) { .cursor-trail { display: block; } }
+        @keyframes fade-trail { 0% { opacity: 0.8; transform: scale(1); } 100% { opacity: 0; transform: scale(0.2) translate(0, 10px); } }
+
+        /* --- NAVBAR --- */
+        .navbar { background: rgba(10, 10, 10, 0.95); border-bottom: 1px solid rgba(212, 175, 55, 0.3); }
+        .navbar-brand { font-family: 'Cinzel Decorative'; color: var(--gold) !important; }
+        .admin-badge { border: 1px solid var(--gold); padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; margin-left: 10px; color: var(--gold); }
+
+        /* --- PAGE LAYOUT --- */
+        .container { padding-top: 50px; padding-bottom: 50px; max-width: 1200px; }
+        .page-header { text-align: center; margin-bottom: 40px; }
+        .page-title { font-family: 'Cinzel Decorative'; font-size: 3rem; color: var(--gold); text-shadow: 0 0 15px rgba(212,175,55,0.4); margin-bottom: 10px; }
+        .page-subtitle { font-family: 'Pinyon Script'; font-size: 1.8rem; color: #aaa; }
+
+        /* --- SEARCH BAR --- */
+        .search-wrapper { position: relative; max-width: 400px; margin: 0 auto 40px auto; }
+        .magic-search { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid #444; padding: 12px 20px 12px 45px; border-radius: 50px; color: #fff; font-family: 'Crimson Text'; font-size: 1.2rem; transition: 0.3s; outline: none; }
+        .magic-search:focus { border-color: var(--gold); box-shadow: 0 0 15px rgba(212, 175, 55, 0.2); background: rgba(0,0,0,0.5); }
+        .search-icon { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #666; transition: 0.3s; }
+        .magic-search:focus + .search-icon { color: var(--gold); }
+
+        /* --- MAGIC TABLE --- */
+        .table-scroll { overflow-x: auto; border-radius: 8px; border: 1px solid rgba(212, 175, 55, 0.3); box-shadow: 0 0 30px rgba(0,0,0,0.5); }
+        .magic-table { width: 100%; border-collapse: collapse; background: var(--table-bg); min-width: 800px; }
+        
+        .magic-table thead { background: linear-gradient(to bottom, #1a1a1a, #0b0b0b); border-bottom: 2px solid var(--gold); }
+        .magic-table th { font-family: 'Cinzel Decorative'; color: var(--gold); padding: 20px; text-align: left; font-size: 1rem; letter-spacing: 1px; text-transform: uppercase; }
+
+        .magic-table tbody tr { border-bottom: 1px solid rgba(255, 255, 255, 0.05); transition: background 0.3s; }
+        .magic-table tbody tr:hover { background: rgba(212, 175, 55, 0.05); }
+        .magic-table td { padding: 18px 20px; font-family: 'Crimson Text'; font-size: 1.1rem; color: #ccc; vertical-align: middle; }
+
+        /* --- TEAM DETAILS BUTTON --- */
+        .btn-team-name {
+            background: transparent; border: 1px solid var(--gold); color: var(--gold);
+            font-family: 'Cinzel Decorative'; padding: 8px 15px; font-size: 1rem;
+            border-radius: 4px; transition: 0.3s; cursor: pointer; text-align: left;
+            display: flex; align-items: center; gap: 10px; width: 100%; max-width: 250px;
+        }
+        .btn-team-name:hover { background: var(--gold); color: #000; box-shadow: 0 0 15px var(--gold); }
+        .btn-team-name i { font-size: 0.8rem; opacity: 0.7; }
+
+        /* --- ACTION BUTTONS --- */
+        .actions-cell { display: flex; align-items: center; gap: 15px; }
+        .btn-action { width: 35px; height: 35px; border-radius: 50%; border: none; color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.3s; font-size: 1rem; }
+        .btn-accept { background: rgba(46, 125, 50, 0.3); border: 1px solid var(--success); color: var(--success); }
+        .btn-accept:hover { background: var(--success); color: #fff; box-shadow: 0 0 10px var(--success); transform: scale(1.1); }
+        .btn-reject { background: rgba(198, 40, 40, 0.3); border: 1px solid var(--danger); color: var(--danger); }
+        .btn-reject:hover { background: var(--danger); color: #fff; box-shadow: 0 0 10px var(--danger); transform: scale(1.1); }
+
+        /* UTR Font */
+        .utr-code { font-family: 'Courier New', monospace; color: #aaa; letter-spacing: 1px; font-weight: bold; }
+
+        /* View Proof Button */
+        .btn-proof { background: transparent; border: 1px solid #666; color: #aaa; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.3s; cursor: pointer; margin: 0 auto; }
+        .btn-proof:hover { border-color: var(--gold); color: var(--gold); background: rgba(212, 175, 55, 0.1); transform: scale(1.1); }
+
+        /* Verdict Badges */
+        .verdict-badge { font-family: 'Cinzel Decorative'; font-size: 0.9rem; padding: 5px 10px; border-radius: 4px; text-transform: uppercase; animation: fadeIn 0.5s ease; }
+        .verdict-accepted { color: #4caf50; border: 1px solid #4caf50; background: rgba(76, 175, 80, 0.1); }
+        .verdict-rejected { color: #f44336; border: 1px solid #f44336; background: rgba(244, 67, 54, 0.1); text-decoration: line-through; }
+
+        /* --- MODALS (PARCHMENT) --- */
+        .parchment-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; backdrop-filter: blur(5px); }
+        .parchment-overlay.active { opacity: 1; pointer-events: auto; }
+        .parchment-modal { width: 90%; max-width: 500px; background-color: var(--parchment); background-image: url('https://www.transparenttextures.com/patterns/aged-paper.png'); padding: 30px; position: relative; border: 5px double #5d4037; box-shadow: 0 0 50px rgba(212, 175, 55, 0.2); transform: scale(0.9); transition: transform 0.3s; text-align: center; filter: url(#wrinkle-paper); }
+        .parchment-overlay.active .parchment-modal { transform: scale(1); }
+        .close-modal { position: absolute; top: -20px; right: -20px; width: 40px; height: 40px; background: #7f0000; border-radius: 50%; border: 2px solid #fff; color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10; transition: 0.3s; }
+        .close-modal:hover { transform: scale(1.1); background: #900; }
+        .modal-title { font-family: 'Cinzel Decorative'; color: var(--ink); border-bottom: 2px solid var(--ink); padding-bottom: 10px; margin-bottom: 20px; }
+        
+        /* Details List */
+        .details-list { list-style: none; padding: 0; text-align: left; color: var(--ink); font-family: 'Crimson Text'; font-size: 1.1rem; }
+        .details-list li { padding: 8px 0; border-bottom: 1px dashed rgba(42, 27, 21, 0.3); display: flex; align-items: center; }
+        .details-list li i { margin-right: 10px; color: #5d4037; width: 20px; text-align: center; }
+        .details-list li strong { margin-right: 5px; }
+
+        /* Proof Image */
+        .proof-img-container { width: 100%; height: 300px; background: rgba(0,0,0,0.1); border: 2px dashed var(--ink); display: flex; align-items: center; justify-content: center; margin-bottom: 20px; overflow: hidden; }
+        .proof-img { max-width: 100%; max-height: 100%; object-fit: contain; filter: sepia(30%); }
+
+        svg { position: absolute; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+    </style>
+</head>
+<body>
+
+    <svg width="0" height="0"><filter id="wrinkle-paper"><feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="3" result="noise" /><feDiffuseLighting in="noise" lighting-color="#fff" surfaceScale="2"><feDistantLight azimuth="45" elevation="60" /></feDiffuseLighting><feComposite operator="in" in2="SourceGraphic" result="textured"/><feBlend mode="multiply" in="textured" in2="SourceGraphic"/></filter></svg>
+
+    <div id="wand"><img src="assets/wand.png" alt="Wand cursor"></div>
+
+    <nav class="navbar navbar-expand-lg sticky-top navbar-dark">
+        <div class="container-fluid px-5">
+            <a class="navbar-brand" href="admin.html">Hogwarts Hacks <span class="admin-badge">Admin</span></a>
+            <div class="d-flex">
+                <a href="admin.html" class="btn btn-sm btn-outline-warning me-2" style="font-family: 'Cinzel Decorative'; border-color: var(--gold); color: var(--gold);">Dashboard</a>
+                <a href="login.html" class="btn btn-sm btn-outline-secondary" style="font-family: 'Cinzel Decorative';" onclick="logout()">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">The Book of Admittance</h1>
+            <p class="page-subtitle">"Decide who enters the Great Hall"</p>
+        </div>
+
+        <div class="search-wrapper">
+            <input type="text" class="magic-search" id="searchInput" placeholder="Lumos (Search Fellowship)..." onkeyup="searchTable()">
+            <i class="fa-solid fa-wand-magic-sparkles search-icon"></i>
+        </div>
+
+        <div class="table-scroll">
+            <table class="magic-table" id="teamsTable">
+                <thead>
+                    <tr>
+                        <th>Team Details</th>
+                        <th>Gringotts Ref (UTR)</th>
+                        <th style="text-align: center;">Proof</th>
+                        <th>Ministry Verdict</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Teams will be loaded dynamically -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="parchment-overlay" id="detailsModal">
+        <div class="parchment-modal">
+            <button class="close-modal" onclick="closeModal('detailsModal')"><i class="fa-solid fa-xmark"></i></button>
+            <h3 class="modal-title" id="modalTeamName">Team Name</h3>
+            
+            <ul class="details-list" id="modalMembers">
+                </ul>
+            
+            <div style="margin-top: 20px; border-top: 2px solid #2a1b15; padding-top: 10px; font-family: 'Cinzel Decorative'; color: #2a1b15;">
+                Total Wizards: <span id="modalSize">0</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="parchment-overlay" id="proofModal">
+        <div class="parchment-modal">
+            <button class="close-modal" onclick="closeModal('proofModal')"><i class="fa-solid fa-xmark"></i></button>
+            <h3 class="modal-title" id="proofTeamName">Offering Proof</h3>
+            <div class="proof-img-container">
+                <!-- Image will be loaded dynamically -->
+            </div>
+            <p style="font-family: 'Crimson Text'; color: #2a1b15;">Gringotts Transfer Receipt</p>
+        </div>
+    </div>
+
+    <script>
+        // Check if admin is logged in
+        const isAdmin = sessionStorage.getItem('isAdmin');
+        if (!isAdmin) {
+            window.location.href = '/admin-login';
+        }
+        
+        // --- WAND CURSOR ---
+        const wand = document.getElementById('wand');
+        const isDesktop = window.matchMedia("(min-width: 992px)");
+        
+        if (isDesktop.matches) {
+            window.addEventListener('mousemove', (e) => {
+                const x = e.clientX;
+                const y = e.clientY;
+                const angle = 15 * (Math.PI / 180); // Convert to radians
+                wand.style.transform = `translate(${x}px, ${y}px) rotate(${15}deg)`;
+                
+                // Create trail particles at wand tip
+                const wandRect = wand.getBoundingClientRect();
+                const tipRelX = (wandRect.width / 2) - 20; // Move more to the left
+                const tipRelY = -5; // Move down slightly
+                
+                // Apply rotation transformation around origin (0,0)
+                const tipX = wandRect.left + tipRelX * Math.cos(angle) - tipRelY * Math.sin(angle);
+                const tipY = wandRect.top + tipRelX * Math.sin(angle) + tipRelY * Math.cos(angle);
+                
+                const trail = document.createElement('div');
+                trail.classList.add('cursor-trail');
+                trail.style.left = `${tipX}px`;
+                trail.style.top = `${tipY}px`;
+                document.body.appendChild(trail);
+                setTimeout(() => trail.remove(), 500);
+            });
+        }
+
+        // --- MODAL LOGIC ---
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        // Open Team Details
+        function openDetails(name, size, members) {
+            document.getElementById('modalTeamName').innerText = name;
+            document.getElementById('modalSize').innerText = size;
+            
+            const list = document.getElementById('modalMembers');
+            list.innerHTML = ''; // Clear previous
+            
+            // Add Team Leader (First member)
+            list.innerHTML += `<li><i class="fa-solid fa-crown" style="color: #d4af37;"></i> <strong>Leader:</strong> ${members[0]}</li>`;
+            
+            // Add other members
+            for(let i=1; i<members.length; i++) {
+                list.innerHTML += `<li><i class="fa-solid fa-user-graduate"></i> ${members[i]}</li>`;
+            }
+
+            document.getElementById('detailsModal').classList.add('active');
+        }
+
+
+        document.querySelectorAll('.parchment-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.classList.remove('active'); });
+        });
+
+        // --- SEARCH LOGIC ---
+        function searchTable() {
+            const input = document.getElementById("searchInput");
+            const filter = input.value.toUpperCase();
+            const table = document.getElementById("teamsTable");
+            const tr = table.getElementsByTagName("tr");
+            for (let i = 1; i < tr.length; i++) {
+                // Search in the Button Text (Team Name)
+                let btn = tr[i].querySelector('.btn-team-name');
+                if (btn) {
+                    let txtValue = btn.textContent || btn.innerText;
+                    if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                        tr[i].style.display = "";
+                    } else {
+                        tr[i].style.display = "none";
+                    }
+                }       
+            }
+        }
+
+        // Load pending teams on page load
+        async function loadPendingTeams() {
+            try {
+                const response = await fetch('/api/admin/pending-teams');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const tbody = document.querySelector('#teamsTable tbody');
+                    tbody.innerHTML = '';
+                    
+                    if (data.teams.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 40px; color: #aaa; font-family: \'Crimson Text\';">No pending teams to review</td></tr>';
+                        return;
+                    }
+                    
+                    data.teams.forEach(team => {
+                        const leader = team.members.find(m => m.is_leader) || team.members[0];
+                        const memberNames = team.members.map(m => m.name);
+                        
+                        const row = document.createElement('tr');
+                        row.setAttribute('data-team-id', team.id);
+                        row.innerHTML = `
+                            <td>
+                                <button class="btn-team-name" onclick="openDetails('${team.team_name}', ${team.team_size}, ${JSON.stringify(memberNames).replace(/"/g, '&quot;')})">
+                                    <i class="fa-solid fa-scroll"></i> ${team.team_name}
+                                </button>
+                            </td>
+                            <td class="utr-code">${team.utr_transaction_id}</td>
+                            <td style="text-align: center;">
+                                ${team.payment_proof_path ? `<button class="btn-proof" onclick="openProof('${team.team_name}', '${team.payment_proof_path}')"><i class="fa-solid fa-eye"></i></button>` : '<span style="color: #666;">No proof</span>'}
+                            </td>
+                            <td>
+                                <div class="actions-cell">
+                                    <button class="btn-action btn-accept" onclick="grantAccess(this, ${team.id})" title="Accept"><i class="fa-solid fa-check"></i></button>
+                                    <button class="btn-action btn-reject" onclick="denyAccess(this, ${team.id})" title="Reject"><i class="fa-solid fa-xmark"></i></button>
+                                </div>
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading teams:', error);
+                alert('Error loading teams. Please refresh the page.');
+            }
+        }
+        
+        // Logout function
+        function logout() {
+            sessionStorage.removeItem('isAdmin');
+            sessionStorage.removeItem('adminName');
+        }
+        
+        // Load teams on page load
+        loadPendingTeams();
+
+        // --- APPROVE/REJECT LOGIC ---
+        async function grantAccess(btn, teamId) {
+            try {
+                const response = await fetch(`/api/admin/approve-team/${teamId}`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    const cell = btn.closest('td');
+                    const row = btn.closest('tr');
+                    row.style.backgroundColor = "rgba(46, 125, 50, 0.1)";
+                    cell.innerHTML = '<span class="verdict-badge verdict-accepted"><i class="fa-solid fa-check me-1"></i> Accepted</span>';
+                } else {
+                    alert(data.error || 'Failed to approve team');
+                }
+            } catch (error) {
+                console.error('Error approving team:', error);
+                alert('Error approving team. Please try again.');
+            }
+        }
+
+        async function denyAccess(btn, teamId) {
+            if(confirm("Are you sure you want to deny this fellowship?")) {
+                try {
+                    const response = await fetch(`/api/admin/reject-team/${teamId}`, {
+                        method: 'POST'
+                    });
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        const cell = btn.closest('td');
+                        const row = btn.closest('tr');
+                        row.style.backgroundColor = "rgba(198, 40, 40, 0.1)";
+                        row.style.opacity = "0.6";
+                        cell.innerHTML = '<span class="verdict-badge verdict-rejected"><i class="fa-solid fa-ban me-1"></i> Denied</span>';
+                    } else {
+                        alert(data.error || 'Failed to reject team');
+                    }
+                } catch (error) {
+                    console.error('Error rejecting team:', error);
+                    alert('Error rejecting team. Please try again.');
+                }
+            }
+        }
+        
+        // Update openProof function to use actual image path
+        function openProof(teamName, proofPath) {
+            document.getElementById('proofTeamName').innerText = teamName + " Offering";
+            const imgContainer = document.querySelector('#proofModal .proof-img-container');
+            imgContainer.innerHTML = `<img src="/api/${proofPath}" alt="Payment Proof" class="proof-img" onerror="this.parentElement.innerHTML='<p style=\'color: #2a1b15; font-family: \'Crimson Text\';\'>Image not found</p>'">`;
+            document.getElementById('proofModal').classList.add('active');
+        }
+    </script>
+</body>
+</html>

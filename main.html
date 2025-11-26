@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hogwarts Hackathon 2025</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Crimson+Text:ital,wght@0,400;1,400&family=Pinyon+Script&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* --- THEME VARIABLES --- */
+        :root {
+            --gold: #d4af37;
+            --bg-dark: #0b0b0b;
+            --ink-color: #2c1b18; 
+            
+            /* COLORS */
+            --envelope-color: #C9A66B; 
+            --paper-color: #D8C3A5;    
+            
+            /* BORDERS & LINES */
+            --border-color: #000000; /* Pure Black */
+        }
+
+        html, body {
+            width: 100%; margin: 0; padding: 0;
+            overflow-x: hidden; 
+            background-color: var(--bg-dark);
+        }
+
+        /* --- CONTENT WRAPPER --- */
+        #site-wrapper {
+            position: relative;
+            width: 100%;
+            min-height: 100vh;
+            background: radial-gradient(circle at center, #1f1f35 0%, #000000 100%), url('https://www.transparenttextures.com/patterns/stardust.png');
+            background-attachment: fixed;
+            transition: transform 0.2s ease;
+            will-change: transform;
+        }
+
+        /* --- SCREEN SHAKE --- */
+        @keyframes screen-rotate-shake {
+            0% { transform: scale(1) rotate(0deg); }
+            20% { transform: scale(1.02) rotate(-2deg); }
+            40% { transform: scale(1.02) rotate(2deg); }
+            60% { transform: scale(1.02) rotate(-1deg); }
+            80% { transform: scale(1.01) rotate(1deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+        .shake-active #site-wrapper { animation: screen-rotate-shake 0.6s ease-out; }
+
+        /* --- LIGHTING --- */
+        #ambient-light {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            pointer-events: none; z-index: 9990;
+            background: radial-gradient(circle 350px at var(--x, 50%) var(--y, 50%), rgba(255, 255, 255, 0.02) 0%, rgba(0, 0, 0, 0.1) 30%, rgba(0, 0, 0, 0.85) 100%);
+            transition: opacity 1s ease; opacity: 0;
+        }
+        body.magic-on #ambient-light { opacity: 1; }
+        body.lumos-active #ambient-light { opacity: 0 !important; }
+
+        /* --- LAYERS --- */
+        #magic-viewport { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9995; overflow: hidden; }
+        #flash-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: white; z-index: 9999; pointer-events: none; opacity: 0; transition: opacity 0.5s ease-out; mix-blend-mode: overlay; }
+
+        /* --- PERMANENT WAND --- */
+        @media (min-width: 992px) {
+            *, html, body, a, button, input, label, select { cursor: none !important; }
+            #wand { display: flex !important; }
+            #ambient-light { display: block !important; }
+        }
+        #wand { 
+            position: fixed; top: 0; left: 0; 
+            width: 50px; height: auto; 
+            pointer-events: none; z-index: 10000; will-change: transform; 
+            transform-origin: top left; 
+            filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.6)) drop-shadow(2px 3px 6px rgba(0,0,0,0.95)); 
+            display: none; 
+            animation: wandGlow 2s ease-in-out infinite;
+        }
+        #wand img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        @keyframes wandGlow {
+            0%, 100% { filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.6)) drop-shadow(2px 3px 6px rgba(0,0,0,0.95)); }
+            50% { filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.8)) drop-shadow(2px 3px 8px rgba(0,0,0,0.95)) drop-shadow(0 0 20px rgba(255, 255, 100, 0.4)); }
+        }
+
+        /* =========================================
+           CLEAN LINE ENVELOPE STYLES
+           ========================================= */
+        .letter-wrapper {
+            position: relative;
+            width: 280px; height: 180px;
+            margin: 40px auto;
+            perspective: 1000px;
+            cursor: pointer;
+        }
+
+        /* 1. ENVELOPE BODY (Back) */
+        .envelope {
+            position: relative; width: 100%; height: 100%;
+            z-index: 1;
+            background-color: var(--envelope-color);
+            background-image: url('https://www.transparenttextures.com/patterns/aged-paper.png'); 
+            
+            /* Curved Border, No Shadow */
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            box-shadow: none; /* SHADOW REMOVED */
+            
+            filter: url(#wrinkle-paper) brightness(0.98);
+        }
+
+        /* 2. THE LETTER (Inside) */
+        .house-card {
+            position: absolute;
+            bottom: 0; left: 15px; right: 15px;
+            height: 150px;
+            background-color: var(--paper-color);
+            background-image: url('https://www.transparenttextures.com/patterns/aged-paper.png');
+            border: 1px solid var(--border-color);
+            padding: 20px 10px;
+            text-align: center;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 2;
+            filter: url(#wrinkle-paper) contrast(1.05);
+            transform: translateY(0);
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); 
+            transition-delay: 0s;
+        }
+
+        .house-card h4 {
+            font-family: 'Cinzel Decorative', cursive;
+            font-size: 1.1rem; font-weight: 700;
+            color: var(--ink-color); margin-bottom: 5px;
+            border-bottom: 1px solid rgba(44, 27, 24, 0.4);
+            width: 80%; padding-bottom: 5px;
+        }
+        
+        .house-card p {
+            font-family: 'Pinyon Script', cursive;
+            font-size: 1.6rem; line-height: 1.1;
+            color: #3e2723;
+            margin-top: 5px; font-weight: 600;
+        }
+
+        /* 3. THE POCKET (Front Shapes - No Shadows) */
+        .envelope-front {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 100%;
+            z-index: 3; pointer-events: none;
+        }
+        
+        .pocket-left { 
+            position: absolute; bottom: 0; left: 0; width: 0; height: 0; 
+            border-left: 140px solid var(--envelope-color); 
+            border-top: 90px solid transparent; 
+            border-bottom: 90px solid var(--envelope-color); 
+            border-bottom-left-radius: 6px;
+            filter: url(#wrinkle-paper); /* SHADOW REMOVED */
+        }
+        .pocket-right { 
+            position: absolute; bottom: 0; right: 0; width: 0; height: 0; 
+            border-right: 140px solid var(--envelope-color); 
+            border-top: 90px solid transparent; 
+            border-bottom: 90px solid var(--envelope-color); 
+            border-bottom-right-radius: 6px;
+            filter: url(#wrinkle-paper); /* SHADOW REMOVED */
+        }
+        .pocket-bottom { 
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 100px; 
+            clip-path: polygon(0 100%, 50% 0%, 100% 100%); z-index: 4; 
+            background-color: var(--envelope-color);
+            background-image: linear-gradient(to top, rgba(0,0,0,0.05) 0%, transparent 50%);
+            filter: url(#wrinkle-paper); /* SHADOW REMOVED */
+            border-bottom-left-radius: 6px; border-bottom-right-radius: 6px;
+        }
+
+        /* 4. THE LID (Top Flap Shape - No Shadow) */
+        .envelope-lid {
+            position: absolute; top: 0; left: 0; width: 100%; height: 95px;
+            clip-path: polygon(0 0, 100% 0, 50% 100%);
+            transform-origin: top;
+            background-color: var(--envelope-color);
+            background-image: linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, transparent 50%);
+            
+            filter: url(#wrinkle-paper); /* SHADOW REMOVED */
+
+            transform: rotateX(0deg);
+            z-index: 5;
+            transition: transform 0.4s ease-in-out, z-index 0.1s;
+            transition-delay: 0.4s;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 5. SVG LINES (The "X" Marks) */
+        /* Static bottom lines */
+        .envelope-lines {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 100%;
+            z-index: 5; pointer-events: none;
+        }
+        /* Rotating top lines */
+        .lid-lines {
+            position: absolute; top: 0; left: 0; width: 100%; height: 95px;
+            z-index: 6; pointer-events: none;
+            transform-origin: top;
+            transition: transform 0.4s ease-in-out, z-index 0.1s;
+            transition-delay: 0.4s;
+        }
+
+        /* 6. SEAL */
+        .wax-seal {
+            position: absolute; top: 75px; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 55px; height: 55px; border-radius: 50%;
+            /* Clean seal shadow */
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
+            z-index: 7;
+            display: flex; align-items: center; justify-content: center;
+            color: rgba(0,0,0,0.5); 
+            border: 1px solid rgba(255,255,255,0.2);
+            opacity: 1; transition: opacity 0.3s; transition-delay: 0.8s;
+        }
+        .wax-seal i { font-size: 1.8rem; filter: drop-shadow(1px 1px 1px rgba(255,255,255,0.2)); }
+
+        .house-label {
+            position: absolute; bottom: 20px; width: 100%; text-align: center;
+            font-family: 'Cinzel Decorative'; font-weight: 700; color: #1a0f0d;
+            z-index: 5; font-size: 1.2rem; letter-spacing: 2px;
+        }
+
+        /* --- HOVER STATES --- */
+        .letter-wrapper:hover .wax-seal { opacity: 0; transition-delay: 0s; }
+        
+        /* Rotate Lid AND Lid Lines together */
+        .letter-wrapper:hover .envelope-lid,
+        .letter-wrapper:hover .lid-lines { 
+            transform: rotateX(180deg); z-index: 0; transition-delay: 0s; 
+        }
+        
+        .letter-wrapper:hover .house-card { transform: translateY(-100px); z-index: 2; transition-delay: 0.4s; }
+
+        /* House Colors */
+        .gryffindor .wax-seal { background: radial-gradient(circle at 30% 30%, #b71c1c, #7f0000); }
+        .slytherin .wax-seal { background: radial-gradient(circle at 30% 30%, #2e7d32, #113311); }
+        .ravenclaw .wax-seal { background: radial-gradient(circle at 30% 30%, #1565c0, #0d47a1); }
+        .hufflepuff .wax-seal { background: radial-gradient(circle at 30% 30%, #fbc02d, #7e5e00); }
+        .muggles .wax-seal { background: radial-gradient(circle at 30% 30%, #7f8c8d, #2c3e50); }
+
+        /* --- GENERAL UI --- */
+        .harry-potter-title { font-family: 'Cinzel Decorative'; font-weight: 900; text-transform: uppercase; line-height: 1; color: #ffd700; filter: url(#gold-texture); font-size: 6rem; position: relative; z-index: 2; }
+        @media (max-width: 768px) { .harry-potter-title { font-size: 3rem; } }
+        .navbar { background-color: rgba(10, 10, 10, 0.9); border-bottom: 1px solid rgba(212, 175, 55, 0.3); padding: 1rem 0; z-index: 100; backdrop-filter: blur(10px); }
+        .navbar-brand, .nav-link { font-family: 'Cinzel Decorative'; color: var(--gold); transition: 0.3s; }
+        .nav-link:hover { color: #fff; text-shadow: 0 0 15px var(--gold); }
+    /* Neon Register button */
+    .register-btn{position:relative;display:inline-block;padding:8px 22px;margin-left:12px;border:1px solid rgba(255,215,100,.55);border-radius:999px;font-family:'Cinzel Decorative';letter-spacing:1px;text-transform:uppercase;font-size:.75rem;color:#ffe7b0!important;background:linear-gradient(130deg,#3a2d00,#1a1400 55%,#3a2d00);box-shadow:0 0 8px rgba(255,180,60,.4),inset 0 0 10px rgba(255,220,140,.15);overflow:hidden;transition:.35s;animation:pulseNeon 3.6s ease-in-out infinite}
+    .register-btn:before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 28% 50%,rgba(255,230,140,.35),transparent 62%);opacity:.6;mix-blend-mode:screen;pointer-events:none}
+    .register-btn:after{content:'';position:absolute;inset:0;border-radius:inherit;padding:2px;background:linear-gradient(110deg,rgba(255,220,140,.8),rgba(255,150,40,.4),rgba(255,230,120,.8));-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:.4}
+    .register-btn:hover{background:linear-gradient(130deg,#ffbb4d,#ff9e29 55%,#ffbb4d);color:#111!important;box-shadow:0 0 14px #ffd23f,0 0 34px #ff9000,0 0 72px rgba(255,120,0,.6);text-shadow:none;transform:translateY(-2px)}
+    @keyframes pulseNeon{0%{box-shadow:0 0 6px rgba(255,190,60,.4),0 0 18px rgba(255,140,0,.25)}50%{box-shadow:0 0 14px rgba(255,190,60,.65),0 0 36px rgba(255,140,0,.45),0 0 60px rgba(255,120,0,.35)}100%{box-shadow:0 0 6px rgba(255,190,60,.4),0 0 18px rgba(255,140,0,.25)}}
+    .register-btn:focus{outline:none;box-shadow:0 0 16px #ffd23f,0 0 42px #ff9000}
+        .form-check-input { background-color: #333; border-color: #666; width: 3em; height: 1.5em; }
+        .form-check-input:checked { background-color: var(--gold); border-color: var(--gold); }
+        .form-check-label { font-family: 'Cinzel Decorative'; color: var(--gold); margin-left: 8px; padding-top: 2px;}
+        .hero-section { min-height: 90vh; display: flex; align-items: center; justify-content: center; text-align: center; padding-top: 80px; position: relative; }
+        .timer-container { display: flex; justify-content: center; gap: 20px; margin: 30px auto; padding: 25px; background: rgba(0, 0, 0, 0.6); border: 1px solid var(--gold); border-radius: 15px; backdrop-filter: blur(5px); max-width: 600px; box-shadow: 0 0 30px rgba(212, 175, 55, 0.2); position: relative; z-index: 10; }
+        .time-val { font-family: 'Cinzel Decorative'; font-size: 2.5rem; color: var(--gold); text-shadow: 0 0 10px var(--gold); }
+        .time-label { text-transform: uppercase; letter-spacing: 2px; color: #aaa; }
+        .btn-magic { border: 2px solid var(--gold); color: var(--gold); font-family: 'Cinzel Decorative'; padding: 15px 40px; font-size: 1.2rem; background: rgba(0,0,0,0.4); transition: 0.4s; margin-top: 30px; display: inline-block; z-index: 10; position: relative; overflow: hidden; }
+        .btn-magic:hover { background: var(--gold); color: #000; box-shadow: 0 0 50px var(--gold); }
+        .house-section { padding: 80px 0; position: relative; z-index: 2; background: rgba(20, 20, 20, 0.9); border-top: 1px solid #333; flex-grow: 1; }
+        footer { padding: 40px; text-align: center; border-top: 1px solid var(--gold); background: #0a0a0a; position: relative; z-index: 10; color: #777; }
+        
+        /* Magic Visuals */
+        .rotating-spell { position: fixed; pointer-events: none; z-index: 9996; width: 0px; height: 0px; border-radius: 50%; border: 4px solid transparent; border-top-color: #fff; border-bottom-color: var(--gold); box-shadow: 0 0 50px #fff; color: var(--gold); }
+        .white-expansion-ring { position: absolute; border: 4px solid white; border-radius: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 40px white, inset 0 0 10px white; opacity: 1; pointer-events: none; z-index: 9997; animation: expand-smooth 0.6s ease-out forwards; }
+        @keyframes expand-smooth { 0% { width: 0; height: 0; opacity: 1; border-width: 8px; } 100% { width: 250vmax; height: 250vmax; opacity: 0; border-width: 0; } }
+        .cursor-trail { position: fixed; width: 3px; height: 3px; background: var(--gold); border-radius: 50%; pointer-events: none; z-index: 9999; animation: fade-trail 0.5s linear forwards; box-shadow: 0 0 5px var(--gold); }
+        @keyframes fade-trail { 0% { opacity: 0.8; transform: scale(1); } 100% { opacity: 0; transform: scale(0.2) translate(0, 10px); } }
+        @keyframes broomShine { 0% { filter: drop-shadow(0 0 5px #d4af37); } 100% { filter: drop-shadow(0 0 20px #ffd700) brightness(1.3); } }
+    .broom-instance { position: absolute; left: 0; top: 0; width: 150px; height: auto; opacity: 1; offset-rotate: auto; animation: broomShine 0.6s infinite alternate; }
+    .broom-instance img { width: 100%; height: auto; display: block; }
+        .spell-bolt-container { position: absolute; left: 0; top: 0; offset-rotate: auto; }
+        .spell-bolt-core { width: 120px; height: 5px; background: linear-gradient(90deg, transparent 0%, var(--spell-color) 50%, #fff 100%); border-radius: 100px; opacity: 0.9; box-shadow: 0 0 25px var(--spell-color); }
+        .spell-bolt-core::after { content: ''; position: absolute; right: 0; top: -2.5px; width: 10px; height: 10px; background: #fff; border-radius: 50%; box-shadow: 0 0 20px #fff; }
+        .shockwave-ring { position: absolute; border: 3px solid #fff; border-radius: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 30px var(--color); animation: expand-ring 0.5s ease-out forwards; }
+        @keyframes expand-ring { to { width: 150px; height: 150px; opacity: 0; border-width: 0; } }
+        .magic-sprinkle { position: absolute; width: 4px; height: 4px; background: #fff; border-radius: 50%; box-shadow: 0 0 8px var(--color); pointer-events: none; z-index: 9999; animation: sprinkle-fall 1.2s cubic-bezier(0.1, 1, 0.5, 1) forwards; }
+        @keyframes sprinkle-fall { 0% { transform: translate(0,0) scale(1); opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; } }
+    </style>
+</head>
+<body>
+
+    <div id="magic-viewport"></div>
+    <div id="flash-overlay"></div>
+    <div id="ambient-light"></div>
+
+    <svg width="0" height="0" style="position: absolute;">
+        <filter id="gold-texture" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="3" result="noise" /><feDiffuseLighting in="noise" lighting-color="#d4af37" surfaceScale="3" result="coloredNoise"><feDistantLight azimuth="45" elevation="60" /></feDiffuseLighting><feSpecularLighting in="noise" surfaceScale="6" specularConstant="1" specularExponent="20" lighting-color="#ffecb3" result="specular"><fePointLight x="-5000" y="-10000" z="20000" /></feSpecularLighting><feComposite in="specular" in2="SourceAlpha" operator="in" result="specularText" /><feComposite in="coloredNoise" in2="SourceAlpha" operator="in" result="coloredText" /><feMerge><feMergeNode in="coloredText" /><feMergeNode in="specularText" /></feMerge><feDropShadow dx="4" dy="4" stdDeviation="3" flood-color="#000" flood-opacity="0.8"/></filter>
+        
+        <filter id="wrinkle-paper" x="0%" y="0%" width="100%" height="100%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="3" result="noise" />
+            <feDiffuseLighting in="noise" lighting-color="#fff" surfaceScale="1.5">
+                <feDistantLight azimuth="45" elevation="50" />
+            </feDiffuseLighting>
+            <feComposite operator="in" in2="SourceGraphic" result="textured"/>
+            <feBlend mode="multiply" in="textured" in2="SourceGraphic"/>
+        </filter>
+    </svg>
+
+    <div id="wand"><img src="assets/wand.png" alt="Wand cursor"></div>
+
+    <div id="site-wrapper">
+        <nav class="navbar navbar-expand-lg sticky-top navbar-dark">
+            <div class="container">
+                <a class="navbar-brand" href="#">Hogwarts Hackathon</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"><span class="navbar-toggler-icon"></span></button>
+                <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+                    <ul class="navbar-nav align-items-center">
+                        <li class="nav-item me-4">
+                            <div class="form-check form-switch mb-0 d-flex align-items-center">
+                                <input class="form-check-input" type="checkbox" id="magicToggle">
+                                <label class="form-check-label" for="magicToggle">Try Magic</label>
+                            </div>
+                        </li>
+                        <li class="nav-item"><a class="nav-link" href="#home">Great Hall</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#houses">Houses</a></li>
+                        <li class="nav-item"><a class="nav-link" href="teams.html">Teams</a></li>
+                        <li class="nav-item"><a class="nav-link" href="leaderboard.html">Leaderboard</a></li>
+                        <li class="nav-item"><a class="nav-link" href="organizers.html">Organizers</a></li>
+                        <li class="nav-item"><a class="nav-link" href="timeline.html">Timeline</a></li>
+                        <li class="nav-item"><a class="nav-link" href="faq.html">FAQs</a></li>
+                        <li class="nav-item"><a class="nav-link" href="rules.html">Rules</a></li>
+                        <li class="nav-item" id="registerNavItem" style="display: none;"><a class="nav-link register-btn" href="register.html">Register</a></li>
+                        <li class="nav-item" id="loginNavItem" style="display: none;"><a class="nav-link" href="login.html" style="color: var(--gold);">Login</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <section id="home" class="hero-section">
+            <div class="container">
+                <h1 class="harry-potter-title">Hogwarts<br>Hackathon</h1>
+                <div id="registrationMessage" style="display: none; margin: 15px 0;">
+                    <p style="color: var(--gold); font-style: italic; font-size: 1.1rem; margin: 0; font-family: 'Cinzel Decorative'; text-align: center;">Registration will be opened on 25 November 10am</p>
+                </div>
+                <p class="lead mt-3 mb-2" style="font-size: 1.3rem; color: #ccc; font-family: 'Cinzel Decorative'; text-transform: uppercase; letter-spacing: 2px;">The Chamber of Code has been opened.</p>
+                <div class="timer-container" id="countdown">
+                    <div class="time-box"><div class="time-val" id="days">00</div><div class="time-label">Days</div></div>
+                    <div class="time-box"><div class="time-val" id="hours">00</div><div class="time-label">Hours</div></div>
+                    <div class="time-box"><div class="time-val" id="minutes">00</div><div class="time-label">Mins</div></div>
+                    <div class="time-box"><div class="time-val" id="seconds">00</div><div class="time-label">Secs</div></div>
+                </div>
+                <a href="#houses" class="btn btn-magic">Enter The Tournament</a>
+            </div>
+        </section>
+
+        <section id="houses" class="house-section">
+            <div class="container">
+                <h2 class="text-center mb-5" style="color: var(--gold); font-family: 'Cinzel Decorative';">Choose Your House</h2>
+                
+                <div class="row justify-content-center g-5 pb-5">
+                    
+                    <div class="col-lg-4 col-md-6 d-flex justify-content-center">
+                        <div class="letter-wrapper gryffindor">
+                            <div class="envelope">
+                                <div class="house-card">
+                                    <h4>FinTech</h4>
+                                    <p>Brave UI & CSS</p>
+                                </div>
+                                
+                                <div class="envelope-front">
+                                    <div class="pocket-left"></div>
+                                    <div class="pocket-right"></div>
+                                    <div class="pocket-bottom"></div>
+                                    <svg class="envelope-lines" viewBox="0 0 280 180">
+                                        <line x1="0" y1="180" x2="140" y2="90" stroke="black" stroke-width="1.5" />
+                                        <line x1="280" y1="180" x2="140" y2="90" stroke="black" stroke-width="1.5" />
+                                    </svg>
+                                </div>
+                                
+                                <div class="envelope-lid"></div>
+                                <svg class="lid-lines" viewBox="0 0 280 95">
+                                    <line x1="0" y1="0" x2="140" y2="95" stroke="black" stroke-width="1.5" />
+                                    <line x1="280" y1="0" x2="140" y2="95" stroke="black" stroke-width="1.5" />
+                                </svg>
+
+                                <div class="wax-seal"><i class="fa-solid fa-shield-cat"></i></div>
+                                <div class="house-label">Gryffindor</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4 col-md-6 d-flex justify-content-center">
+                        <div class="letter-wrapper slytherin">
+                            <div class="envelope">
+                                <div class="house-card">
+                                    <h4>Cyber Security</h4>
+                                    <p>Cunning APIs</p>
+                                </div>
+                                <div class="envelope-front"><div class="pocket-left"></div><div class="pocket-right"></div><div class="pocket-bottom"></div><svg class="envelope-lines" viewBox="0 0 280 180"><line x1="0" y1="180" x2="140" y2="90" stroke="black" stroke-width="1.5" /><line x1="280" y1="180" x2="140" y2="90" stroke="black" stroke-width="1.5" /></svg></div>
+                                <div class="envelope-lid"></div>
+                                <svg class="lid-lines" viewBox="0 0 280 95"><line x1="0" y1="0" x2="140" y2="95" stroke="black" stroke-width="1.5" /><line x1="280" y1="0" x2="140" y2="95" stroke="black" stroke-width="1.5" /></svg>
+                                <div class="wax-seal"><i class="fa-solid fa-staff-snake"></i></div>
+                                <div class="house-label">Slytherin</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4 col-md-6 d-flex justify-content-center">
+                        <div class="letter-wrapper ravenclaw">
+                            <div class="envelope">
+                                <div class="house-card">
+                                    <h4>Smart Education</h4>
+                                    <p>Wit & Logic</p>
+                                </div>
+                                <div class="envelope-front"><div class="pocket-left"></div><div class="pocket-right"></div><div class="pocket-bottom"></div><svg class="envelope-lines" viewBox="0 0 280 180"><line x1="0" y1="180" x2="140" y2="90" stroke="black" stroke-width="1.5" /><line x1="280" y1="180" x2="140" y2="90" stroke="black" stroke-width="1.5" /></svg></div>
+                                <div class="envelope-lid"></div>
+                                <svg class="lid-lines" viewBox="0 0 280 95"><line x1="0" y1="0" x2="140" y2="95" stroke="black" stroke-width="1.5" /><line x1="280" y1="0" x2="140" y2="95" stroke="black" stroke-width="1.5" /></svg>
+                                <div class="wax-seal"><i class="fa-solid fa-crow"></i></div>
+                                <div class="house-label">Ravenclaw</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4 col-md-6 d-flex justify-content-center">
+                        <div class="letter-wrapper hufflepuff">
+                            <div class="envelope">
+                                <div class="house-card">
+                                    <h4>Agriculture</h4>
+                                    <p>Loyalty & Tools</p>
+                                </div>
+                                <div class="envelope-front"><div class="pocket-left"></div><div class="pocket-right"></div><div class="pocket-bottom"></div><svg class="envelope-lines" viewBox="0 0 280 180"><line x1="0" y1="180" x2="140" y2="90" stroke="black" stroke-width="1.5" /><line x1="280" y1="180" x2="140" y2="90" stroke="black" stroke-width="1.5" /></svg></div>
+                                <div class="envelope-lid"></div>
+                                <svg class="lid-lines" viewBox="0 0 280 95"><line x1="0" y1="0" x2="140" y2="95" stroke="black" stroke-width="1.5" /><line x1="280" y1="0" x2="140" y2="95" stroke="black" stroke-width="1.5" /></svg>
+                                <div class="wax-seal"><i class="fa-solid fa-paw"></i></div>
+                                <div class="house-label">Hufflepuff</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4 col-md-6 d-flex justify-content-center">
+                        <div class="letter-wrapper muggles">
+                            <div class="envelope">
+                                <div class="house-card">
+                                    <h4>Tourism</h4>
+                                    <p>No Magic, Just Logic</p>
+                                </div>
+                                <div class="envelope-front"><div class="pocket-left"></div><div class="pocket-right"></div><div class="pocket-bottom"></div><svg class="envelope-lines" viewBox="0 0 280 180"><line x1="0" y1="180" x2="140" y2="90" stroke="black" stroke-width="1.5" /><line x1="280" y1="180" x2="140" y2="90" stroke="black" stroke-width="1.5" /></svg></div>
+                                <div class="envelope-lid"></div>
+                                <svg class="lid-lines" viewBox="0 0 280 95"><line x1="0" y1="0" x2="140" y2="95" stroke="black" stroke-width="1.5" /><line x1="280" y1="0" x2="140" y2="95" stroke="black" stroke-width="1.5" /></svg>
+                                <div class="wax-seal"><i class="fa-solid fa-gear"></i></div>
+                                <div class="house-label">Muggles</div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <div class="container">
+                <p>Mischief Managed &copy; 2025 Hogwarts Hackathon</p>
+                <small>"I solemnly swear that I am up to no good code."</small>
+            </div>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        const isDesktop = window.matchMedia("(min-width: 992px)");
+        const magicLayer = document.getElementById('magic-viewport');
+        const toggleBtn = document.getElementById('magicToggle');
+        const wand = document.getElementById('wand');
+        const lightLayer = document.getElementById('ambient-light');
+        
+        let magicEnabled = false;
+        let broomInterval, spellInterval, broomTrailInterval;
+
+        toggleBtn.addEventListener('change', (e) => {
+            magicEnabled = e.target.checked;
+            if (magicEnabled) { 
+                document.body.classList.add('magic-on');
+                startLoops(); 
+            } else { 
+                document.body.classList.remove('magic-on');
+                stopLoops(); 
+            }
+        });
+
+        function startLoops() {
+            if (!isDesktop.matches) return;
+            clearInterval(broomInterval); clearInterval(spellInterval); clearInterval(broomTrailInterval);
+            
+            broomInterval = setInterval(spawnBroom, 3000);
+            spellInterval = setInterval(castBackgroundSpell, 2000);
+            
+            broomTrailInterval = setInterval(() => {
+                document.querySelectorAll('.broom-instance').forEach(broom => {
+                    const rect = broom.getBoundingClientRect();
+                    createSprinkle(rect.left + 20, rect.top + rect.height/2, '#d4af37');
+                });
+            }, 150);
+        }
+
+        function stopLoops() {
+            clearInterval(broomInterval); clearInterval(spellInterval); clearInterval(broomTrailInterval);
+            document.querySelectorAll('.broom-instance, .spell-bolt-container, .magic-sprinkle').forEach(el => el.remove());
+        }
+
+        const targetDate = new Date('Dec 6, 2025 11:00:00').getTime();
+        setInterval(() => {
+            const now = new Date().getTime();
+            const distance = targetDate - now;
+            if (distance < 0) return;
+            document.getElementById('days').innerText = String(Math.floor(distance / (1000 * 60 * 60 * 24))).padStart(2, '0');
+            document.getElementById('hours').innerText = String(Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))).padStart(2, '0');
+            document.getElementById('minutes').innerText = String(Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0');
+            document.getElementById('seconds').innerText = String(Math.floor((distance % (1000 * 60)) / 1000)).padStart(2, '0');
+        }, 1000);
+
+        function createSprinkle(x, y, color) {
+            const p = document.createElement('div');
+            p.classList.add('magic-sprinkle');
+            p.style.left = x + 'px'; p.style.top = y + 'px';
+            p.style.background = color; p.style.setProperty('--color', color);
+            
+            const angle = Math.random() * Math.PI * 2;
+            const velocity = 20 + Math.random() * 40;
+            p.style.setProperty('--tx', `${Math.cos(angle) * velocity}px`);
+            p.style.setProperty('--ty', `${Math.sin(angle) * velocity + 150}px`); 
+
+            magicLayer.appendChild(p);
+            setTimeout(() => p.remove(), 1200);
+        }
+
+        function spawnBroom() {
+            const broom = document.createElement('div');
+            broom.classList.add('broom-instance');
+            broom.innerHTML = '<img src="assets/broom.png" alt="Flying broom">';
+            
+            const w = window.innerWidth; const h = window.innerHeight;
+            const startRight = Math.random() > 0.5;
+            const sx = startRight ? w+200 : -200; const sy = Math.random()*h;
+            const ex = startRight ? -200 : w+200; const ey = Math.random()*h;
+            const pathString = `M ${sx},${sy} C ${Math.random()*w},${Math.random()*h} ${Math.random()*w},${Math.random()*h} ${ex},${ey}`;
+            
+            broom.style.offsetPath = `path('${pathString}')`;
+            magicLayer.appendChild(broom);
+            const anim = broom.animate([{offsetDistance:'0%'},{offsetDistance:'100%'}], {duration:4000+Math.random()*3000, easing:'linear', fill:'forwards'});
+            anim.onfinish = () => broom.remove();
+        }
+
+        function castBackgroundSpell() {
+            const spell = document.createElement('div');
+            spell.classList.add('spell-bolt-container');
+            const core = document.createElement('div');
+            core.classList.add('spell-bolt-core');
+            spell.appendChild(core);
+            const color = ['#ff4d4d', '#4d94ff', '#5cd65c', '#ffd700'][Math.floor(Math.random() * 4)];
+            spell.style.setProperty('--spell-color', color);
+            
+            const w = window.innerWidth; const h = window.innerHeight;
+            const sx = Math.random()*w; const sy = Math.random() > 0.5 ? -100 : h+100;
+            const ex = Math.random()*w; const ey = Math.random()*h;
+            const pathString = `M ${sx},${sy} Q ${(sx+ex)/2 + (Math.random()*400-200)},${(sy+ey)/2 + (Math.random()*400-200)} ${ex},${ey}`;
+            spell.style.offsetPath = `path('${pathString}')`;
+            magicLayer.appendChild(spell);
+            
+            const anim = spell.animate([{offsetDistance:'0%', opacity:0},{offsetDistance:'10%', opacity:1},{offsetDistance:'100%', opacity:1}], {duration:2000, easing:'ease-in', fill:'forwards'});
+            anim.onfinish = () => { createBurst(ex, ey, color); spell.remove(); };
+        }
+
+        function createBurst(x, y, color) {
+            const wave = document.createElement('div'); wave.classList.add('shockwave-ring');
+            wave.style.left=`${x}px`; wave.style.top=`${y}px`; wave.style.setProperty('--color', color);
+            magicLayer.appendChild(wave); setTimeout(()=>wave.remove(),500);
+
+            for (let i = 0; i < 50; i++) {
+                createSprinkle(x, y, Math.random()>0.5 ? color : '#fff');
+            }
+        }
+
+        window.addEventListener('mousemove', (e) => {
+            if (isDesktop.matches) {
+                const x = e.clientX; const y = e.clientY;
+                wand.style.transform = `translate(${x}px, ${y}px) rotate(15deg)`;
+                lightLayer.style.setProperty('--x', `${x}px`);
+                lightLayer.style.setProperty('--y', `${y}px`);
+                
+                if(Math.random() > 0.5) {
+                    const wandRect = wand.getBoundingClientRect();
+                    const angle = 15 * (Math.PI / 180); // Convert to radians
+                    
+                    // The tip is at the top center of the wand image
+                    // Tip position relative to top-left: (width/2, 0)
+                    // Adjust up and left to match visual tip
+                    const tipRelX = (wandRect.width / 2) - 20; // Move more to the left
+                    const tipRelY = -5; // Move down slightly
+                    
+                    // Apply rotation transformation around origin (0,0)
+                    const tipX = wandRect.left + tipRelX * Math.cos(angle) - tipRelY * Math.sin(angle);
+                    const tipY = wandRect.top + tipRelX * Math.sin(angle) + tipRelY * Math.cos(angle);
+                    
+                    const trail = document.createElement('div');
+                    trail.classList.add('cursor-trail');
+                    trail.style.left = `${tipX}px`; 
+                    trail.style.top = `${tipY}px`;
+                    magicLayer.appendChild(trail);
+                    setTimeout(() => trail.remove(), 500);
+                }
+            }
+        });
+
+        window.addEventListener('click', (e) => {
+            if (!isDesktop.matches) return;
+            if (!magicEnabled) return; 
+
+            if (e.target.closest('a') || e.target.closest('button') || e.target.closest('.btn') || e.target.closest('.form-check-input') || e.target.closest('.letter-wrapper')) return;
+
+            const wandRect = wand.getBoundingClientRect();
+            const angle = 15 * (Math.PI / 180); // Convert to radians
+            
+            // The tip is at the top center of the wand image
+            // Tip position relative to top-left: (width/2, 0)
+            // Adjust up and left to match visual tip
+            const tipRelX = (wandRect.width / 2) - 20; // Move more to the left
+            const tipRelY = -5; // Move down slightly
+            
+            // Apply rotation transformation around origin (0,0)
+            const startX = wandRect.left + tipRelX * Math.cos(angle) - tipRelY * Math.sin(angle);
+            const startY = wandRect.top + tipRelX * Math.sin(angle) + tipRelY * Math.cos(angle);
+
+            const rotatingSpell = document.createElement('div');
+            rotatingSpell.classList.add('rotating-spell');
+            rotatingSpell.style.left = `${startX}px`; rotatingSpell.style.top = `${startY}px`;
+            magicLayer.appendChild(rotatingSpell);
+
+            const anim = rotatingSpell.animate([
+                { transform: 'translate(-50%, -50%) scale(0) rotate(0deg)', opacity: 0, offset: 0 },
+                { transform: 'translate(-50%, -50%) scale(2) rotate(360deg)', opacity: 1, offset: 0.6 },
+                { transform: 'translate(-50%, -50%) scale(0) rotate(720deg)', opacity: 1, offset: 1 }
+            ], { duration: 600, easing: 'ease-in-out' });
+
+            anim.onfinish = () => {
+                rotatingSpell.remove();
+                
+                const expansionRing = document.createElement('div');
+                expansionRing.classList.add('white-expansion-ring');
+                expansionRing.style.left = `${startX}px`; expansionRing.style.top = `${startY}px`;
+                magicLayer.appendChild(expansionRing);
+
+                setTimeout(() => {
+                    createBurst(startX, startY, '#d4af37');
+                    createBurst(startX, startY, '#ffffff');
+
+                    document.body.classList.add('shake-active');
+                    setTimeout(() => document.body.classList.remove('shake-active'), 600);
+
+                    document.body.classList.add('lumos-active');
+                    const flash = document.getElementById('flash-overlay');
+                    flash.style.opacity = '0.5'; 
+                    setTimeout(() => { flash.style.opacity = '0'; }, 500);
+                    setTimeout(() => { document.body.classList.remove('lumos-active'); }, 5000);
+                    
+                    setTimeout(() => expansionRing.remove(), 600);
+                }, 100);
+            };
+        });
+
+        // Check login toggle status
+        async function checkLoginToggle() {
+            try {
+                const response = await fetch('/api/admin/login-toggle');
+                const data = await response.json();
+                if (data.success && data.enabled) {
+                    document.getElementById('loginNavItem').style.display = 'block';
+                } else {
+                    document.getElementById('loginNavItem').style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error checking login toggle:', error);
+            }
+        }
+        
+        // Check registration toggle status
+        async function checkRegistrationToggle() {
+            try {
+                const response = await fetch('/api/admin/registration-toggle');
+                const data = await response.json();
+                const registerBtn = document.getElementById('registerNavItem');
+                const regMessage = document.getElementById('registrationMessage');
+                
+                if (data.success && data.enabled) {
+                    // Registration enabled - show register button
+                    if (registerBtn) registerBtn.style.display = 'block';
+                    if (regMessage) regMessage.style.display = 'none';
+                } else {
+                    // Registration disabled - hide button and show message
+                    if (registerBtn) registerBtn.style.display = 'none';
+                    if (regMessage) regMessage.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error checking registration toggle:', error);
+                // Default to showing message if error
+                const registerBtn = document.getElementById('registerNavItem');
+                const regMessage = document.getElementById('registrationMessage');
+                if (registerBtn) registerBtn.style.display = 'none';
+                if (regMessage) regMessage.style.display = 'block';
+            }
+        }
+        
+        // Check on page load
+        checkLoginToggle();
+        checkRegistrationToggle();
+        
+        // Check every 5 seconds to update if admin changes it
+        setInterval(checkLoginToggle, 5000);
+        setInterval(checkRegistrationToggle, 5000);
+    </script>
+</body>
+</html>

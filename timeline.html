@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hogwarts Express - Final</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Crimson+Text:ital,wght@0,400;1,400&family=Pinyon+Script&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --gold: #d4af37;
+            --bg-dark: #0b0b0b;
+            --ink: #1a0f0d;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            background: radial-gradient(circle at center, #1f1f35 0%, #000000 100%), url('https://www.transparenttextures.com/patterns/stardust.png');
+            background-attachment: fixed;
+            color: #eee;
+            overflow-x: hidden;
+            cursor: none;
+            min-height: 100vh;
+        }
+
+        /* --- WAND CURSOR --- */
+        #wand { 
+            position: fixed; top: 0; left: 0; width: 10px; height: 50px; 
+            pointer-events: none; z-index: 10000; will-change: transform; 
+            transform-origin: top left; 
+            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.9)); 
+            display: none; flex-direction: column; align-items: center; 
+        }
+        #wand-tip { 
+            width: 4px; height: 4px; background: #fff; border-radius: 50%; 
+            box-shadow: 0 0 10px #fff, 0 0 20px var(--gold); 
+            z-index: 2; margin-bottom: -1px; 
+        }
+        #wand-shaft { 
+            width: 3px; height: 60%; 
+            background: linear-gradient(to right, #5d4037, #8d6e63, #5d4037); 
+            border-radius: 0 0 2px 2px; 
+        }
+        #wand-handle { 
+            width: 8px; height: 40%; 
+            background: repeating-linear-gradient(45deg, #2d2d2d, #1a1a1a 3px, #3a3a3a 3px, #2d2d2d 6px); 
+            border-radius: 3px; position: relative; 
+        }
+
+        @media (min-width: 992px) {
+            #wand { display: flex; }
+            .cursor-trail { 
+                position: fixed; width: 3px; height: 3px; background: var(--gold); 
+                border-radius: 50%; pointer-events: none; z-index: 9999; 
+                animation: fade-trail 0.5s linear forwards; box-shadow: 0 0 5px var(--gold); 
+            }
+        }
+        @keyframes fade-trail { 
+            0% { opacity: 0.8; transform: scale(1); } 
+            100% { opacity: 0; transform: scale(0.2) translate(0, 10px); } 
+        }
+
+        /* --- INTRO OVERLAY --- */
+        #intro-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(11, 11, 11, 0.95);
+            z-index: 20000;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            transition: opacity 1s ease;
+        }
+        #intro-overlay.hidden {
+            opacity: 0; pointer-events: none;
+        }
+
+        .board-btn {
+            background: transparent;
+            color: var(--gold);
+            font-family: 'Cinzel Decorative';
+            font-size: 2rem;
+            padding: 15px 40px;
+            border: 2px solid var(--gold);
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+            transition: all 0.4s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .board-btn:hover {
+            background: var(--gold);
+            color: #000;
+            box-shadow: 0 0 50px var(--gold);
+            transform: scale(1.05);
+        }
+
+        /* --- LAYOUT --- */
+        .page-header { text-align: center; margin-top: 100px; margin-bottom: 80px; }
+        .page-title { font-family: 'Cinzel Decorative'; font-size: 4rem; color: var(--gold); text-shadow: 0 0 20px rgba(212, 175, 55, 0.4); }
+        .page-subtitle { font-family: 'Pinyon Script'; font-size: 2rem; color: #ccc; }
+
+        .timeline-container {
+            position: relative; max-width: 1000px; margin: 0 auto; 
+            padding-top: 40px;
+            padding-bottom: 0px; 
+            overflow: hidden; 
+        }
+
+        /* --- RAILWAY TRACKS --- */
+        .timeline-track {
+            position: absolute; 
+            top: 0; 
+            bottom: 180px; 
+            left: 50%; 
+            width: 40px; 
+            transform: translateX(-50%);
+            z-index: 1;
+            border-left: 3px solid var(--gold);
+            border-right: 3px solid var(--gold);
+            border-bottom: 3px solid var(--gold);
+            border-bottom-left-radius: 5px;
+            border-bottom-right-radius: 5px;
+
+            background-image: linear-gradient(to bottom, transparent 60%, rgba(212, 175, 55, 0.5) 60%);
+            background-size: 100% 20px; 
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
+        }
+
+        /* --- THE TRAIN --- */
+        #hogwarts-express {
+            position: absolute;
+            left: 50%; top: 0;
+            transform: translate(-50%, -50%); 
+            width: 54px; height: 54px;
+            background: #2a0a0a;
+            border: 2px solid var(--gold);
+            border-radius: 50%;
+            z-index: 20;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 20px var(--gold), 0 0 40px rgba(212, 175, 55, 0.4);
+            font-size: 1.6rem; color: var(--gold);
+            
+            /* Hardware Acceleration */
+            will-change: transform;
+        }
+
+        /* --- FOOTSTEPS --- */
+        .footsteps-layer {
+            position: absolute; top: 0; bottom: 0; left: 50%; width: 40px; 
+            transform: translateX(-50%); z-index: 2; pointer-events: none;
+        }
+        .footprint {
+            position: absolute; font-size: 1rem;
+            color: var(--ink);
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        .footprint.visible { 
+            opacity: 1 !important;
+            filter: drop-shadow(0 0 1px #000);
+        }
+
+        /* --- CARDS & TYPOGRAPHY --- */
+        .timeline-row { display: flex; justify-content: space-between; margin-bottom: 150px; position: relative; z-index: 5; }
+        .timeline-row.right { flex-direction: row-reverse; }
+        
+        #last-row { margin-bottom: 80px; }
+
+        .timeline-content {
+            width: 40%; 
+            background: rgba(12, 12, 12, 0.8); 
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 30px; 
+            border-radius: 8px; 
+            position: relative; 
+            backdrop-filter: blur(2px); 
+            opacity: 0.5;
+            filter: grayscale(100%);
+            transform: scale(0.95);
+            transition: all 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .timeline-content h3 {
+            font-family: 'Cinzel Decorative';
+            margin-bottom: 10px;
+            color: #ffffff; 
+            text-shadow: none;
+            transition: color 0.5s ease, text-shadow 0.5s ease;
+        }
+
+        .time-badge { 
+            font-family: 'Cinzel Decorative'; 
+            color: #bbb;
+            font-size: 1.5rem; 
+            display: block; 
+            margin-bottom: 5px; 
+            transition: color 0.5s ease, text-shadow 0.5s ease;
+        }
+
+        /* --- ACTIVE STATE --- */
+        .timeline-content.active {
+            opacity: 1;
+            filter: grayscale(0%);
+            transform: scale(1.05);
+            background: rgba(12, 12, 12, 0.95); 
+            border-color: var(--gold);
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.15); 
+        }
+
+        .timeline-content.active h3 {
+            color: var(--gold);
+            text-shadow: 0 0 5px rgba(212, 175, 55, 0.6);
+            animation: textBreath 3s infinite alternate;
+        }
+
+        .timeline-content.active .time-badge {
+            color: var(--gold);
+            text-shadow: 0 0 8px rgba(212, 175, 55, 0.4);
+        }
+
+        /* --- RESTART BUTTON (LAST CARD) --- */
+        .timeline-action {
+            width: 40%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none; 
+        }
+        
+        .timeline-row.active-row .timeline-action {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .restart-btn {
+            width: 60px; height: 60px;
+            border-radius: 50%;
+            background: transparent;
+            border: 2px solid var(--gold);
+            color: var(--gold);
+            font-size: 1.4rem;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 10px rgba(212, 175, 55, 0.2);
+            animation: floatBtn 2s infinite ease-in-out;
+        }
+
+        .restart-btn:hover {
+            background: var(--gold);
+            color: #000;
+            box-shadow: 0 0 20px var(--gold);
+            transform: rotate(-180deg); /* Spin effect on hover */
+        }
+
+        @keyframes floatBtn {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(10px); }
+        }
+
+        @media (max-width: 991px) {
+            .timeline-action { display: none; }
+        }
+
+        .timeline-dot {
+            position: absolute; left: 50%; 
+            top: 50px; 
+            width: 20px; height: 20px; background: #000;
+            border: 2px solid #555; 
+            border-radius: 50%; transform: translateX(-50%); z-index: 10;
+            transition: all 0.4s ease;
+        }
+        
+        #last-stop {
+            top: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .timeline-row.active-row .timeline-dot {
+            border-color: var(--gold);
+            background: var(--gold);
+            box-shadow: 0 0 10px var(--gold);
+        }
+
+        .event-icon {
+            position: absolute; top: -25px; right: 20px; width: 50px; height: 50px; 
+            background: #333; color: #888; 
+            border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+            font-size: 1.4rem; 
+            transition: all 0.5s ease;
+            border: 1px solid #555;
+        }
+        .timeline-row.right .event-icon { right: auto; left: 20px; }
+
+        .timeline-content.active .event-icon {
+            background: var(--gold);
+            color: #000;
+            border-color: var(--gold);
+            box-shadow: 0 0 15px var(--gold);
+            transform: rotateY(360deg);
+        }
+
+        p { font-family: 'Crimson Text'; font-size: 1.2rem; color: #bbb; line-height: 1.4; }
+
+        @keyframes textBreath {
+            0% { text-shadow: 0 0 3px rgba(212, 175, 55, 0.5); }
+            100% { text-shadow: 0 0 12px rgba(212, 175, 55, 0.8); }
+        }
+
+        /* --- DESTINATION --- */
+        .destination-container {
+            text-align: center; position: relative; z-index: 10; 
+            margin-top: 0px; 
+            padding-bottom: 20px; 
+        }
+        .castle-img {
+            width: 180px; height: auto; opacity: 0.3; 
+            filter: grayscale(100%);
+            transition: all 1s ease;
+        }
+        .destination-container.active .castle-img {
+            opacity: 1;
+            filter: drop-shadow(0 0 15px var(--gold)) grayscale(0%);
+        }
+
+        @media (max-width: 768px) {
+            .timeline-track, .footsteps-layer, .timeline-dot, #hogwarts-express { left: 30px; }
+            .timeline-row, .timeline-row.right { flex-direction: column; padding-left: 70px; }
+            .timeline-content { width: 100%; }
+            .destination-container { padding-left: 30px; }
+            #wand { display: none !important; }
+            body { cursor: auto; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="intro-overlay">
+        <h1 class="page-title mb-4">The Hogwarts Express</h1>
+        <button class="board-btn" onclick="startJourney()">
+            <i class="fa-solid fa-train-subway me-2"></i> Board the Express
+        </button>
+    </div>
+
+    <div id="wand"><div id="wand-tip"></div><div id="wand-shaft"></div><div id="wand-handle"></div></div>
+
+    <nav class="navbar navbar-dark fixed-top" style="background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); border-bottom: 1px solid rgba(212,175,55,0.2);">
+        <div class="container">
+            <a class="navbar-brand" href="home.html" style="font-family: 'Cinzel Decorative'; color: var(--gold);">Hogwarts Hacks</a>
+            <a href="home.html" class="btn btn-sm btn-outline-warning" style="font-family: 'Cinzel Decorative'; border-color: var(--gold); color: var(--gold);">Back to Great Hall</a>
+        </div>
+    </nav>
+
+    <div class="container page-header">
+        <h1 class="page-title">The Roadmap</h1>
+        <p class="page-subtitle">"All aboard the Hogwarts Express"</p>
+    </div>
+
+    <div class="container timeline-container" id="timeline-track">
+        
+        <div class="timeline-track"></div>
+        <div id="hogwarts-express"><i class="fa-solid fa-train-subway"></i></div>
+        <div id="footsteps-layer" class="footsteps-layer"></div>
+
+        <div class="timeline-row">
+            <div class="timeline-dot" id="first-stop"></div>
+            <div class="timeline-content">
+                <div class="event-icon"><i class="fa-solid fa-train"></i></div>
+                <span class="time-badge">09:00 AM</span>
+                <h3>Platform 9 3/4 Arrival</h3>
+                <p>Check-in at the venue. Collect your house badges, wands (swag kits), and connect to the Hogwarts WiFi.</p>
+            </div>
+        </div>
+
+        <div class="timeline-row right">
+            <div class="timeline-dot"></div>
+            <div class="timeline-content">
+                <div class="event-icon"><i class="fa-solid fa-hat-wizard"></i></div>
+                <span class="time-badge">10:30 AM</span>
+                <h3>The Sorting Ceremony</h3>
+                <p>Opening keynote. Problem statements are revealed. Teams are finalized and the Hackathon begins!</p>
+            </div>
+        </div>
+
+        <div class="timeline-row">
+            <div class="timeline-dot"></div>
+            <div class="timeline-content">
+                <div class="event-icon"><i class="fa-solid fa-utensils"></i></div>
+                <span class="time-badge">01:00 PM</span>
+                <h3>The Great Feast</h3>
+                <p>Lunch break in the Great Hall. Replenish your stamina before diving deep into the Chamber of Code.</p>
+            </div>
+        </div>
+
+        <div class="timeline-row right">
+            <div class="timeline-dot"></div>
+            <div class="timeline-content">
+                <div class="event-icon"><i class="fa-solid fa-scroll"></i></div>
+                <span class="time-badge">04:00 PM</span>
+                <h3>Defense Against Bugs</h3>
+                <p>Mentoring session. Professors (Industry Experts) review your architecture and suggest spells to fix errors.</p>
+            </div>
+        </div>
+
+        <div class="timeline-row" id="last-row">
+            <div class="timeline-dot" id="last-stop"></div>
+            <div class="timeline-content">
+                <div class="event-icon"><i class="fa-solid fa-trophy"></i></div>
+                <span class="time-badge">11:00 AM (Day 2)</span>
+                <h3>House Cup Awarded</h3>
+                <p>Judges announce the winners. The Triwizard Cup is presented to the best team. The Express departs.</p>
+            </div>
+            <div class="timeline-action">
+                <button class="restart-btn" onclick="restartJourney()" title="Restart Journey">
+                    <i class="fa-solid fa-rotate-left"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="destination-container">
+            <img src="https://cdn-icons-png.flaticon.com/512/862/862823.png" alt="Hogwarts Castle" class="castle-img" style="filter: invert(80%) sepia(20%) saturate(500%) hue-rotate(360deg) brightness(90%) contrast(85%);"> 
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        /* --- WAND CURSOR LOGIC --- */
+        const isDesktop = window.matchMedia("(min-width: 992px)");
+        const wand = document.getElementById('wand');
+        window.addEventListener('mousemove', (e) => {
+            if (isDesktop.matches) {
+                const x = e.clientX; const y = e.clientY;
+                wand.style.transform = `translate(${x}px, ${y}px) rotate(-25deg)`;
+                if(Math.random() > 0.6) createTrail(x, y);
+            }
+        });
+        function createTrail(x, y) {
+            const trail = document.createElement('div');
+            trail.classList.add('cursor-trail');
+            trail.style.left = `${x}px`; trail.style.top = `${y}px`;
+            document.body.appendChild(trail);
+            setTimeout(() => trail.remove(), 500);
+        }
+
+        /* --- ADVANCED AUTO SCROLL ENGINE --- */
+        let autoScrollActive = false;
+        let animationFrameId = null;
+        let autoScrollTimeouts = [];
+
+        function easeInOutCubic(t) {
+            return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        }
+
+        function slowScrollTo(targetY, duration) {
+            if (!autoScrollActive) return;
+
+            const startY = window.scrollY;
+            const distance = targetY - startY;
+            let startTime = null;
+
+            function animation(currentTime) {
+                if (!autoScrollActive) return;
+                if (startTime === null) startTime = currentTime;
+                
+                const timeElapsed = currentTime - startTime;
+                const progress = Math.min(timeElapsed / duration, 1);
+                const ease = easeInOutCubic(progress);
+
+                window.scrollTo(0, startY + (distance * ease));
+
+                if (timeElapsed < duration) {
+                    animationFrameId = requestAnimationFrame(animation);
+                }
+            }
+
+            animationFrameId = requestAnimationFrame(animation);
+        }
+
+        function startJourney() {
+            document.getElementById('intro-overlay').classList.add('hidden');
+            autoScrollActive = true;
+            
+            // --- STANDARD TIMING ---
+            // Travel Time: 2 seconds
+            // Stop Time: 1.5 seconds
+            const travelTime = 2000; 
+            const stopTime = 1500;   
+            const cycle = travelTime + stopTime;
+
+            const rows = document.querySelectorAll('.timeline-row');
+            const castle = document.querySelector('.destination-container');
+            const stops = [...rows, castle];
+
+            stops.forEach((stop, index) => {
+                const delay = index * cycle;
+                
+                const timeoutId = setTimeout(() => {
+                    if (autoScrollActive) {
+                        let targetY;
+                        
+                        if(stop.classList.contains('timeline-row')) {
+                            const dot = stop.querySelector('.timeline-dot');
+                            const rect = dot.getBoundingClientRect();
+                            const absoluteTop = window.scrollY + rect.top;
+                            targetY = absoluteTop - (window.innerHeight / 2);
+                        } else {
+                             const rect = stop.getBoundingClientRect();
+                             const absoluteTop = window.scrollY + rect.top;
+                             targetY = absoluteTop - (window.innerHeight / 2) + (rect.height / 2);
+                        }
+
+                        slowScrollTo(targetY, travelTime);
+                    }
+                }, delay);
+                
+                autoScrollTimeouts.push(timeoutId);
+            });
+        }
+
+        // --- RESTART LOGIC ---
+        function restartJourney() {
+            stopAutoScroll(); // Stop current movement
+            
+            // Scroll to top quickly but smoothly
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            // Wait for scroll to finish, then show overlay
+            setTimeout(() => {
+                document.getElementById('intro-overlay').classList.remove('hidden');
+            }, 1000);
+        }
+
+        // --- INTERRUPT LOGIC ---
+        function stopAutoScroll() {
+            if (autoScrollActive) {
+                autoScrollActive = false;
+                if (animationFrameId) cancelAnimationFrame(animationFrameId);
+                autoScrollTimeouts.forEach(id => clearTimeout(id));
+            }
+        }
+
+        window.addEventListener('wheel', stopAutoScroll, { passive: true });
+        window.addEventListener('touchmove', stopAutoScroll, { passive: true });
+        window.addEventListener('keydown', stopAutoScroll, { passive: true });
+        window.addEventListener('mousedown', stopAutoScroll, { passive: true });
+
+
+        /* --- TRAIN POSITION LOGIC (OPTIMIZED) --- */
+        const train = document.getElementById('hogwarts-express');
+        const footstepsLayer = document.getElementById('footsteps-layer');
+        const timelineContainer = document.getElementById('timeline-track');
+        const firstStop = document.getElementById('first-stop');
+        const lastStop = document.getElementById('last-stop'); 
+        const destinationContainer = document.querySelector('.destination-container');
+        const timelineRows = document.querySelectorAll('.timeline-row'); 
+        
+        const STEP_DISTANCE = 30; 
+        const totalSteps = 100;
+        for (let i = 0; i < totalSteps; i++) {
+            const step = document.createElement('i');
+            step.classList.add('fa-solid', 'fa-shoe-prints', 'footprint');
+            step.style.top = `${i * STEP_DISTANCE}px`;
+            if (i % 2 === 0) {
+                step.style.left = '5px'; step.style.transform = 'rotate(-5deg)';
+            } else {
+                step.style.left = '20px'; step.style.transform = 'rotate(5deg) scaleX(-1)';
+            }
+            footstepsLayer.appendChild(step);
+        }
+        const allSteps = document.querySelectorAll('.footprint');
+
+        // Loop for smooth updates
+        function updateTimelineLoop() {
+            const containerRect = timelineContainer.getBoundingClientRect();
+            const firstStopRect = firstStop.getBoundingClientRect();
+            const lastStopRect = lastStop.getBoundingClientRect();
+
+            const windowHeight = window.innerHeight;
+            const triggerPoint = windowHeight * 0.5;
+
+            // position (px) relative to container where the train should be placed
+            let progressPx = triggerPoint - containerRect.top;
+
+            const minDistance = firstStopRect.top - containerRect.top;
+            const maxDistance = lastStopRect.top - containerRect.top;
+
+            // clamp within track
+            if (progressPx < minDistance) progressPx = minDistance;
+            if (progressPx > maxDistance) progressPx = maxDistance;
+
+            // move train using transform (better performance)
+            train.style.transform = `translate(-50%, ${progressPx}px)`;
+
+            // Determine which station the train is *currently at*.
+            // We'll find the nearest dot and only mark it active when the train
+            // is within a small threshold of that dot's Y position.
+            let nearestRow = null;
+            let nearestDist = Infinity;
+            timelineRows.forEach(row => {
+                const dot = row.querySelector('.timeline-dot');
+                const dotRect = dot.getBoundingClientRect();
+                // dot position relative to container top
+                const dotPos = dotRect.top - containerRect.top;
+                const dist = Math.abs(progressPx - dotPos);
+                if (dist < nearestDist) { nearestDist = dist; nearestRow = row; }
+            });
+
+            const ACTIVE_THRESHOLD = 40; // pixels tolerance to consider "at the station"
+            timelineRows.forEach(row => {
+                const content = row.querySelector('.timeline-content');
+                if (row === nearestRow && nearestDist <= ACTIVE_THRESHOLD) {
+                    content.classList.add('active');
+                    row.classList.add('active-row');
+                } else {
+                    content.classList.remove('active');
+                    row.classList.remove('active-row');
+                }
+            });
+
+            // Destination becomes active only when train reaches end of track
+            if (progressPx >= maxDistance - 10) {
+                destinationContainer.classList.add('active');
+            } else {
+                destinationContainer.classList.remove('active');
+            }
+
+            // Remove steps animation when train passes: do not toggle 'visible' on footprints
+            // (This keeps the track static and prevents the footsteps animation.)
+            // If you want to re-enable static footprints later, add CSS to show them.
+
+            requestAnimationFrame(updateTimelineLoop);
+        }
+
+        updateTimelineLoop();
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rules & Decrees - Hogwarts Hackathon</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Crimson+Text:ital,wght@0,400;1,400&family=Pinyon+Script&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --gold: #d4af37;
+            --bg-dark: #0b0b0b;
+            --parchment: #d1c4a9;
+            --ink: #2a1b15;
+            --danger: #8a1c1c;
+        }
+
+        /* --- GLOBAL CURSOR RESET --- */
+        html, body, button, a, input, select, textarea, .btn, .card, div, span, li, i {
+            cursor: none !important;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            background: radial-gradient(circle at center, #1f1f35 0%, #000000 100%), url('https://www.transparenttextures.com/patterns/stardust.png');
+            background-attachment: fixed;
+            color: #eee;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* --- WAND CURSOR --- */
+        #wand { position: fixed; top: 0; left: 0; width: 10px; height: 50px; pointer-events: none; z-index: 10000; will-change: transform; transform-origin: top left; filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.9)); display: none; flex-direction: column; align-items: center; }
+        #wand-tip { width: 4px; height: 4px; background: #fff; border-radius: 50%; box-shadow: 0 0 10px #fff, 0 0 20px var(--gold); z-index: 2; margin-bottom: -1px; }
+        #wand-shaft { width: 3px; height: 60%; background: linear-gradient(to right, #5d4037, #8d6e63, #5d4037); border-radius: 0 0 2px 2px; }
+        #wand-handle { width: 8px; height: 40%; background: repeating-linear-gradient(45deg, #2d2d2d, #1a1a1a 3px, #3a3a3a 3px, #2d2d2d 6px); border-radius: 3px; }
+        @media (min-width: 992px) { #wand { display: flex; } }
+
+        /* --- NAVBAR --- */
+        .navbar { background: rgba(10, 10, 10, 0.95); border-bottom: 1px solid rgba(212, 175, 55, 0.3); }
+        .navbar-brand { font-family: 'Cinzel Decorative'; color: var(--gold) !important; }
+        .nav-link { font-family: 'Cinzel Decorative'; color: var(--gold) !important; transition: 0.3s; }
+        .nav-link:hover { color: #fff !important; text-shadow: 0 0 15px var(--gold); }
+
+        /* --- LAYOUT --- */
+        .container { padding-top: 50px; padding-bottom: 80px; max-width: 1000px; }
+        .page-header { text-align: center; margin-bottom: 50px; }
+        .page-title { font-family: 'Cinzel Decorative'; font-size: 3.5rem; color: var(--gold); text-shadow: 0 0 20px rgba(212,175,55,0.4); margin-bottom: 10px; }
+        .page-subtitle { font-family: 'Pinyon Script'; font-size: 2rem; color: #aaa; }
+
+        /* --- DECREE BOARD --- */
+        .decree-board {
+            background-color: var(--parchment);
+            background-image: url('https://www.transparenttextures.com/patterns/aged-paper.png');
+            border: 15px solid #1a0f0d;
+            border-radius: 5px;
+            padding: 40px;
+            position: relative;
+            box-shadow: 0 0 50px rgba(0,0,0,0.8), inset 0 0 100px rgba(62, 39, 35, 0.4);
+            color: var(--ink);
+            filter: url(#wrinkle-paper);
+        }
+
+        /* Ornamental Corners */
+        .corner-ornament {
+            position: absolute; width: 50px; height: 50px;
+            border: 3px double var(--ink);
+            z-index: 5;
+        }
+        .co-tl { top: 15px; left: 15px; border-right: none; border-bottom: none; }
+        .co-tr { top: 15px; right: 15px; border-left: none; border-bottom: none; }
+        .co-bl { bottom: 15px; left: 15px; border-right: none; border-top: none; }
+        .co-br { bottom: 15px; right: 15px; border-left: none; border-top: none; }
+
+        /* Header Text */
+        .decree-header {
+            text-align: center;
+            border-bottom: 3px double var(--ink);
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .decree-title {
+            font-family: 'Cinzel Decorative';
+            font-size: 2.5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 5px;
+        }
+        .decree-sub {
+            font-family: 'Crimson Text';
+            font-size: 1.2rem;
+            font-style: italic;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Rule Sections */
+        .rule-section { margin-bottom: 30px; }
+        .rule-title {
+            font-family: 'Cinzel Decorative';
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .rule-title i { color: #7f0000; font-size: 1.2rem; }
+
+        .rule-list {
+            list-style: none;
+            padding-left: 20px;
+            font-family: 'Crimson Text';
+            font-size: 1.2rem;
+            line-height: 1.6;
+        }
+        .rule-list li {
+            margin-bottom: 10px;
+            position: relative;
+            padding-left: 25px;
+        }
+        .rule-list li::before {
+            content: "✦";
+            position: absolute;
+            left: 0;
+            color: #7f0000;
+            font-size: 0.8rem;
+            top: 4px;
+        }
+
+        /* Proclamation Footer */
+        .proclamation-footer {
+            text-align: center;
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 2px solid rgba(42, 27, 21, 0.3);
+        }
+        .ministry-seal {
+            width: 80px; height: 80px;
+            background: #7f0000;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center; justify-content: center;
+            color: #fff;
+            font-family: 'Cinzel Decorative';
+            font-size: 0.8rem;
+            text-align: center;
+            border: 4px double #d4af37;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+            margin-bottom: 10px;
+            transform: rotate(-15deg);
+        }
+        .signed-by {
+            font-family: 'Pinyon Script';
+            font-size: 2rem;
+            margin-top: 10px;
+        }
+
+        svg { position: absolute; }
+    </style>
+</head>
+<body>
+
+    <!-- SVG Filter -->
+    <svg width="0" height="0"><filter id="wrinkle-paper"><feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="3" result="noise" /><feDiffuseLighting in="noise" lighting-color="#fff" surfaceScale="2"><feDistantLight azimuth="45" elevation="60" /></feDiffuseLighting><feComposite operator="in" in2="SourceGraphic" result="textured"/><feBlend mode="multiply" in="textured" in2="SourceGraphic"/></filter></svg>
+
+    <div id="wand"><div id="wand-tip"></div><div id="wand-shaft"></div><div id="wand-handle"></div></div>
+
+    <nav class="navbar navbar-expand-lg sticky-top navbar-dark">
+        <div class="container-fluid px-5">
+            <a class="navbar-brand" href="main.html">Hogwarts Hacks</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" style="border-color: rgba(212,175,55,0.3);">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+                <ul class="navbar-nav align-items-center">
+                    <li class="nav-item"><a class="nav-link" href="main.html">Great Hall</a></li>
+                    <li class="nav-item"><a class="nav-link" href="main.html#houses">Houses</a></li>
+                    <li class="nav-item"><a class="nav-link" href="teams.html">Teams</a></li>
+                    <li class="nav-item"><a class="nav-link" href="leaderboard.html">Leaderboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="organizers.html">Organizers</a></li>
+                    <li class="nav-item"><a class="nav-link" href="timeline.html">Timeline</a></li>
+                    <li class="nav-item"><a class="nav-link" href="faq.html">FAQs</a></li>
+                    <li class="nav-item"><a class="nav-link" href="rules.html">Rules</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">Educational Decree No. 24</h1>
+            <p class="page-subtitle">"Rules of Conduct for the upcoming Tournament"</p>
+        </div>
+
+        <div class="decree-board">
+            <!-- Corners -->
+            <div class="corner-ornament co-tl"></div>
+            <div class="corner-ornament co-tr"></div>
+            <div class="corner-ornament co-bl"></div>
+            <div class="corner-ornament co-br"></div>
+
+            <div class="decree-header">
+                <div class="decree-title">By Order of the Ministry</div>
+                <div class="decree-sub">The High Inquisitor of Hogwarts</div>
+            </div>
+
+            <div class="rule-section">
+                <div class="rule-title"><i class="fa-solid fa-users-line"></i> Fellowship Formation</div>
+                <ul class="rule-list">
+                    <li>Teams must consist of 3 to 4 wizards or witches.</li>
+                    <li>Teams are requested to carry the extension cords with them.</li>
+                    <li>All Wizards/Witches must be present in the Great Hall (Venue) for the duration of the hackathon.</li>
+                    <li>Wizards/Witches ID cards will be given at registeration desk at the starting of the hackathon.</li>
+                    <li>Cross college teams are also allowed to participate in the hackathon.</li>
+                </ul>
+            </div>
+
+            <div class="rule-section">
+                <div class="rule-title"><i class="fa-solid fa-hat-wizard"></i> Code of Conduct</div>
+                <ul class="rule-list">
+                    <li>Problem statements are released on 05/12/2025 morning 06:00 AM-06:00 PM.Once opted can't be changed.</li>
+                    <li>Keep the castle clean! Vanish your rubbish into the nearest bin.</li>
+                    <li>Respect your fellow wizards. Duelling is only allowed in the form of code optimization.</li>
+                    <li>Respect organizers and volunteers and follow the instructions given by them.</li>
+                    <li>Incase of inconvenience, report to the nearest organizers or volunteers.</li>
+                </ul>
+            </div>
+
+            <div class="rule-section">
+                <div class="rule-title"><i class="fa-solid fa-scroll"></i> Submission & Judging</div>
+                <ul class="rule-list">
+                    <li>All projects must be submitted to the Repository of Secrets (GitHub) before the sand in the hourglass runs out.</li>
+                    <li>Judging will be based on: Innovation (30%), Technical Complexity (30%), Design & Polish (20%), and Adherence to Theme (20%).</li>
+                    <li>Judge’s decisions are final, as per the rules of the Ministry.</li>
+                </ul>
+            </div>
+
+            <div class="proclamation-footer">
+                <div class="ministry-seal">
+                    Ministry<br>Approved
+                </div>
+                <div class="signed-by">Albus Dumbledore</div>
+                <div style="font-family: 'Crimson Text'; font-size: 0.9rem; margin-top: 5px;">Headmaster</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- WAND CURSOR ---
+        const wand = document.getElementById('wand');
+        const isDesktop = window.matchMedia("(min-width: 992px)");
+        if (isDesktop.matches) {
+            window.addEventListener('mousemove', (e) => {
+                wand.style.transform = `translate(${e.clientX}px, ${e.clientY}px) rotate(-25deg)`;
+            });
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
