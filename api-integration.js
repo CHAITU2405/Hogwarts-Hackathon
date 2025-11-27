@@ -1,13 +1,34 @@
 // API Integration Script for Hogwarts Hackathon
 // Include this script in your HTML files to connect frontend to backend
 
+// Fetch with timeout wrapper
+function fetchWithTimeout(url, options = {}) {
+    const timeout = options.timeout || 10000; // Default 10 seconds
+    delete options.timeout; // Remove timeout from options
+    
+    return new Promise((resolve, reject) => {
+        const timeoutId = setTimeout(() => {
+            reject(new Error(`Request timeout after ${timeout}ms`));
+        }, timeout);
+        
+        fetch(url, options)
+            .then(response => {
+                clearTimeout(timeoutId);
+                resolve(response);
+            })
+            .catch(error => {
+                clearTimeout(timeoutId);
+                reject(error);
+            });
+    });
+}
+
 // Dynamically determine API base URL based on current host
-// This works for localhost, port forwarding, dev tunnels, and deployed environments
+// This works for localhost, port forwarding, dev tunnels, Render, and deployed environments
 function getApiBaseUrl() {
     const protocol = window.location.protocol;
     const hostname = window.location.hostname;
     const port = window.location.port;
-    const fullHost = window.location.host; // includes port if present
     
     // Check if we're on localhost
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
@@ -15,31 +36,30 @@ function getApiBaseUrl() {
         // Use same origin if port is specified, otherwise default to 5000
         if (port && port !== '5000') {
             // Frontend is on a different port, assume backend is on 5000
-        return `http://localhost:5000/api`;
+            return `http://localhost:5000/api`;
         }
         // Same origin - Flask serves both
         return `${protocol}//${hostname}${port ? ':' + port : ':5000'}/api`;
     }
     
-    // Check if using dev tunnels (devtunnels.ms domain)
-    // Flask serves both frontend and backend through the same tunnel
-    if (hostname.includes('devtunnels.ms')) {
-        // Always use same origin for dev tunnels (Flask serves both frontend and API)
+    // Check if using dev tunnels (devtunnels.ms domain) or Render
+    // Flask serves both frontend and backend through the same domain
+    if (hostname.includes('devtunnels.ms') || hostname.includes('render.com') || hostname.includes('onrender.com')) {
+        // Always use same origin (Flask serves both frontend and API)
         // This avoids mixed content and CORS issues
-            return `${protocol}//${hostname}${port ? ':' + port : ''}/api`;
+        return `${protocol}//${hostname}${port ? ':' + port : ''}/api`;
     }
     
     // For port forwarding: Flask serves both frontend and backend on the same port
     // Use same origin (same protocol, hostname, and port)
-    // This is the most common case for forwarded ports
     if (port) {
         // Port is specified - Flask serves both on this port
         return `${protocol}//${hostname}:${port}/api`;
     }
     
-    // Fallback: no port specified, assume Flask is on port 5000
-    // Try to use same protocol as frontend
-    return `${protocol}//${hostname}:5000/api`;
+    // For production deployments (same origin - Flask serves both frontend and API)
+    // Use same origin without port (standard HTTP/HTTPS ports)
+    return `${protocol}//${hostname}/api`;
 }
 
 const API_BASE_URL = getApiBaseUrl();
@@ -54,7 +74,10 @@ function setupRegistrationForm() {
         
         // Check if registration is enabled before allowing submission
         try {
-            const statusResponse = await fetch('/api/admin/registration-toggle');
+            const statusResponse = await fetchWithTimeout('/api/admin/registration-toggle', {
+                method: 'GET',
+                timeout: 5000 // 5 second timeout
+            });
             const statusData = await statusResponse.json();
             if (statusData.success && !statusData.enabled) {
                 alert('Registrations are currently closed');
@@ -62,6 +85,11 @@ function setupRegistrationForm() {
             }
         } catch (error) {
             console.error('Error checking registration status:', error);
+            // If timeout or network error, show user-friendly message
+            if (error.name === 'TimeoutError' || error.message.includes('timeout')) {
+                alert('Connection timeout. Please check your internet connection and try again.');
+                return;
+            }
             // Continue with submission if check fails (fail open)
         }
         
@@ -176,11 +204,13 @@ function setupRegistrationForm() {
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registering...';
         
         try {
-            const apiUrl = `${getApiBaseUrl()}/register`;
+            // Use relative URL for same-origin requests (works on Render)
+            const apiUrl = '/api/register';
             console.log('Registering team via:', apiUrl); // Debug log
-            const response = await fetch(apiUrl, {
+            const response = await fetchWithTimeout(apiUrl, {
                 method: 'POST',
-                body: formData
+                body: formData,
+                timeout: 30000 // 30 second timeout for file upload
             });
             
             // Parse response - only show ticket if we get confirmed success from server
@@ -234,9 +264,11 @@ function setupRegistrationForm() {
                 name: error.name
             });
             
-            // Check if it's a network error
+            // Check if it's a network error or timeout
             if (error.message && (error.message.includes('Failed to fetch') || error.message.includes('NetworkError'))) {
                 alert('Network error. Please check your connection and try again.');
+            } else if (error.message && error.message.includes('timeout')) {
+                alert('Request timed out. The server is taking too long to respond. Please try again.');
             } else {
                 alert('An error occurred: ' + (error.message || 'Unknown error'));
             }

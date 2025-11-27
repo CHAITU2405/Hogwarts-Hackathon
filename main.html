@@ -766,10 +766,35 @@
             }
         }
         
+        // Fetch with timeout wrapper
+        function fetchWithTimeout(url, options = {}) {
+            const timeout = options.timeout || 5000; // Default 5 seconds
+            delete options.timeout;
+            
+            return new Promise((resolve, reject) => {
+                const timeoutId = setTimeout(() => {
+                    reject(new Error(`Request timeout after ${timeout}ms`));
+                }, timeout);
+                
+                fetch(url, options)
+                    .then(response => {
+                        clearTimeout(timeoutId);
+                        resolve(response);
+                    })
+                    .catch(error => {
+                        clearTimeout(timeoutId);
+                        reject(error);
+                    });
+            });
+        }
+
         // Check registration toggle status
         async function checkRegistrationToggle() {
             try {
-                const response = await fetch('/api/admin/registration-toggle');
+                const response = await fetchWithTimeout('/api/admin/registration-toggle', {
+                    method: 'GET',
+                    timeout: 5000
+                });
                 const data = await response.json();
                 const registerBtn = document.getElementById('registerNavItem');
                 const regMessage = document.getElementById('registrationMessage');

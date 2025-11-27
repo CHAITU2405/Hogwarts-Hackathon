@@ -1147,10 +1147,35 @@
             }
         });
 
+        // Fetch with timeout wrapper
+        function fetchWithTimeout(url, options = {}) {
+            const timeout = options.timeout || 5000; // Default 5 seconds
+            delete options.timeout;
+            
+            return new Promise((resolve, reject) => {
+                const timeoutId = setTimeout(() => {
+                    reject(new Error(`Request timeout after ${timeout}ms`));
+                }, timeout);
+                
+                fetch(url, options)
+                    .then(response => {
+                        clearTimeout(timeoutId);
+                        resolve(response);
+                    })
+                    .catch(error => {
+                        clearTimeout(timeoutId);
+                        reject(error);
+                    });
+            });
+        }
+
         // Check registration status on page load
         async function checkRegistrationStatus() {
             try {
-                const response = await fetch('/api/admin/registration-toggle');
+                const response = await fetchWithTimeout('/api/admin/registration-toggle', {
+                    method: 'GET',
+                    timeout: 5000
+                });
                 const data = await response.json();
                 const form = document.getElementById('registrationForm');
                 const closedMessage = document.getElementById('registrationClosedMessage');
@@ -1183,6 +1208,10 @@
                 }
             } catch (error) {
                 console.error('Error checking registration status:', error);
+                // On timeout or network error, show form but log the issue
+                if (error.message && error.message.includes('timeout')) {
+                    console.warn('Registration status check timed out - showing form anyway');
+                }
                 // On error, default to showing form (allow registration)
             }
         }
