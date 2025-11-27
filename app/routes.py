@@ -352,31 +352,51 @@ def approve_team(team_id):
         team.approval_status = 'approved'
         db.session.commit()
         
-        # Send credentials email to team lead
+        # Send credentials email to team lead (non-blocking - don't fail if email fails)
         email_sent = False
         email_error = None
         try:
-            email_sent = send_credentials_email(
-                receiver_email=team_lead.email,
-                team_name=team.team_name,
-                username=team_lead.name,
-                password=team.utr_transaction_id,
-                team_lead_name=team_lead.name
-            )
+            # Only try to send email if email credentials are configured
+            from app.config import Config
+            if hasattr(Config, 'SENDER_EMAIL') and Config.SENDER_EMAIL and hasattr(Config, 'SENDER_PASSWORD') and Config.SENDER_PASSWORD:
+                email_sent = send_credentials_email(
+                    receiver_email=team_lead.email,
+                    team_name=team.team_name,
+                    username=team_lead.name,
+                    password=team.utr_transaction_id,
+                    team_lead_name=team_lead.name
+                )
+            else:
+                print("Email credentials not configured - skipping email send")
         except Exception as e:
             email_error = str(e)
-            print(f"Email sending failed: {email_error}")
+            print(f"Email sending failed (non-critical): {email_error}")
+            # Don't fail the approval if email fails
         
+        # Build response message
         response_message = f'Team {team.team_name} has been approved. Login credentials created.'
         if email_sent:
             response_message += ' Credentials have been sent to the team lead via email.'
         elif email_error:
-            response_message += f' Note: Email could not be sent ({email_error}), but credentials are available.'
+            response_message += f' Note: Email could not be sent, but credentials are available.'
+        
+        # Get team data safely
+        try:
+            team_dict = team.to_dict()
+        except Exception as e:
+            print(f"Error serializing team: {e}")
+            # Fallback to basic team data
+            team_dict = {
+                'id': team.id,
+                'team_name': team.team_name,
+                'house': team.house,
+                'approval_status': team.approval_status
+            }
         
         return jsonify({
             'success': True,
             'message': response_message,
-            'team': team.to_dict(),
+            'team': team_dict,
             'login': {
                 'username': team_lead.name,
                 'password': team.utr_transaction_id,
@@ -386,7 +406,10 @@ def approve_team(team_id):
         }), 200
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+        import traceback
+        error_trace = traceback.format_exc()
+        print(f"Error in approve_team: {error_trace}")
+        return jsonify({'error': str(e), 'trace': error_trace}), 500
 
 @api_bp.route('/admin/reject-team/<int:team_id>', methods=['POST'])
 def reject_team(team_id):
