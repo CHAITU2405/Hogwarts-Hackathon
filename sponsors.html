@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hogwarts Hackathon - Sponsors</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Crimson+Text:ital,wght@0,400;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    :root { --gold: #d4af37; --bg-dark: #0b0b0f; --card-bg: rgba(255,255,255,0.03); }
+    body { background: radial-gradient(circle at 30% 20%, #1d1d29, #050507 70%); color: #e0e0e0; font-family: 'Crimson Text', serif; overflow-x: hidden; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; -webkit-touch-callout: none; }
+    .cinzel { font-family: 'Cinzel Decorative', cursive; }
+    .navbar { background: rgba(0,0,0,0.85); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .navbar-brand { font-family: 'Cinzel Decorative'; color: var(--gold) !important; letter-spacing: 1px; }
+    .nav-link { color: #d7d7d7 !important; font-family: 'Cinzel Decorative'; font-size: 0.95rem; }
+    .nav-link:hover { color: var(--gold) !important; text-shadow: 0 0 8px var(--gold); }
+    .register-btn { border: 1px solid var(--gold); border-radius: 30px; padding: 6px 20px; background: linear-gradient(130deg,#3a2d00,#1a1400); color: var(--gold) !important; box-shadow: 0 0 12px rgba(212,175,55,0.25); }
+    .register-btn:hover { color: #111 !important; background: linear-gradient(130deg,#ffbb4d,#ff9e29); box-shadow: 0 0 20px rgba(255,190,60,0.7); }
+
+    header { text-align: center; padding: 110px 20px 40px; position: relative; }
+    header h1 { font-family: 'Cinzel Decorative'; font-size: 3.5rem; color: var(--gold); text-transform: uppercase; letter-spacing: 2px; }
+    header p { max-width: 720px; margin: 15px auto 0; color: #c7c7c7; font-size: 1.15rem; }
+
+    .sponsor-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 25px; margin: 40px 0 60px; }
+    .sponsor-card { position: relative; background: var(--card-bg); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 25px; text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.45); transition: transform 0.3s ease, border-color 0.3s ease; height: 100%; display: flex; flex-direction: column; justify-content: space-between; }
+    .sponsor-card:hover { transform: translateY(-8px); border-color: rgba(212,175,55,0.35); }
+    .sponsor-logo { height: 80px; width: auto; max-width: 150px; object-fit: contain; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6)); margin-bottom: 18px; }
+    .sponsor-name { font-family: 'Cinzel Decorative'; font-size: 1.3rem; color: var(--gold); margin-bottom: 10px; }
+    .sponsor-tier { font-size: 0.85rem; letter-spacing: 2px; text-transform: uppercase; color: #bca979; margin-bottom: 12px; }
+    .sponsor-desc { font-size: 1rem; line-height: 1.45; color: #c9c9c9; flex-grow: 1; }
+    .social-links { margin-top: 18px; display: flex; justify-content: center; gap: 12px; }
+    .social-links a { width: 38px; height: 38px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; color: #fff; transition: 0.3s; font-size: 1rem; }
+    .social-links a:hover { border-color: var(--gold); color: var(--gold); box-shadow: 0 0 12px rgba(212,175,55,0.4); }
+
+    .glow-divider { width: 160px; height: 2px; background: linear-gradient(90deg, transparent, var(--gold), transparent); margin: 25px auto; opacity: 0.6; }
+
+    footer { padding: 35px 0; text-align: center; color: #9e9e9e; border-top: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.7); margin-top: 60px; }
+
+    @media (min-width: 992px) {
+      *, html, body, a, button, input, label, select { cursor: none !important; }
+      #wand { display: flex !important; }
+    }
+    #wand { position: fixed; top: 0; left: 0; width: 12px; height: 70px; pointer-events: none; z-index: 10000; will-change: transform; transform-origin: top left; filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.6)) drop-shadow(2px 3px 6px rgba(0,0,0,0.95)); flex-direction: column; align-items: center; display: none; animation: wandGlow 2s ease-in-out infinite; }
+    @keyframes wandGlow { 0%,100%{filter:drop-shadow(0 0 8px rgba(212,175,55,0.6)) drop-shadow(2px 3px 6px rgba(0,0,0,0.95));} 50%{filter:drop-shadow(0 0 15px rgba(212,175,55,0.8)) drop-shadow(2px 3px 8px rgba(0,0,0,0.95)) drop-shadow(0 0 20px rgba(255,255,100,0.4));} }
+    #wand-tip { width: 6px; height: 6px; background: radial-gradient(circle at 30% 30%, #fff, #ffeb3b); border-radius: 50%; box-shadow: 0 0 12px #fff, 0 0 24px var(--gold), 0 0 40px rgba(255,215,0,0.6); z-index: 2; margin-bottom: -2px; animation: tipSparkle 1.5s ease-in-out infinite; }
+    @keyframes tipSparkle { 0%,100%{box-shadow:0 0 12px #fff,0 0 24px var(--gold),0 0 40px rgba(255,215,0,0.6);} 50%{box-shadow:0 0 20px #fff,0 0 36px var(--gold),0 0 60px rgba(255,255,100,0.8);} }
+    #wand-shaft { width: 4px; height: 55%; background: linear-gradient(to right, #4a2511, #6d4c41, #5d4037, #6d4c41, #4a2511); border-radius: 3px 3px 0 0; box-shadow: inset -1px 0 2px rgba(0,0,0,0.8), inset 1px 0 1px rgba(255,255,255,0.1); }
+    #wand-handle { width: 10px; height: 45%; background: linear-gradient(135deg, #1a0d04, #2d1810, #3a241a, #2d1810, #1a0d04); border-radius: 2px 2px 3px 3px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.9), 0 0 6px rgba(0,0,0,0.8); border: 1px solid rgba(255,215,0,0.15); position: relative; }
+    #wand-handle::before { content: ''; position: absolute; top: 3px; left: 2px; right: 2px; height: 3px; background: repeating-linear-gradient(90deg, #8b6f47 0px, #8b6f47 2px, transparent 2px, transparent 5px); border-radius: 1px; }
+    .cursor-trail { position: fixed; width: 3px; height: 3px; background: var(--gold); border-radius: 50%; pointer-events: none; z-index: 9999; animation: fade-trail 0.5s linear forwards; box-shadow: 0 0 5px var(--gold); }
+    @keyframes fade-trail { 0% { opacity: 0.8; transform: scale(1); } 100% { opacity: 0; transform: scale(0.2) translate(0, 10px); } }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+    <div class="container">
+      <a class="navbar-brand" href="main.html">Hogwarts Hacks</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav"><span class="navbar-toggler-icon"></span></button>
+      <div id="nav" class="collapse navbar-collapse justify-content-end">
+        <ul class="navbar-nav align-items-center">
+          <li class="nav-item"><a class="nav-link" href="main.html">Great Hall</a></li>
+          <li class="nav-item"><a class="nav-link" href="teams.html">Teams</a></li>
+          <li class="nav-item"><a class="nav-link" href="organizers.html">Organizers</a></li>
+          <li class="nav-item"><a class="nav-link" href="faq.html">FAQs</a></li>
+          <li class="nav-item"><a class="nav-link register-btn" href="register.html">Register</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div id="wand"><div id="wand-tip"></div><div id="wand-shaft"></div><div id="wand-handle"></div></div>
+
+  <header>
+    <h1>Our Sponsors</h1>
+    <div class="glow-divider"></div>
+    <p>These esteemed houses of innovation power the Hogwarts Hackathon with resources, mentorship, and a touch of magic. Explore their missions and follow along on their enchanted channels.</p>
+  </header>
+
+  <div class="container">
+    <div class="sponsor-grid">
+      <article class="sponsor-card">
+        <img class="sponsor-logo" src="https://logo.clearbit.com/microsoft.com" alt="Microsoft Logo" />
+        <h3 class="sponsor-name">Microsoft Azure</h3>
+        <div class="sponsor-tier">Phoenix Tier Partner</div>
+        <p class="sponsor-desc">Fueling cloud-native spellcraft with scalable infrastructure, AI services, and wizard-friendly tooling that keeps projects soaring.</p>
+        <div class="social-links">
+          <a href="https://twitter.com/azure" target="_blank" rel="noopener" aria-label="Azure on Twitter"><i class="fab fa-twitter"></i></a>
+          <a href="https://www.linkedin.com/showcase/microsoft-azure/" target="_blank" rel="noopener" aria-label="Azure on LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+          <a href="https://azure.microsoft.com" target="_blank" rel="noopener" aria-label="Azure Website"><i class="fas fa-globe"></i></a>
+        </div>
+      </article>
+
+      <article class="sponsor-card">
+        <img class="sponsor-logo" src="https://logo.clearbit.com/github.com" alt="GitHub Logo" />
+        <h3 class="sponsor-name">GitHub</h3>
+        <div class="sponsor-tier">Dragon Tier Partner</div>
+        <p class="sponsor-desc">Keeping collaboration seamless with spellbound repositories, Actions, and Copilot assistance for every aspiring witch and wizard developer.</p>
+        <div class="social-links">
+          <a href="https://twitter.com/github" target="_blank" rel="noopener" aria-label="GitHub on Twitter"><i class="fab fa-twitter"></i></a>
+          <a href="https://www.linkedin.com/company/github/" target="_blank" rel="noopener" aria-label="GitHub on LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+          <a href="https://github.com" target="_blank" rel="noopener" aria-label="GitHub Website"><i class="fas fa-globe"></i></a>
+        </div>
+      </article>
+
+      <article class="sponsor-card">
+        <img class="sponsor-logo" src="https://logo.clearbit.com/notion.so" alt="Notion Logo" />
+        <h3 class="sponsor-name">Notion</h3>
+        <div class="sponsor-tier">Patronus Tier Partner</div>
+        <p class="sponsor-desc">Providing the ultimate enchanted workspace to document quests, manage tasks, and collaborate across Hogwarts houses.</p>
+        <div class="social-links">
+          <a href="https://twitter.com/NotionHQ" target="_blank" rel="noopener" aria-label="Notion on Twitter"><i class="fab fa-twitter"></i></a>
+          <a href="https://www.linkedin.com/company/notion-labs-inc-/" target="_blank" rel="noopener" aria-label="Notion on LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+          <a href="https://www.notion.so" target="_blank" rel="noopener" aria-label="Notion Website"><i class="fas fa-globe"></i></a>
+        </div>
+      </article>
+
+      <article class="sponsor-card">
+        <img class="sponsor-logo" src="https://logo.clearbit.com/stripe.com" alt="Stripe Logo" />
+        <h3 class="sponsor-name">Stripe</h3>
+        <div class="sponsor-tier">Runes Tier Partner</div>
+        <p class="sponsor-desc">Enchanting commerce with secure payments, financial APIs, and global reach so every magical project can thrive.</p>
+        <div class="social-links">
+          <a href="https://twitter.com/stripe" target="_blank" rel="noopener" aria-label="Stripe on Twitter"><i class="fab fa-twitter"></i></a>
+          <a href="https://www.linkedin.com/company/stripe/" target="_blank" rel="noopener" aria-label="Stripe on LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+          <a href="https://stripe.com" target="_blank" rel="noopener" aria-label="Stripe Website"><i class="fas fa-globe"></i></a>
+        </div>
+      </article>
+    </div>
+  </div>
+
+  <footer>
+    <p class="cinzel mb-0">Mischief Managed &copy; 2025</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="disable-copy.js"></script>
+  <script>
+    const wand = document.getElementById('wand');
+    const wandTip = document.getElementById('wand-tip');
+    const isDesktop = window.matchMedia('(min-width: 992px)');
+
+    function handleWandMove(event) {
+      if (!isDesktop.matches) return;
+      const { clientX: x, clientY: y } = event;
+      wand.style.transform = `translate(${x}px, ${y}px) rotate(-25deg)`;
+      if (Math.random() > 0.6) spawnTrail();
+    }
+
+    function spawnTrail() {
+      const tipRect = wandTip.getBoundingClientRect();
+      const trail = document.createElement('span');
+      trail.className = 'cursor-trail';
+      trail.style.left = `${tipRect.left + tipRect.width / 2}px`;
+      trail.style.top = `${tipRect.top + tipRect.height / 2}px`;
+      document.body.appendChild(trail);
+      setTimeout(() => trail.remove(), 500);
+    }
+
+    window.addEventListener('mousemove', handleWandMove);
+  </script>
+</body>
+</html>

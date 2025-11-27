@@ -30,6 +30,12 @@
             width: 100%; margin: 0; padding: 0;
             overflow-x: hidden; 
             background-color: var(--bg-dark);
+            /* Disable text selection */
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
         }
 
         /* --- CONTENT WRAPPER --- */
@@ -228,7 +234,12 @@
             border: 1px solid rgba(255,255,255,0.2);
             opacity: 1; transition: opacity 0.3s; transition-delay: 0.8s;
         }
-        .wax-seal i { font-size: 1.8rem; filter: drop-shadow(1px 1px 1px rgba(255,255,255,0.2)); }
+        .wax-seal img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: contain; 
+            filter: drop-shadow(1px 1px 1px rgba(255,255,255,0.2)); 
+        }
 
         .house-label {
             position: absolute; bottom: 20px; width: 100%; text-align: center;
@@ -258,7 +269,42 @@
         .harry-potter-title { font-family: 'Cinzel Decorative'; font-weight: 900; text-transform: uppercase; line-height: 1; color: #ffd700; filter: url(#gold-texture); font-size: 6rem; position: relative; z-index: 2; }
         @media (max-width: 768px) { .harry-potter-title { font-size: 3rem; } }
         .navbar { background-color: rgba(10, 10, 10, 0.9); border-bottom: 1px solid rgba(212, 175, 55, 0.3); padding: 1rem 0; z-index: 100; backdrop-filter: blur(10px); }
-        .navbar-brand, .nav-link { font-family: 'Cinzel Decorative'; color: var(--gold); transition: 0.3s; }
+        
+        /* Volume Control Button */
+        .volume-btn {
+            color: var(--gold);
+            font-size: 1.2rem;
+            padding: 5px 10px;
+            border: none;
+            background: transparent;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .volume-btn:hover {
+            color: #ffd700;
+            transform: scale(1.1);
+        }
+        .volume-btn.volume-off {
+            opacity: 0.6;
+        }
+        .volume-btn.volume-on {
+            opacity: 1;
+        }
+        
+        .navbar-brand { 
+            font-family: 'Cinzel Decorative'; 
+            font-weight: 900; 
+            text-transform: uppercase; 
+            line-height: 1.1; 
+            color: #ffd700; 
+            filter: url(#gold-texture); 
+            font-size: 1.5rem; 
+            transition: 0.3s;
+        }
+        @media (max-width: 768px) { 
+            .navbar-brand { font-size: 1.2rem; } 
+        }
+        .nav-link { font-family: 'Cinzel Decorative'; color: var(--gold); transition: 0.3s; }
         .nav-link:hover { color: #fff; text-shadow: 0 0 15px var(--gold); }
     /* Neon Register button */
     .register-btn{position:relative;display:inline-block;padding:8px 22px;margin-left:12px;border:1px solid rgba(255,215,100,.55);border-radius:999px;font-family:'Cinzel Decorative';letter-spacing:1px;text-transform:uppercase;font-size:.75rem;color:#ffe7b0!important;background:linear-gradient(130deg,#3a2d00,#1a1400 55%,#3a2d00);box-shadow:0 0 8px rgba(255,180,60,.4),inset 0 0 10px rgba(255,220,140,.15);overflow:hidden;transition:.35s;animation:pulseNeon 3.6s ease-in-out infinite}
@@ -278,6 +324,14 @@
         .btn-magic:hover { background: var(--gold); color: #000; box-shadow: 0 0 50px var(--gold); }
         .house-section { padding: 80px 0; position: relative; z-index: 2; background: rgba(20, 20, 20, 0.9); border-top: 1px solid #333; flex-grow: 1; }
         footer { padding: 40px; text-align: center; border-top: 1px solid var(--gold); background: #0a0a0a; position: relative; z-index: 10; color: #777; }
+        footer .container { position: relative; }
+        .sponsor-section { position: absolute; right: 0; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: center; gap: 5px; }
+        .sponsor-label { font-family: 'Cinzel Decorative'; color: #777; font-size: 0.8rem; margin: 0; text-transform: uppercase; letter-spacing: 1px; }
+        .sponsor-logo { height: 40px; width: auto; }
+        .sponsor-name { font-family: 'Cinzel Decorative'; color: #777; font-size: 0.9rem; }
+        @media (max-width: 768px) {
+            .sponsor-section { position: static; transform: none; margin-top: 20px; justify-content: center; }
+        }
         
         /* Magic Visuals */
         .rotating-spell { position: fixed; pointer-events: none; z-index: 9996; width: 0px; height: 0px; border-radius: 50%; border: 4px solid transparent; border-top-color: #fff; border-bottom-color: var(--gold); box-shadow: 0 0 50px #fff; color: var(--gold); }
@@ -321,24 +375,30 @@
     <div id="site-wrapper">
         <nav class="navbar navbar-expand-lg sticky-top navbar-dark">
             <div class="container">
-                <a class="navbar-brand" href="#">Hogwarts Hackathon</a>
+                <a class="navbar-brand" href="main.html">
+                    <span style="display: block;">Hogwarts</span>
+                    <span style="display: block;">Hackathon</span>
+                </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"><span class="navbar-toggler-icon"></span></button>
                 <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
                     <ul class="navbar-nav align-items-center">
-                        <li class="nav-item me-4">
+                        <li class="nav-item me-3">
+                            <button id="volumeControl" class="btn btn-link volume-btn" type="button" title="Toggle Background Music">
+                                <i class="fas fa-volume-up"></i>
+                            </button>
+                        </li>
+                        <li class="nav-item me-4 d-none d-md-block">
                             <div class="form-check form-switch mb-0 d-flex align-items-center">
                                 <input class="form-check-input" type="checkbox" id="magicToggle">
-                                <label class="form-check-label" for="magicToggle">Try Magic</label>
+                                <label class="form-check-label" for="magicToggle">Stupify</label>
                             </div>
                         </li>
                         <li class="nav-item"><a class="nav-link" href="#home">Great Hall</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#houses">Houses</a></li>
                         <li class="nav-item"><a class="nav-link" href="teams.html">Teams</a></li>
-                        <li class="nav-item"><a class="nav-link" href="leaderboard.html">Leaderboard</a></li>
                         <li class="nav-item"><a class="nav-link" href="organizers.html">Organizers</a></li>
                         <li class="nav-item"><a class="nav-link" href="timeline.html">Timeline</a></li>
-                        <li class="nav-item"><a class="nav-link" href="faq.html">FAQs</a></li>
                         <li class="nav-item"><a class="nav-link" href="rules.html">Rules</a></li>
+                        <li class="nav-item"><a class="nav-link" href="faq.html">FAQs</a></li>
                         <li class="nav-item" id="registerNavItem" style="display: none;"><a class="nav-link register-btn" href="register.html">Register</a></li>
                         <li class="nav-item" id="loginNavItem" style="display: none;"><a class="nav-link" href="login.html" style="color: var(--gold);">Login</a></li>
                     </ul>
@@ -374,7 +434,7 @@
                             <div class="envelope">
                                 <div class="house-card">
                                     <h4>FinTech</h4>
-                                    <p>Brave UI & CSS</p>
+                                    <p>Gringotts Goldguards</p>
                                 </div>
                                 
                                 <div class="envelope-front">
@@ -393,7 +453,7 @@
                                     <line x1="280" y1="0" x2="140" y2="95" stroke="black" stroke-width="1.5" />
                                 </svg>
 
-                                <div class="wax-seal"><i class="fa-solid fa-shield-cat"></i></div>
+                                <div class="wax-seal"><img src="assets/gryffindor.png" alt="Gryffindor"></div>
                                 <div class="house-label">Gryffindor</div>
                             </div>
                         </div>
@@ -404,12 +464,12 @@
                             <div class="envelope">
                                 <div class="house-card">
                                     <h4>Cyber Security</h4>
-                                    <p>Cunning APIs</p>
+                                    <p>Protect like patronum</p>
                                 </div>
                                 <div class="envelope-front"><div class="pocket-left"></div><div class="pocket-right"></div><div class="pocket-bottom"></div><svg class="envelope-lines" viewBox="0 0 280 180"><line x1="0" y1="180" x2="140" y2="90" stroke="black" stroke-width="1.5" /><line x1="280" y1="180" x2="140" y2="90" stroke="black" stroke-width="1.5" /></svg></div>
                                 <div class="envelope-lid"></div>
                                 <svg class="lid-lines" viewBox="0 0 280 95"><line x1="0" y1="0" x2="140" y2="95" stroke="black" stroke-width="1.5" /><line x1="280" y1="0" x2="140" y2="95" stroke="black" stroke-width="1.5" /></svg>
-                                <div class="wax-seal"><i class="fa-solid fa-staff-snake"></i></div>
+                                <div class="wax-seal"><img src="assets/slytherin.png" alt="Slytherin"></div>
                                 <div class="house-label">Slytherin</div>
                             </div>
                         </div>
@@ -425,7 +485,7 @@
                                 <div class="envelope-front"><div class="pocket-left"></div><div class="pocket-right"></div><div class="pocket-bottom"></div><svg class="envelope-lines" viewBox="0 0 280 180"><line x1="0" y1="180" x2="140" y2="90" stroke="black" stroke-width="1.5" /><line x1="280" y1="180" x2="140" y2="90" stroke="black" stroke-width="1.5" /></svg></div>
                                 <div class="envelope-lid"></div>
                                 <svg class="lid-lines" viewBox="0 0 280 95"><line x1="0" y1="0" x2="140" y2="95" stroke="black" stroke-width="1.5" /><line x1="280" y1="0" x2="140" y2="95" stroke="black" stroke-width="1.5" /></svg>
-                                <div class="wax-seal"><i class="fa-solid fa-crow"></i></div>
+                                <div class="wax-seal"><img src="assets/ravenclaw.png" alt="Ravenclaw"></div>
                                 <div class="house-label">Ravenclaw</div>
                             </div>
                         </div>
@@ -441,7 +501,7 @@
                                 <div class="envelope-front"><div class="pocket-left"></div><div class="pocket-right"></div><div class="pocket-bottom"></div><svg class="envelope-lines" viewBox="0 0 280 180"><line x1="0" y1="180" x2="140" y2="90" stroke="black" stroke-width="1.5" /><line x1="280" y1="180" x2="140" y2="90" stroke="black" stroke-width="1.5" /></svg></div>
                                 <div class="envelope-lid"></div>
                                 <svg class="lid-lines" viewBox="0 0 280 95"><line x1="0" y1="0" x2="140" y2="95" stroke="black" stroke-width="1.5" /><line x1="280" y1="0" x2="140" y2="95" stroke="black" stroke-width="1.5" /></svg>
-                                <div class="wax-seal"><i class="fa-solid fa-paw"></i></div>
+                                <div class="wax-seal"><img src="assets/hufflepuff.png" alt="Hufflepuff"></div>
                                 <div class="house-label">Hufflepuff</div>
                             </div>
                         </div>
@@ -457,7 +517,7 @@
                                 <div class="envelope-front"><div class="pocket-left"></div><div class="pocket-right"></div><div class="pocket-bottom"></div><svg class="envelope-lines" viewBox="0 0 280 180"><line x1="0" y1="180" x2="140" y2="90" stroke="black" stroke-width="1.5" /><line x1="280" y1="180" x2="140" y2="90" stroke="black" stroke-width="1.5" /></svg></div>
                                 <div class="envelope-lid"></div>
                                 <svg class="lid-lines" viewBox="0 0 280 95"><line x1="0" y1="0" x2="140" y2="95" stroke="black" stroke-width="1.5" /><line x1="280" y1="0" x2="140" y2="95" stroke="black" stroke-width="1.5" /></svg>
-                                <div class="wax-seal"><i class="fa-solid fa-gear"></i></div>
+                                <div class="wax-seal"><img src="assets/muggles.png" alt="Muggles"></div>
                                 <div class="house-label">Muggles</div>
                             </div>
                         </div>
@@ -471,11 +531,19 @@
             <div class="container">
                 <p>Mischief Managed &copy; 2025 Hogwarts Hackathon</p>
                 <small>"I solemnly swear that I am up to no good code."</small>
+                <div class="sponsor-section">
+                    <p class="sponsor-label" style="font-family: 'Cinzel Decorative'; color: #777; font-size: 0.8rem; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;">Sponsored by</p>
+                    <img src="assets/mmm.jpg" alt="MEG Multi Media" class="sponsor-logo">
+                    <span class="sponsor-name">MEG Multi Media</span>
+                </div>
             </div>
         </footer>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="loading-screen.js"></script>
+    <script src="audio-control.js"></script>
+    <script src="disable-copy.js"></script>
 
     <script>
         const isDesktop = window.matchMedia("(min-width: 992px)");

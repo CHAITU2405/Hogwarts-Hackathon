@@ -11,38 +11,35 @@ function getApiBaseUrl() {
     
     // Check if we're on localhost
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
+        // For localhost, Flask serves both frontend and backend on same port
+        // Use same origin if port is specified, otherwise default to 5000
+        if (port && port !== '5000') {
+            // Frontend is on a different port, assume backend is on 5000
         return `http://localhost:5000/api`;
+        }
+        // Same origin - Flask serves both
+        return `${protocol}//${hostname}${port ? ':' + port : ':5000'}/api`;
     }
     
     // Check if using dev tunnels (devtunnels.ms domain)
-    // If Flask is serving both frontend and backend through the same tunnel,
-    // we should use relative URLs or same origin
+    // Flask serves both frontend and backend through the same tunnel
     if (hostname.includes('devtunnels.ms')) {
-        // If the hostname contains -5000 or port is 5000, Flask is likely serving from this tunnel
-        // Use same origin - this avoids mixed content issues
-        if (hostname.includes('-5000') || port === '5000' || port === '') {
-            // Same origin - use same protocol and host (Flask serves both frontend and API)
+        // Always use same origin for dev tunnels (Flask serves both frontend and API)
+        // This avoids mixed content and CORS issues
             return `${protocol}//${hostname}${port ? ':' + port : ''}/api`;
-        } else {
-            // Frontend is on a different tunnel/port, try to find backend tunnel
-            // Pattern: replace frontend port with -5000
-            const baseHost = hostname.split('.')[0]; // Get the tunnel ID part
-            const domain = hostname.substring(hostname.indexOf('.')); // Get .inc1.devtunnels.ms
-            // Try backend tunnel URL with same protocol
-            return `${protocol}//${baseHost}-5000${domain}/api`;
-        }
     }
     
-    // For other external access (port forwarding), use same hostname
-    // Use HTTP for backend (Flask typically runs on HTTP)
-    // If frontend is HTTPS, we'll try HTTP (may need CORS/proxy setup)
-    if (protocol === 'https:') {
-        // If frontend is HTTPS, try HTTP for backend (common in dev)
-        // Note: This may cause mixed content issues - backend should support HTTPS or use proxy
-        return `http://${hostname}:5000/api`;
+    // For port forwarding: Flask serves both frontend and backend on the same port
+    // Use same origin (same protocol, hostname, and port)
+    // This is the most common case for forwarded ports
+    if (port) {
+        // Port is specified - Flask serves both on this port
+        return `${protocol}//${hostname}:${port}/api`;
     }
     
-    return `http://${hostname}:5000/api`;
+    // Fallback: no port specified, assume Flask is on port 5000
+    // Try to use same protocol as frontend
+    return `${protocol}//${hostname}:5000/api`;
 }
 
 const API_BASE_URL = getApiBaseUrl();
@@ -77,19 +74,20 @@ function setupRegistrationForm() {
         
         memberBlocks.forEach((block, index) => {
             const inputs = block.querySelectorAll('.magic-input');
-            if (inputs.length >= 3) {
+            if (inputs.length >= 4) {
                 members.push({
                     name: inputs[0].value.trim(),
                     email: inputs[1].value.trim(),
-                    phone: inputs[2].value.trim()
+                    phone: inputs[2].value.trim(),
+                    college: inputs[3].value.trim()
                 });
             }
         });
         
         // Validate members
         for (let i = 0; i < members.length; i++) {
-            if (!members[i].name || !members[i].email || !members[i].phone) {
-                alert(`Please fill in all fields for member ${i + 1}`);
+            if (!members[i].name || !members[i].email || !members[i].phone || !members[i].college) {
+                alert(`Please fill in all fields including college name for member ${i + 1}`);
                 return;
             }
         }
@@ -128,6 +126,13 @@ function setupRegistrationForm() {
             return;
         }
         
+        // Check terms and conditions checkbox
+        const termsCheckbox = document.getElementById('termsCheckbox');
+        if (!termsCheckbox || !termsCheckbox.checked) {
+            alert('Please accept the Terms and Conditions to proceed');
+            return;
+        }
+        
         // Get payment proof file
         const paymentProofInput = document.getElementById('paymentProof');
         const paymentProofFile = paymentProofInput ? paymentProofInput.files[0] : null;
@@ -143,11 +148,12 @@ function setupRegistrationForm() {
             formData.append('payment_proof', paymentProofFile);
         }
         
-        // Add member data
+        // Add member data (including college name for each member)
         members.forEach((member, index) => {
             formData.append(`member_${index + 1}_name`, member.name);
             formData.append(`member_${index + 1}_email`, member.email);
             formData.append(`member_${index + 1}_phone`, member.phone);
+            formData.append(`member_${index + 1}_college`, member.college);
         });
         
         // Show loading
@@ -243,8 +249,10 @@ async function loadTeamsFromAPI() {
         if (houseFilter) params.append('house', houseFilter);
         if (searchTerm) params.append('search', searchTerm);
         
-        const apiUrl = `${getApiBaseUrl()}/teams?${params.toString()}`;
+        // Use relative URL - this works when Flask serves both frontend and backend
+        const apiUrl = `/api/teams?${params.toString()}`;
         console.log('Fetching teams from:', apiUrl); // Debug log
+        console.log('Full URL will be:', window.location.origin + apiUrl); // Debug log
         console.log('Current page URL:', window.location.href); // Debug log
         
         const response = await fetch(apiUrl, {
@@ -252,12 +260,14 @@ async function loadTeamsFromAPI() {
             headers: {
                 'Content-Type': 'application/json'
             },
-            // Add mode to handle CORS
+            // Use same-origin mode when using relative URLs
             mode: 'cors',
-            credentials: 'omit'
+            credentials: 'same-origin'
         });
         
         if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Response error:', response.status, errorText);
             throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
         }
         
@@ -278,7 +288,7 @@ async function loadTeamsFromAPI() {
         });
         const teamGrid = document.getElementById('teamGrid');
         if (teamGrid) {
-            const apiUrl = getApiBaseUrl();
+            const apiUrl = window.location.origin + '/api/teams';
             let errorMsg = `Error loading teams: ${error.message}`;
             if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
                 errorMsg += '<br><br><strong>Possible issues:</strong><br>';
@@ -288,6 +298,7 @@ async function loadTeamsFromAPI() {
                 errorMsg += '4. Firewall or network blocking the connection<br>';
             }
             errorMsg += `<br><small>API URL: ${apiUrl}</small>`;
+            errorMsg += `<br><small>Current Origin: ${window.location.origin}</small>`;
             teamGrid.innerHTML = `<p style="color: #ef5350; text-align: center; grid-column: 1/-1; font-family: 'Crimson Text'; padding: 40px; line-height: 1.6;">${errorMsg}</p>`;
         }
     }

@@ -32,6 +32,12 @@
             color: #eee;
             min-height: 100vh;
             overflow-x: hidden;
+            /* Disable text selection */
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
         }
 
         /* --- WAND CURSOR --- */
@@ -66,9 +72,43 @@
         @keyframes fade-trail { 0% { opacity: 0.8; transform: scale(1); } 100% { opacity: 0; transform: scale(0.2) translate(0, 10px); } }
 
         /* --- NAVBAR --- */
-        .navbar { background: rgba(10, 10, 10, 0.95); border-bottom: 1px solid rgba(212, 175, 55, 0.3); }
-        .navbar-brand { font-family: 'Cinzel Decorative'; color: var(--gold) !important; }
-        .admin-badge { border: 1px solid var(--gold); padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; margin-left: 10px; color: var(--gold); }
+        .navbar { background-color: rgba(10, 10, 10, 0.9); border-bottom: 1px solid rgba(212, 175, 55, 0.3); padding: 1rem 0; z-index: 100; backdrop-filter: blur(10px); }
+        .navbar-brand { 
+            font-family: 'Cinzel Decorative'; 
+            font-weight: 900; 
+            text-transform: uppercase; 
+            line-height: 1.1; 
+            color: #ffd700; 
+            filter: url(#gold-texture); 
+            font-size: 1.5rem; 
+            transition: 0.3s;
+        }
+        @media (max-width: 768px) { 
+            .navbar-brand { font-size: 1.2rem; } 
+        }
+        .nav-link { font-family: 'Cinzel Decorative'; color: var(--gold); transition: 0.3s; }
+        .nav-link:hover { color: #fff; text-shadow: 0 0 15px var(--gold); }
+        
+        /* Volume Control Button */
+        .volume-btn {
+            color: var(--gold);
+            font-size: 1.2rem;
+            padding: 5px 10px;
+            border: none;
+            background: transparent;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .volume-btn:hover {
+            color: #ffd700;
+            transform: scale(1.1);
+        }
+        .volume-btn.volume-off {
+            opacity: 0.6;
+        }
+        .volume-btn.volume-on {
+            opacity: 1;
+        }
 
         /* --- PAGE LAYOUT --- */
         .container { padding-top: 50px; padding-bottom: 50px; max-width: 1200px; }
@@ -135,9 +175,11 @@
         
         /* Details List */
         .details-list { list-style: none; padding: 0; text-align: left; color: var(--ink); font-family: 'Crimson Text'; font-size: 1.1rem; }
-        .details-list li { padding: 8px 0; border-bottom: 1px dashed rgba(42, 27, 21, 0.3); display: flex; align-items: center; }
+        .details-list li { padding: 8px 0; border-bottom: 1px dashed rgba(42, 27, 21, 0.3); display: flex; align-items: center; justify-content: space-between; }
         .details-list li i { margin-right: 10px; color: #5d4037; width: 20px; text-align: center; }
         .details-list li strong { margin-right: 5px; }
+        .btn-remove-member { background: transparent; border: none; color: #c62828; cursor: pointer; font-size: 1.2rem; padding: 5px 10px; margin-left: 10px; transition: 0.3s; border-radius: 4px; }
+        .btn-remove-member:hover { background: rgba(198, 40, 40, 0.1); color: #8a1c1c; transform: scale(1.2); }
 
         /* Proof Image */
         .proof-img-container { width: 100%; height: 300px; background: rgba(0,0,0,0.1); border: 2px dashed var(--ink); display: flex; align-items: center; justify-content: center; margin-bottom: 20px; overflow: hidden; }
@@ -154,11 +196,27 @@
     <div id="wand"><img src="assets/wand.png" alt="Wand cursor"></div>
 
     <nav class="navbar navbar-expand-lg sticky-top navbar-dark">
-        <div class="container-fluid px-5">
-            <a class="navbar-brand" href="admin.html">Hogwarts Hacks <span class="admin-badge">Admin</span></a>
-            <div class="d-flex">
-                <a href="admin.html" class="btn btn-sm btn-outline-warning me-2" style="font-family: 'Cinzel Decorative'; border-color: var(--gold); color: var(--gold);">Dashboard</a>
-                <a href="login.html" class="btn btn-sm btn-outline-secondary" style="font-family: 'Cinzel Decorative';" onclick="logout()">Logout</a>
+        <div class="container">
+            <a class="navbar-brand" href="main.html">
+                <span style="display: block;">Hogwarts</span>
+                <span style="display: block;">Hackathon</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"><span class="navbar-toggler-icon"></span></button>
+            <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+                <ul class="navbar-nav align-items-center">
+                    <li class="nav-item me-3">
+                        <button id="volumeControl" class="btn btn-link volume-btn" type="button" title="Toggle Background Music">
+                            <i class="fas fa-volume-up"></i>
+                        </button>
+                    </li>
+                    <li class="nav-item"><a class="nav-link" href="main.html#home">Great Hall</a></li>
+                    <li class="nav-item"><a class="nav-link" href="teams.html">Teams</a></li>
+                    <li class="nav-item"><a class="nav-link" href="organizers.html">Organizers</a></li>
+                    <li class="nav-item"><a class="nav-link" href="timeline.html">Timeline</a></li>
+                    <li class="nav-item"><a class="nav-link" href="rules.html">Rules</a></li>
+                    <li class="nav-item"><a class="nav-link" href="faq.html">FAQs</a></li>
+                    <li class="nav-item"><a class="nav-link" href="admin.html" style="color: var(--gold);">Admin</a></li>
+                </ul>
             </div>
         </div>
     </nav>
@@ -201,6 +259,11 @@
             
             <div style="margin-top: 20px; border-top: 2px solid #2a1b15; padding-top: 10px; font-family: 'Cinzel Decorative'; color: #2a1b15;">
                 Total Wizards: <span id="modalSize">0</span>
+            </div>
+            <div style="margin-top: 15px; text-align: center;">
+                <button class="btn-action btn-accept" onclick="approveTeamFromModal()" style="padding: 10px 30px; font-size: 1rem;">
+                    <i class="fa-solid fa-check"></i> Approve Team
+                </button>
             </div>
         </div>
     </div>
@@ -257,23 +320,122 @@
             document.getElementById(id).classList.remove('active');
         }
 
+        let currentTeamId = null;
+        let currentTeamMembers = [];
+
         // Open Team Details
-        function openDetails(name, size, members) {
+        function openDetails(teamId, name, size, members) {
+            currentTeamId = teamId;
+            currentTeamMembers = members;
             document.getElementById('modalTeamName').innerText = name;
             document.getElementById('modalSize').innerText = size;
             
             const list = document.getElementById('modalMembers');
             list.innerHTML = ''; // Clear previous
             
-            // Add Team Leader (First member)
-            list.innerHTML += `<li><i class="fa-solid fa-crown" style="color: #d4af37;"></i> <strong>Leader:</strong> ${members[0]}</li>`;
-            
-            // Add other members
-            for(let i=1; i<members.length; i++) {
-                list.innerHTML += `<li><i class="fa-solid fa-user-graduate"></i> ${members[i]}</li>`;
-            }
+            // Add members with delete buttons (X mark)
+            members.forEach((member, index) => {
+                const isLeader = member.is_leader || index === 0;
+                const canDelete = members.length > 1; // Can't delete if only one member
+                const deleteBtn = canDelete ? 
+                    `<button class="btn-remove-member" onclick="removeMemberFromModal(${member.id}, ${teamId})" title="Remove member" style="background: transparent; border: none; color: #c62828; cursor: pointer; font-size: 1.2rem; padding: 0 10px; margin-left: 10px;">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>` : '';
+                
+                const collegeName = member.college_name || 'Not provided';
+                
+                list.innerHTML += `
+                    <li style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                        <div style="flex: 1;">
+                            <div>
+                                ${isLeader ? '<i class="fa-solid fa-crown" style="color: #d4af37;"></i> <strong>Leader:</strong> ' : '<i class="fa-solid fa-user-graduate"></i> '}
+                                ${member.name}
+                            </div>
+                            <div style="font-size: 0.9rem; color: #5d4037; margin-top: 3px; margin-left: 28px;">
+                                <i class="fa-solid fa-envelope" style="margin-right: 5px;"></i>${member.email}
+                            </div>
+                            <div style="font-size: 0.9rem; color: #5d4037; margin-top: 3px; margin-left: 28px;">
+                                <i class="fa-solid fa-graduation-cap" style="margin-right: 5px;"></i>${collegeName}
+                            </div>
+                        </div>
+                        ${deleteBtn}
+                    </li>
+                `;
+            });
 
             document.getElementById('detailsModal').classList.add('active');
+        }
+        
+        async function removeMemberFromModal(memberId, teamId) {
+            if (!confirm('Are you sure you want to remove this member? This action cannot be undone.')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/admin/teams/${teamId}/members/${memberId}`, {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Reload the team data and refresh modal
+                    await loadPendingTeams();
+                    // Reopen modal with updated data
+                    const teamRow = document.querySelector(`tr[data-team-id="${teamId}"]`);
+                    if (teamRow) {
+                        const teamBtn = teamRow.querySelector('.btn-team-name');
+                        if (teamBtn) {
+                            teamBtn.click(); // Trigger the openDetails again
+                        }
+                    }
+                } else {
+                    alert('Error removing member: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error removing member:', error);
+                alert('Error removing member. Please try again.');
+            }
+        }
+        
+        async function approveTeamFromModal() {
+            if (!currentTeamId) {
+                alert('No team selected');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/admin/approve-team/${currentTeamId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                // Check if response is OK
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    const successMsg = data.message || 'Team approved successfully!';
+                    if (data.email_sent) {
+                        alert(successMsg + ' Credentials have been sent via email.');
+                    } else {
+                        alert(successMsg);
+                    }
+                    closeModal('detailsModal');
+                    await loadPendingTeams();
+                } else {
+                    alert(data.error || 'Failed to approve team');
+                }
+            } catch (error) {
+                console.error('Error approving team:', error);
+                alert(error.message || 'Error approving team. Please try again.');
+            }
         }
 
 
@@ -324,7 +486,7 @@
                         row.setAttribute('data-team-id', team.id);
                         row.innerHTML = `
                             <td>
-                                <button class="btn-team-name" onclick="openDetails('${team.team_name}', ${team.team_size}, ${JSON.stringify(memberNames).replace(/"/g, '&quot;')})">
+                                <button class="btn-team-name" onclick="openDetails(${team.id}, '${team.team_name}', ${team.team_size}, ${JSON.stringify(team.members).replace(/"/g, '&quot;')})">
                                     <i class="fa-solid fa-scroll"></i> ${team.team_name}
                                 </button>
                             </td>
@@ -361,8 +523,18 @@
         async function grantAccess(btn, teamId) {
             try {
                 const response = await fetch(`/api/admin/approve-team/${teamId}`, {
-                    method: 'POST'
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
                 });
+                
+                // Check if response is OK
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+                }
+                
                 const data = await response.json();
                 
                 if (data.success) {
@@ -370,35 +542,66 @@
                     const row = btn.closest('tr');
                     row.style.backgroundColor = "rgba(46, 125, 50, 0.1)";
                     cell.innerHTML = '<span class="verdict-badge verdict-accepted"><i class="fa-solid fa-check me-1"></i> Accepted</span>';
+                    
+                    // Show success message
+                    if (data.email_sent) {
+                        console.log('Team approved and email sent successfully');
+                    } else {
+                        console.log('Team approved (email may not have been sent)');
+                    }
                 } else {
                     alert(data.error || 'Failed to approve team');
                 }
             } catch (error) {
                 console.error('Error approving team:', error);
-                alert('Error approving team. Please try again.');
+                alert(error.message || 'Error approving team. Please try again.');
             }
         }
 
         async function denyAccess(btn, teamId) {
-            if(confirm("Are you sure you want to deny this fellowship?")) {
+            if(confirm("Are you sure you want to reject and delete this fellowship? This action cannot be undone.")) {
                 try {
                     const response = await fetch(`/api/admin/reject-team/${teamId}`, {
-                        method: 'POST'
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
                     });
+                    
                     const data = await response.json();
                     
-                    if (data.success) {
-                        const cell = btn.closest('td');
+                    console.log('Reject response:', data); // Debug log
+                    
+                    if (!response.ok) {
+                        // HTTP error status
+                        console.error('HTTP Error:', response.status, data);
+                        alert(`Error: ${data.error || 'Failed to reject team. Status: ' + response.status}`);
+                        return;
+                    }
+                    
+                    if (data.success && data.deleted) {
+                        // Remove the row from the table since team is deleted
                         const row = btn.closest('tr');
-                        row.style.backgroundColor = "rgba(198, 40, 40, 0.1)";
-                        row.style.opacity = "0.6";
-                        cell.innerHTML = '<span class="verdict-badge verdict-rejected"><i class="fa-solid fa-ban me-1"></i> Denied</span>';
+                        if (row) {
+                            row.style.transition = 'opacity 0.3s ease';
+                            row.style.opacity = '0';
+                            setTimeout(() => {
+                                row.remove();
+                                // Reload the table to refresh the count
+                                loadPendingTeams();
+                            }, 300);
+                        } else {
+                            // Row not found, just reload
+                            loadPendingTeams();
+                        }
                     } else {
-                        alert(data.error || 'Failed to reject team');
+                        console.error('Reject failed:', data);
+                        const errorMsg = data.error || data.message || 'Failed to reject team';
+                        alert(`Error: ${errorMsg}\n\nCheck the browser console (F12) for more details.`);
                     }
                 } catch (error) {
                     console.error('Error rejecting team:', error);
-                    alert('Error rejecting team. Please try again.');
+                    alert(`Network Error: ${error.message}\n\nPlease check the browser console (F12) and server logs for details.`);
                 }
             }
         }
@@ -411,5 +614,6 @@
             document.getElementById('proofModal').classList.add('active');
         }
     </script>
+    <script src="disable-copy.js"></script>
 </body>
 </html>

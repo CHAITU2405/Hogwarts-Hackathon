@@ -6,6 +6,7 @@
     <title>Magical Hackathon - Chamber of Secrets</title>
     <!-- Added Bootstrap for shared navbar -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,7 +26,13 @@
             width: 100%; margin: 0; padding: 0;
             overflow-x: hidden; 
             background-color: var(--bg-dark);
-            cursor: none !important; 
+            cursor: none !important;
+            /* Disable text selection */
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none; 
         }
 
         /* --- 2. BACKGROUND --- */
@@ -239,8 +246,45 @@
         .footer-spacer { height: 100px; }
 
         /* Navbar styles copied from teams.html for consistency */
-        .navbar{background-color:rgba(10,10,10,.9);border-bottom:1px solid rgba(212,175,55,.3);padding:1rem 0;z-index:100;backdrop-filter:blur(10px);}        
-        .navbar-brand,.nav-link{font-family:'Cinzel Decorative';color:var(--gold)!important;}
+        .navbar { background-color: rgba(10, 10, 10, 0.9); border-bottom: 1px solid rgba(212, 175, 55, 0.3); padding: 1rem 0; z-index: 100; backdrop-filter: blur(10px); }
+        .nav-link { font-family: 'Cinzel Decorative'; color: var(--gold); transition: 0.3s; }
+        .nav-link:hover { color: #fff; text-shadow: 0 0 15px var(--gold); }
+        
+        /* Volume Control Button */
+        .volume-btn {
+            color: var(--gold);
+            font-size: 1.2rem;
+            padding: 5px 10px;
+            border: none;
+            background: transparent;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .volume-btn:hover {
+            color: #ffd700;
+            transform: scale(1.1);
+        }
+        .volume-btn.volume-off {
+            opacity: 0.6;
+        }
+        .volume-btn.volume-on {
+            opacity: 1;
+        }
+        
+        .navbar-brand { 
+            font-family: 'Cinzel Decorative'; 
+            font-weight: 900; 
+            text-transform: uppercase; 
+            line-height: 1.1; 
+            color: #ffd700; 
+            filter: url(#gold-texture); 
+            font-size: 1.5rem; 
+            transition: 0.3s;
+        }
+        @media (max-width: 768px) { 
+            .navbar-brand { font-size: 1.2rem; } 
+        }
+        .nav-link{font-family:'Cinzel Decorative';color:var(--gold)!important;}
         .nav-link:hover{color:#fff!important;text-shadow:0 0 12px var(--gold);} 
         .form-check-input { background-color: #333; border-color: #666; width: 3em; height: 1.5em; }
         .form-check-input:checked { background-color: var(--gold); border-color: var(--gold); }
@@ -253,6 +297,10 @@
         .register-btn:focus{outline:none;box-shadow:0 0 16px #ffd23f,0 0 42px #ff9000}
     </style>
 </head>
+    <svg width="0" height="0" style="position: absolute;">
+        <filter id="gold-texture" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="3" result="noise" /><feDiffuseLighting in="noise" lighting-color="#d4af37" surfaceScale="3" result="coloredNoise"><feDistantLight azimuth="45" elevation="60" /></feDiffuseLighting><feSpecularLighting in="noise" surfaceScale="6" specularConstant="1" specularExponent="20" lighting-color="#ffecb3" result="specular"><fePointLight x="-5000" y="-10000" z="20000" /></feSpecularLighting><feComposite in="specular" in2="SourceAlpha" operator="in" result="specularText" /><feComposite in="coloredNoise" in2="SourceAlpha" operator="in" result="coloredText" /><feMerge><feMergeNode in="coloredText" /><feMergeNode in="specularText" /></feMerge><feDropShadow dx="4" dy="4" stdDeviation="3" flood-color="#000" flood-opacity="0.8"/></filter>
+    </svg>
+
 <body>
 
     <div id="wand"><img src="assets/wand.png" alt="Wand cursor"></div>
@@ -262,24 +310,24 @@
         <!-- Navbar replicated from main.html -->
         <nav class="navbar navbar-expand-lg sticky-top navbar-dark">
             <div class="container">
-                <a class="navbar-brand" href="main.html">Hogwarts Hackathon</a>
+                <a class="navbar-brand" href="main.html">
+                    <span style="display: block;">Hogwarts</span>
+                    <span style="display: block;">Hackathon</span>
+                </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"><span class="navbar-toggler-icon"></span></button>
                 <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
                     <ul class="navbar-nav align-items-center">
-                        <li class="nav-item me-4">
-                            <div class="form-check form-switch mb-0 d-flex align-items-center">
-                                <input class="form-check-input" type="checkbox" id="magicToggle" disabled>
-                                <label class="form-check-label" for="magicToggle">Try Magic</label>
-                            </div>
+                        <li class="nav-item me-3">
+                            <button id="volumeControl" class="btn btn-link volume-btn" type="button" title="Toggle Background Music">
+                                <i class="fas fa-volume-up"></i>
+                            </button>
                         </li>
                         <li class="nav-item"><a class="nav-link" href="main.html#home">Great Hall</a></li>
-                        <li class="nav-item"><a class="nav-link" href="main.html#houses">Houses</a></li>
                         <li class="nav-item"><a class="nav-link" href="teams.html">Teams</a></li>
                         <li class="nav-item"><a class="nav-link" href="organizers.html">Organizers</a></li>
                         <li class="nav-item"><a class="nav-link" href="timeline.html">Timeline</a></li>
-                        <li class="nav-item"><a class="nav-link" href="faq.html">FAQs</a></li>
                         <li class="nav-item"><a class="nav-link" href="rules.html">Rules</a></li>
-                        <li class="nav-item"><a class="nav-link register-btn" href="register.html">Register</a></li>
+                        <li class="nav-item"><a class="nav-link" href="faq.html">FAQs</a></li>
                     </ul>
                 </div>
             </div>
@@ -295,12 +343,12 @@
             <div class="scroll-item" onclick="toggleScrollMobile(this)">
                 <div class="scroll-head">
                     <div class="handle left"></div>
-                    <div class="question-text">How do I enter the Hackathon?</div>
+                    <div class="question-text">Can we switch our domain/track after selecting the problem statement?</div>
                     <div class="handle right"></div>
                 </div>
                 <div class="scroll-body">
                     <div class="answer-content">
-                        One does not simply walk into the coding chamber. You must register via the enchanted portal (Devfolio) before the hourglass runs empty.
+                        No. Once you choose your problem statement between 06:00 AM – 06:00 PM, you must continue with it. Choose carefully.
                     </div>
                 </div>
             </div>
@@ -308,12 +356,12 @@
             <div class="scroll-item" onclick="toggleScrollMobile(this)">
                 <div class="scroll-head">
                     <div class="handle left"></div>
-                    <div class="question-text">Is Polyjuice Potion allowed?</div>
+                    <div class="question-text">Can we submit our GitHub repository privately?</div>
                     <div class="handle right"></div>
                 </div>
                 <div class="scroll-body">
                     <div class="answer-content">
-                        Identity theft is strictly prohibited by the Ministry. You must code as your true self. However, Draught of Living Death (Energy Drinks) is permitted.
+                        Make it public or add the organizers/judges as collaborators. If judges cannot access your repo, your submission may not be evaluated.
                     </div>
                 </div>
             </div>
@@ -321,12 +369,12 @@
             <div class="scroll-item" onclick="toggleScrollMobile(this)">
                 <div class="scroll-head">
                     <div class="handle left"></div>
-                    <div class="question-text">What about Muggle Technology?</div>
+                    <div class="question-text">Do all team members need to be present for the entire hackathon?</div>
                     <div class="handle right"></div>
                 </div>
                 <div class="scroll-body">
                     <div class="answer-content">
-                        While we prefer wands, we understand the necessity of Laptops and WiFi. Bring your own devices, but beware of Pixies in the network.
+                        Yes. Since it's mentioned all wizards/witches must stay in the Great Hall the whole time, no one can leave for long durations unless informed to organizers.
                     </div>
                 </div>
             </div>
@@ -334,12 +382,51 @@
             <div class="scroll-item" onclick="toggleScrollMobile(this)">
                 <div class="scroll-head">
                     <div class="handle left"></div>
-                    <div class="question-text">What is the Team Size?</div>
+                    <div class="question-text">How do we prove our work is original and done during the hackathon?</div>
                     <div class="handle right"></div>
                 </div>
                 <div class="scroll-body">
                     <div class="answer-content">
-                        A minimum of 2 wizards and a maximum of 4. Choose your housemates wisely, for the path to victory is treacherous for the lone wolf.
+                        Keep your commits visible on GitHub. Judges may check timestamps. Copy-paste code or pre-built projects may lead to disqualification.
+                    </div>
+                </div>
+            </div>
+
+            <div class="scroll-item" onclick="toggleScrollMobile(this)">
+                <div class="scroll-head">
+                    <div class="handle left"></div>
+                    <div class="question-text">How do we contact organizers for emergency help?</div>
+                    <div class="handle right"></div>
+                </div>
+                <div class="scroll-body">
+                    <div class="answer-content">
+                        Approach the nearest volunteer (as per rules) — not other teams.
+                    </div>
+                </div>
+            </div>
+
+            <div class="scroll-item" onclick="toggleScrollMobile(this)">
+                <div class="scroll-head">
+                    <div class="handle left"></div>
+                    <div class="question-text">Do we need to submit a video demo?</div>
+                    <div class="handle right"></div>
+                </div>
+                <div class="scroll-body">
+                    <div class="answer-content">
+                        If required, organizers will mention it. If not, prepare one as a backup — it helps judges understand your project quickly.
+                    </div>
+                </div>
+            </div>
+
+            <div class="scroll-item" onclick="toggleScrollMobile(this)">
+                <div class="scroll-head">
+                    <div class="handle left"></div>
+                    <div class="question-text">What if two teams have similar ideas?</div>
+                    <div class="handle right"></div>
+                </div>
+                <div class="scroll-body">
+                    <div class="answer-content">
+                        Judging depends on execution, innovation, and implementation, so similar ideas are allowed.
                     </div>
                 </div>
             </div>
@@ -441,5 +528,10 @@
     </script>
     <!-- Bootstrap JS for navbar collapse -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    </script>
+    <script src="loading-screen.js"></script>
+    <script src="audio-control.js"></script>
+    <script src="disable-copy.js"></script>
 </body>
 </html>

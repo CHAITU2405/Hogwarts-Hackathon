@@ -7,6 +7,10 @@ from app.models import db, Team, Member, ProblemStatement, AdminSettings, Admin,
 from app.config import Config
 from datetime import datetime
 import io
+import base64
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 try:
     from openpyxl import Workbook
     OPENPYXL_AVAILABLE = True
@@ -23,9 +27,70 @@ def after_request(response):
     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
     return response
 
+# Handle CORS preflight requests
+@api_bp.before_request
+def handle_preflight():
+    if request.method == "OPTIONS":
+        response = make_response()
+        response.headers.add("Access-Control-Allow-Origin", "*")
+        response.headers.add('Access-Control-Allow-Headers', "Content-Type,Authorization")
+        response.headers.add('Access-Control-Allow-Methods', "GET,PUT,POST,DELETE,OPTIONS")
+        return response
+
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in Config.ALLOWED_EXTENSIONS
+
+# Email configuration
+SENDER_EMAIL = "hogwartshackathon@gmail.com"
+SENDER_PASSWORD = "cszf wruj ejlg exgu"  # Gmail App Password
+
+def send_credentials_email(receiver_email, team_name, username, password, team_lead_name):
+    """Send login credentials to team lead via email"""
+    try:
+        # Create message
+        msg = MIMEMultipart()
+        msg["From"] = SENDER_EMAIL
+        msg["To"] = receiver_email
+        msg["Subject"] = f"Welcome to Hogwarts Hackathon - Your Team Login Credentials"
+        
+        # Email body
+        body = f"""
+Dear {team_lead_name},
+
+Congratulations! Your team "{team_name}" has been approved for the Hogwarts Hackathon.
+
+Your login credentials are as follows:
+
+Username: {username}
+Password: {password}
+
+Please keep these credentials secure and use them to log in to the hackathon portal.
+
+Important Notes:
+- You can log in using these credentials on the login page
+- Do not share these credentials with anyone outside your team
+- If you have any issues, please contact the organizers
+
+We look forward to seeing your magical creations!
+
+Best regards,
+Hogwarts Hackathon Team
+        """
+        
+        msg.attach(MIMEText(body, "plain"))
+        
+        # Sending Email
+        server = smtplib.SMTP("smtp.gmail.com", 587)
+        server.starttls()
+        server.login(SENDER_EMAIL, SENDER_PASSWORD)
+        server.sendmail(SENDER_EMAIL, receiver_email, msg.as_string())
+        server.quit()
+        
+        return True
+    except Exception as e:
+        print(f"Error sending email: {e}")
+        return False
 
 @api_bp.route('/register', methods=['POST'])
 def register_team():
@@ -87,10 +152,11 @@ def register_team():
             name = request.form.get(f'member_{i}_name', '').strip()
             email = request.form.get(f'member_{i}_email', '').strip()
             phone = request.form.get(f'member_{i}_phone', '').strip()
+            college_name = request.form.get(f'member_{i}_college', '').strip()
             
-            if not name or not email or not phone:
+            if not name or not email or not phone or not college_name:
                 db.session.rollback()
-                return jsonify({'error': f'All fields are required for member {i}'}), 400
+                return jsonify({'error': f'All fields including college name are required for member {i}'}), 400
             
             # Check for duplicate emails
             existing_member = Member.query.filter_by(email=email).first()
@@ -103,6 +169,7 @@ def register_team():
                 name=name,
                 email=email,
                 phone=phone,
+                college_name=college_name,
                 is_leader=(i == 1),
                 member_order=i
             )
@@ -155,13 +222,59 @@ def get_teams():
         
         teams = query.order_by(Team.registered_at.desc()).all()
         
+        # Safely serialize teams
+        teams_data = []
+        for team in teams:
+            try:
+                # Use to_dict_summary which has built-in safety
+                teams_data.append(team.to_dict_summary())
+            except Exception as e:
+                import traceback
+                print(f"Error serializing team {team.id}: {e}")
+                print(traceback.format_exc())
+                # Fallback to basic data if serialization fails
+                try:
+                    # Get members safely
+                    members_list = []
+                    try:
+                        if hasattr(team, 'members') and team.members:
+                            members_list = [m.name for m in team.members]
+                    except:
+                        pass
+                    
+                    # Get college name safely
+                    college = ''
+                    try:
+                        college = getattr(team, 'college_name', None) or ''
+                    except:
+                        pass
+                    
+                    teams_data.append({
+                        'id': team.id,
+                        'name': team.team_name,
+                        'house': team.house,
+                        'members': members_list,
+                        'projectUrl': '',
+                        'college': college,
+                        'description': f'A brave team from {team.house} house',
+                        'approval_status': team.approval_status
+                    })
+                except Exception as e2:
+                    import traceback
+                    print(f"Error in fallback serialization for team {team.id}: {e2}")
+                    print(traceback.format_exc())
+                    continue
+        
         return jsonify({
             'success': True,
-            'teams': [team.to_dict_summary() for team in teams]
+            'teams': teams_data
         }), 200
         
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        import traceback
+        error_trace = traceback.format_exc()
+        print(f"Error in get_teams: {error_trace}")
+        return jsonify({'error': str(e), 'trace': error_trace}), 500
 
 @api_bp.route('/teams/<int:team_id>', methods=['GET'])
 def get_team(team_id):
@@ -226,19 +339,45 @@ def approve_team(team_id):
             )
             db.session.add(team_login)
         
+        # Update team size based on current member count (in case members were removed)
+        current_member_count = Member.query.filter_by(team_id=team_id).count()
+        team.team_size = current_member_count
+        
         # Update team approval status
         team.approval_status = 'approved'
         db.session.commit()
         
+        # Send credentials email to team lead
+        email_sent = False
+        email_error = None
+        try:
+            email_sent = send_credentials_email(
+                receiver_email=team_lead.email,
+                team_name=team.team_name,
+                username=team_lead.name,
+                password=team.utr_transaction_id,
+                team_lead_name=team_lead.name
+            )
+        except Exception as e:
+            email_error = str(e)
+            print(f"Email sending failed: {email_error}")
+        
+        response_message = f'Team {team.team_name} has been approved. Login credentials created.'
+        if email_sent:
+            response_message += ' Credentials have been sent to the team lead via email.'
+        elif email_error:
+            response_message += f' Note: Email could not be sent ({email_error}), but credentials are available.'
+        
         return jsonify({
             'success': True,
-            'message': f'Team {team.team_name} has been approved. Login credentials created.',
+            'message': response_message,
             'team': team.to_dict(),
             'login': {
                 'username': team_lead.name,
                 'password': team.utr_transaction_id,
                 'house': team.house
-            }
+            },
+            'email_sent': email_sent
         }), 200
     except Exception as e:
         db.session.rollback()
@@ -246,20 +385,63 @@ def approve_team(team_id):
 
 @api_bp.route('/admin/reject-team/<int:team_id>', methods=['POST'])
 def reject_team(team_id):
-    """Reject a team - sets status to rejected"""
+    """Reject a team - deletes the team and all related data from the database"""
+    print(f"=== REJECT TEAM CALLED: Deleting team {team_id} ===")  # Debug log
     try:
         team = Team.query.get_or_404(team_id)
-        team.approval_status = 'rejected'
+        team_name = team.team_name  # Store name before deletion
+        print(f"Found team: {team_name} (ID: {team_id})")
+        
+        # Delete related records first (due to foreign key constraints)
+        # Delete TeamLogin if it exists
+        team_login = TeamLogin.query.filter_by(team_id=team_id).first()
+        if team_login:
+            print(f"Deleting TeamLogin for team {team_id}")
+            db.session.delete(team_login)
+        
+        # Delete Review if it exists
+        review = Review.query.filter_by(team_id=team_id).first()
+        if review:
+            print(f"Deleting Review for team {team_id}")
+            db.session.delete(review)
+        
+        # Delete all members explicitly (cascade should handle this, but being explicit)
+        members = Member.query.filter_by(team_id=team_id).all()
+        print(f"Deleting {len(members)} members for team {team_id}")
+        for member in members:
+            db.session.delete(member)
+        
+        # Delete the team (DO NOT SET STATUS - DELETE IT)
+        print(f"Deleting team {team_id} ({team_name})")
+        db.session.delete(team)
+        
+        # Commit all deletions
         db.session.commit()
+        print(f"Successfully deleted team {team_id} from database")
+        
+        # Verify deletion
+        verify_team = Team.query.get(team_id)
+        if verify_team:
+            print(f"ERROR: Team {team_id} still exists after deletion!")
+            return jsonify({'error': 'Team still exists after deletion attempt'}), 500
         
         return jsonify({
             'success': True,
-            'message': f'Team {team.team_name} has been rejected',
-            'team': team.to_dict()
+            'message': f'Team {team_name} has been rejected and deleted',
+            'deleted': True
         }), 200
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+        import traceback
+        error_trace = traceback.format_exc()
+        print(f"ERROR deleting team {team_id}: {error_trace}")  # Log to console for debugging
+        # Return a more user-friendly error message
+        error_msg = str(e)
+        if 'foreign key constraint' in error_msg.lower() or 'constraint' in error_msg.lower():
+            error_msg = 'Database constraint error. Please ensure all related records are deleted first.'
+        elif 'IntegrityError' in str(type(e)):
+            error_msg = 'Database integrity error. The team may have related records that prevent deletion.'
+        return jsonify({'error': error_msg, 'trace': error_trace}), 500
 
 @api_bp.route('/admin/problem-statements', methods=['GET'])
 def get_problem_statements():
@@ -439,7 +621,7 @@ def toggle_registration():
 @api_bp.route('/login', methods=['POST'])
 def login():
     """Team lead login - username is team_name, password is UTR
-    Admin login - username is 'harry potter', password is 'hogwarts house cup'"""
+    Admin login - username is 'Harry Potter', password is 'hogwarts school'"""
     try:
         data = request.get_json()
         username = data.get('username', '').strip()
@@ -450,17 +632,16 @@ def login():
             return jsonify({'error': 'Username and password are required'}), 400
         
         # Check for admin login
-        if is_admin or username.lower() == 'harry potter':
-            # Check admin credentials from database
-            admin = Admin.query.filter_by(username=username.lower()).first()
-            if admin and check_password_hash(admin.password_hash, password):
+        if is_admin or (username.lower() == 'harry potter' and password == 'hogwarts school'):
+            # Admin credentials
+            if username.lower() == 'harry potter' and password == 'hogwarts school':
                 return jsonify({
                     'success': True,
                     'message': 'Admin login successful',
                     'is_admin': True,
                     'admin': {
-                        'username': admin.username,
-                        'name': admin.username.title()
+                        'username': 'Harry Potter',
+                        'name': 'Harry Potter'
                     }
                 }), 200
             else:
@@ -549,9 +730,13 @@ def select_problem_statement():
         # Update team's selected problem statement
         team.selected_problem_statement_id = problem_statement_id
         
-        # If the problem statement is from a different house, update team's house
-        if problem_statement.house and problem_statement.house != team.house:
-            team.house = problem_statement.house
+        # If the problem statement's domain is different from team's house, update team's house
+        # Domain values: gryffindor, slytherin, ravenclaw, hufflepuff, muggles
+        # Convert domain to capitalized house name for consistency
+        problem_house = problem_statement.domain.capitalize() if problem_statement.domain else None
+        
+        if problem_house and problem_house.lower() != team.house.lower():
+            team.house = problem_house
         
         db.session.commit()
         
@@ -574,6 +759,456 @@ def get_all_teams():
             'teams': [{'id': team.id, 'team_name': team.team_name, 'house': team.house} for team in teams]
         }), 200
     except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@api_bp.route('/generate-ticket/<int:team_id>', methods=['GET'])
+def generate_ticket(team_id):
+    """Generate and return a downloadable ticket for the team"""
+    try:
+        team = Team.query.get_or_404(team_id)
+        
+        # Check if team is approved
+        if team.approval_status != 'approved':
+            return jsonify({'error': 'Team is not approved yet'}), 403
+        
+        # Get team members
+        members = Member.query.filter_by(team_id=team_id).order_by(Member.member_order).all()
+        
+        # Get selected problem statement if any
+        problem_statement = None
+        if team.selected_problem_statement_id:
+            problem_statement = ProblemStatement.query.get(team.selected_problem_statement_id)
+        
+        # Get house crest image and convert to base64
+        house_crests = {
+            'Gryffindor': 'gryffindor.png',
+            'Slytherin': 'slytherin.png',
+            'Ravenclaw': 'ravenclaw.png',
+            'Hufflepuff': 'hufflepuff.png',
+            'Muggles': 'muggles.png'
+        }
+        crest_filename = house_crests.get(team.house, 'muggles.png')
+        crest_path = Config.BASE_DIR / 'assets' / crest_filename
+        
+        # Convert image to base64
+        crest_base64 = ''
+        if crest_path.exists():
+            try:
+                with open(crest_path, 'rb') as img_file:
+                    img_data = img_file.read()
+                    crest_base64 = base64.b64encode(img_data).decode('utf-8')
+                    crest_base64 = f'data:image/png;base64,{crest_base64}'
+            except Exception as e:
+                print(f"Error reading crest image: {e}")
+                crest_base64 = ''
+        
+        # Generate HTML ticket in Hogwarts Express style
+        ticket_html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hogwarts Express Ticket</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Crimson+Text:ital,wght@0,400;1,400&family=Pinyon+Script&display=swap" rel="stylesheet">
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        body {{ 
+            font-family: 'Crimson Text', serif; 
+            background: #8b7355; 
+            padding: 40px 20px; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }}
+        .ticket-wrapper {{
+            max-width: 900px;
+            width: 100%;
+        }}
+        .ticket-container {{ 
+            background: #f3e9d2;
+            background-image: url('https://www.transparenttextures.com/patterns/aged-paper.png');
+            border: 4px solid #2c1b18;
+            display: flex;
+            position: relative;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }}
+        .ticket-stub {{
+            width: 35%;
+            padding: 30px 20px;
+            border-right: 2px dashed #8b7355;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+        }}
+        .platform-text {{
+            font-family: 'Cinzel Decorative', serif;
+            font-size: 1rem;
+            color: #2c1b18;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+        }}
+        .platform-number {{
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: #2c1b18;
+            color: #f3e9d2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin: 20px 0;
+            font-family: Arial, sans-serif;
+        }}
+        .house-crest {{
+            width: 120px;
+            height: 120px;
+            margin: 20px 0;
+            background: white;
+            border: 2px solid #8b7355;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+        }}
+        .house-crest img {{
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }}
+        .house-name {{
+            font-family: 'Cinzel Decorative', serif;
+            font-size: 0.9rem;
+            color: #2c1b18;
+            text-transform: uppercase;
+            font-weight: bold;
+            margin-top: 10px;
+        }}
+        .location-text {{
+            font-family: 'Cinzel Decorative', serif;
+            font-size: 1rem;
+            color: #2c1b18;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: 15px;
+        }}
+        .ticket-main {{
+            width: 65%;
+            padding: 40px 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }}
+        .ticket-title {{
+            font-family: 'Cinzel Decorative', serif;
+            font-size: 3rem;
+            color: #2c1b18;
+            text-align: center;
+            margin-bottom: 5px;
+            font-weight: 900;
+            text-shadow: 2px 2px 4px rgba(212, 175, 55, 0.3);
+        }}
+        .ticket-subtitle {{
+            font-family: 'Cinzel Decorative', serif;
+            font-size: 2.5rem;
+            color: #2c1b18;
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: 900;
+            text-shadow: 2px 2px 4px rgba(212, 175, 55, 0.3);
+        }}
+        .divider {{
+            border-top: 2px double #d4af37;
+            margin: 15px 0;
+        }}
+        .destination {{
+            font-family: 'Pinyon Script', cursive;
+            font-size: 2rem;
+            color: #2c1b18;
+            text-align: center;
+            margin: 10px 0;
+        }}
+        .trip-type {{
+            font-family: Arial, sans-serif;
+            font-size: 0.9rem;
+            color: #2c1b18;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin: 10px 0;
+            font-weight: bold;
+        }}
+        .team-info {{
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(255,255,255,0.3);
+            border-left: 3px solid #d4af37;
+        }}
+        .team-name {{
+            font-family: 'Cinzel Decorative', serif;
+            font-size: 1.3rem;
+            color: #8b6914;
+            margin-bottom: 10px;
+        }}
+        .team-details {{
+            font-size: 0.95rem;
+            color: #2c1b18;
+            line-height: 1.6;
+        }}
+        .members-list {{
+            margin: 15px 0;
+            font-size: 0.9rem;
+            color: #2c1b18;
+        }}
+        .member-item {{
+            margin: 5px 0;
+            padding-left: 15px;
+        }}
+        .rules-text {{
+            font-family: Arial, sans-serif;
+            font-size: 0.7rem;
+            color: #2c1b18;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 20px;
+            line-height: 1.4;
+        }}
+        @media print {{
+            body {{ padding: 10px; background: white; }}
+            .ticket-container {{ box-shadow: none; }}
+        }}
+    </style>
+</head>
+<body>
+    <div class="ticket-wrapper">
+        <div class="ticket-container">
+            <!-- Left Stub -->
+            <div class="ticket-stub">
+                <div class="platform-text">PLATFORM</div>
+                <div class="platform-number">9¾</div>
+                <div class="house-crest">
+                    <img src="{crest_base64}" alt="{team.house} Crest" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                </div>
+                <div class="house-name">{team.house.upper()}</div>
+                <div class="location-text">LONDON</div>
+            </div>
+            
+            <!-- Main Ticket -->
+            <div class="ticket-main">
+                <div>
+                    <h1 class="ticket-title">HOGWARTS</h1>
+                    <h2 class="ticket-subtitle">EXPRESS</h2>
+                    <div class="divider"></div>
+                    <div class="destination">Sto Hogwarts Hackathon</div>
+                    <div class="trip-type">ONE WAY TRIP</div>
+                    <div class="divider"></div>
+                </div>
+                
+                <div class="team-info">
+                    <div class="team-name">{team.team_name}</div>
+                    <div class="team-details">
+                        <strong>House:</strong> {team.house} | <strong>Team Size:</strong> {team.team_size} members<br>
+                        <strong>Registration:</strong> {team.registered_at.strftime('%B %d, %Y') if team.registered_at else 'N/A'}<br>
+                        <strong>UTR:</strong> {team.utr_transaction_id}
+                    </div>
+                    <div class="members-list">
+                        <strong>Team Members:</strong>
+"""
+        
+        for member in members:
+            leader_badge = " (Leader)" if member.is_leader else ""
+            ticket_html += f"""
+                        <div class="member-item">• {member.name}{leader_badge}</div>
+"""
+        
+        ticket_html += """
+                    </div>
+                </div>
+                
+                <div class="rules-text">
+                    INSTRUCTED TO FOLLOW THE RULES AND REGULATIONS OF HOGWARTS HACKATHON
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+"""
+        
+        # Return as downloadable HTML file
+        response = make_response(ticket_html)
+        response.headers['Content-Type'] = 'text/html'
+        response.headers['Content-Disposition'] = f'attachment; filename="Hogwarts_Hackathon_Ticket_{team.team_name.replace(" ", "_")}.html"'
+        return response
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@api_bp.route('/admin/statistics', methods=['GET'])
+def get_statistics():
+    """Get accurate statistics: total members, total teams, and counts by domain"""
+    try:
+        from sqlalchemy import func
+        
+        # Total members count (all members across all teams)
+        total_members = db.session.query(func.count(Member.id)).scalar() or 0
+        
+        # Total teams count (all teams, regardless of approval status)
+        total_teams = db.session.query(func.count(Team.id)).scalar() or 0
+        
+        # Count teams by their house (case-insensitive using SQL)
+        domain_counts = {}
+        houses = ['gryffindor', 'slytherin', 'ravenclaw', 'hufflepuff', 'muggles']
+        
+        for house in houses:
+            # Use case-insensitive comparison with func.lower()
+            count = db.session.query(func.count(Team.id)).filter(
+                db.func.lower(Team.house) == house
+            ).scalar() or 0
+            domain_counts[house] = count
+        
+        return jsonify({
+            'success': True,
+            'statistics': {
+                'total_members': total_members,
+                'total_teams': total_teams,
+                'by_domain': domain_counts
+            }
+        }), 200
+    except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
+        print(f"Error in get_statistics: {error_trace}")
+        return jsonify({'error': str(e), 'trace': error_trace}), 500
+
+@api_bp.route('/admin/all-teams', methods=['GET'])
+def get_all_teams_with_members():
+    """Get all approved teams with full member details for management"""
+    try:
+        # Only get approved teams
+        teams = Team.query.filter_by(approval_status='approved').order_by(Team.team_name).all()
+        teams_data = []
+        for team in teams:
+            try:
+                teams_data.append(team.to_dict())
+            except Exception as e:
+                print(f"Error serializing team {team.id}: {e}")
+                continue
+        
+        return jsonify({
+            'success': True,
+            'teams': teams_data
+        }), 200
+    except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
+        print(f"Error in get_all_teams_with_members: {error_trace}")
+        return jsonify({'error': str(e), 'trace': error_trace}), 500
+
+@api_bp.route('/admin/teams/<int:team_id>/members', methods=['POST'])
+def add_team_member(team_id):
+    """Add a new member to a team"""
+    try:
+        team = Team.query.get_or_404(team_id)
+        
+        # Check current team size
+        current_members = Member.query.filter_by(team_id=team_id).count()
+        if current_members >= 4:
+            return jsonify({'error': 'Team already has maximum 4 members'}), 400
+        
+        data = request.get_json()
+        name = data.get('name', '').strip()
+        email = data.get('email', '').strip()
+        phone = data.get('phone', '').strip()
+        college_name = data.get('college_name', '').strip()
+        is_leader = data.get('is_leader', False)
+        
+        if not name or not email or not phone or not college_name:
+            return jsonify({'error': 'Name, email, phone, and college name are required'}), 400
+        
+        # Get next member order
+        max_order = db.session.query(db.func.max(Member.member_order)).filter_by(team_id=team_id).scalar() or 0
+        member_order = max_order + 1
+        
+        # Determine if this member should be leader
+        # First member is always leader, or if explicitly marked as leader
+        will_be_leader = current_members == 0 or is_leader
+        
+        # If setting as leader, unset other leaders
+        if will_be_leader and current_members > 0:
+            Member.query.filter_by(team_id=team_id, is_leader=True).update({'is_leader': False})
+        
+        new_member = Member(
+            team_id=team_id,
+            name=name,
+            email=email,
+            phone=phone,
+            college_name=college_name,
+            is_leader=will_be_leader,
+            member_order=member_order
+        )
+        
+        db.session.add(new_member)
+        
+        # Update team size
+        team.team_size = current_members + 1
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Member added successfully',
+            'member': new_member.to_dict(),
+            'team': team.to_dict()
+        }), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@api_bp.route('/admin/teams/<int:team_id>/members/<int:member_id>', methods=['DELETE'])
+def remove_team_member(team_id, member_id):
+    """Remove a member from a team"""
+    try:
+        team = Team.query.get_or_404(team_id)
+        member = Member.query.filter_by(id=member_id, team_id=team_id).first_or_404()
+        
+        # Don't allow removing if it's the only member
+        current_members = Member.query.filter_by(team_id=team_id).count()
+        if current_members <= 1:
+            return jsonify({'error': 'Cannot remove the last member from a team'}), 400
+        
+        # If removing the leader, assign leadership to the first remaining member
+        if member.is_leader:
+            remaining_members = Member.query.filter_by(team_id=team_id).filter(Member.id != member_id).order_by(Member.member_order).all()
+            if remaining_members:
+                remaining_members[0].is_leader = True
+        
+        # Delete the member
+        db.session.delete(member)
+        
+        # Update team size
+        team.team_size = current_members - 1
+        
+        # Reorder remaining members
+        remaining_members = Member.query.filter_by(team_id=team_id).order_by(Member.member_order).all()
+        for idx, mem in enumerate(remaining_members, 1):
+            mem.member_order = idx
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Member removed successfully',
+            'team': team.to_dict()
+        }), 200
+    except Exception as e:
+        db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
 @api_bp.route('/admin/review-marks', methods=['POST'])
@@ -758,116 +1393,6 @@ def export_review_marks():
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
-@api_bp.route('/admin/download-db', methods=['GET'])
-def download_database():
-    """Download database file - admin only"""
-    try:
-        # Check admin authentication via session or request header
-        # For simplicity, we'll check if admin is logged in via session
-        # In production, use proper JWT or session management
-        username = request.args.get('username', '').strip()
-        password = request.args.get('password', '').strip()
-        
-        if not username or not password:
-            return jsonify({'error': 'Admin credentials required'}), 401
-        
-        # Verify admin credentials
-        admin = Admin.query.filter_by(username=username.lower()).first()
-        if not admin or not check_password_hash(admin.password_hash, password):
-            return jsonify({'error': 'Invalid admin credentials'}), 401
-        
-        # Get database file path from config
-        from app.config import Config
-        db_path = str(Config.DATABASE_PATH)
-        
-        # Check if file exists
-        if not os.path.exists(db_path):
-            return jsonify({'error': 'Database file not found'}), 404
-        
-        # Send file
-        return send_file(
-            db_path,
-            mimetype='application/x-sqlite3',
-            as_attachment=True,
-            download_name='hogwarts_hackathon.db'
-        )
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@api_bp.route('/leaderboard', methods=['GET'])
-def get_leaderboard():
-    """Get leaderboard data with all teams and their review marks"""
-    try:
-        import json
-        # Get all approved teams
-        teams = Team.query.filter_by(approval_status='approved').all()
-        
-        leaderboard_data = []
-        for team in teams:
-            # Get review row for this team (one row per team now)
-            review = Review.query.filter_by(team_id=team.id).first()
-            
-            # Initialize review data
-            review_1 = {'score': 0, 'comment': ''}
-            review_2 = {'score': 0, 'comment': ''}
-            review_3 = {'score': 0, 'comment': ''}
-            
-            # Populate review data from single row
-            if review:
-                # Get review 1 - always get data
-                r1_data = review.get_review(1)
-                if r1_data:
-                    marks_1 = r1_data.get('marks', 0) or 0
-                    review_1 = {
-                        'score': int(marks_1),
-                        'comment': str(r1_data.get('feedback', '') or '')
-                    }
-                
-                # Get review 2
-                r2_data = review.get_review(2)
-                if r2_data:
-                    marks_2 = r2_data.get('marks', 0) or 0
-                    review_2 = {
-                        'score': int(marks_2),
-                        'comment': str(r2_data.get('feedback', '') or '')
-                    }
-                
-                # Get review 3
-                r3_data = review.get_review(3)
-                if r3_data:
-                    marks_3 = r3_data.get('marks', 0) or 0
-                    review_3 = {
-                        'score': int(marks_3),
-                        'comment': str(r3_data.get('feedback', '') or '')
-                    }
-            
-            total = review_1['score'] + review_2['score'] + review_3['score']
-            
-            leaderboard_data.append({
-                'id': team.id,
-                'name': team.team_name,
-                'house': team.house,
-                'r1': review_1,
-                'r2': review_2,
-                'r3': review_3,
-                'total': total
-            })
-        
-        # Sort by total points descending
-        leaderboard_data.sort(key=lambda x: x['total'], reverse=True)
-        
-        return jsonify({
-            'success': True,
-            'teams': leaderboard_data
-        }), 200
-    except Exception as e:
-        import traceback
-        return jsonify({
-            'success': False,
-            'error': str(e),
-            'traceback': traceback.format_exc()
-        }), 500
 
 def register_blueprints(app):
     app.register_blueprint(api_bp)

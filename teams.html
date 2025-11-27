@@ -5,10 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Hogwarts Hackathon Teams</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Crimson+Text:ital,wght@0,400;1,400&display=swap" rel="stylesheet" />
 <style>
 :root { --gold:#d4af37; --bg-dark:#121213; --parchment:#efe5cf; }
-html,body{margin:0;padding:0;background:#0d0d10;color:#ddd;font-family:'Crimson Text',serif;}
+html,body{margin:0;padding:0;background:#0d0d10;color:#ddd;font-family:'Crimson Text',serif;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;-webkit-touch-callout:none;}
 body{background:radial-gradient(circle at 50% 30%, #1e1e2c 0%, #0a0a0d 80%) fixed;}
 .filter-bar{margin-top:26px;background:rgba(255,255,255,.04);border:1px solid rgba(212,175,55,.25);border-radius:14px;padding:14px 18px;backdrop-filter:blur(10px);max-width:880px;margin-left:auto;margin-right:auto;box-shadow:0 8px 24px rgba(0,0,0,.45);position:relative;z-index:60;} 
 .filter-inner{display:grid;grid-template-columns:minmax(190px,220px) 1fr;gap:34px;align-items:end;}
@@ -65,8 +66,43 @@ body{background:radial-gradient(circle at 50% 30%, #1e1e2c 0%, #0a0a0d 80%) fixe
 .hp-option:hover{background:rgba(212,175,55,.28);color:#fff;} 
 .hp-option:before{content:'✶';position:absolute;left:10px;top:50%;transform:translateY(-50%);opacity:.6;font-size:.6rem;color:var(--gold);} 
 .hp-option[data-value='']::before{content:'★';}
-.navbar{background:rgba(10,10,10,.9);border-bottom:1px solid rgba(212,175,55,.3);backdrop-filter:blur(8px);}
-.navbar-brand,.nav-link{font-family:'Cinzel Decorative';color:var(--gold)!important;}
+.navbar { background-color: rgba(10, 10, 10, 0.9); border-bottom: 1px solid rgba(212, 175, 55, 0.3); padding: 1rem 0; z-index: 100; backdrop-filter: blur(10px); }
+
+/* Volume Control Button */
+.volume-btn {
+    color: var(--gold);
+    font-size: 1.2rem;
+    padding: 5px 10px;
+    border: none;
+    background: transparent;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+.volume-btn:hover {
+    color: #ffd700;
+    transform: scale(1.1);
+}
+.volume-btn.volume-off {
+    opacity: 0.6;
+}
+.volume-btn.volume-on {
+    opacity: 1;
+}
+
+.navbar-brand { 
+    font-family: 'Cinzel Decorative'; 
+    font-weight: 900; 
+    text-transform: uppercase; 
+    line-height: 1.1; 
+    color: #ffd700; 
+    filter: url(#gold-texture); 
+    font-size: 1.5rem; 
+    transition: 0.3s;
+}
+@media (max-width: 768px) { 
+    .navbar-brand { font-size: 1.2rem; } 
+}
+.nav-link{font-family:'Cinzel Decorative';color:var(--gold)!important;}
 .nav-link:hover{color:#fff!important;text-shadow:0 0 12px var(--gold);} 
 /* Neon Register button */
 .register-btn{position:relative;display:inline-block;padding:8px 22px;margin-left:12px;border:1px solid rgba(255,215,100,.55);border-radius:999px;font-family:'Cinzel Decorative';letter-spacing:1px;text-transform:uppercase;font-size:.75rem;color:#ffe7b0!important;background:linear-gradient(130deg,#3a2d00,#1a1400 55%,#3a2d00);box-shadow:0 0 8px rgba(255,180,60,.4),inset 0 0 10px rgba(255,220,140,.15);overflow:hidden;transition:.35s;animation:pulseNeon 3.6s ease-in-out infinite}
@@ -182,6 +218,14 @@ body{background:radial-gradient(circle at 50% 30%, #1e1e2c 0%, #0a0a0d 80%) fixe
 @keyframes twinkle{0%{transform:scale(.6);opacity:.9;}100%{transform:scale(.1) translateY(25px);opacity:0;}}
 
 footer{padding:40px;text-align:center;border-top:1px solid var(--gold);background:#0a0a0a;color:#777;margin-top:100px;}
+footer .container { position: relative; }
+.sponsor-section { position: absolute; right: 0; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.sponsor-label { font-family: 'Cinzel Decorative'; color: #777; font-size: 0.8rem; margin: 0; text-transform: uppercase; letter-spacing: 1px; }
+.sponsor-logo { height: 40px; width: auto; }
+.sponsor-name { font-family: 'Cinzel Decorative'; color: #777; font-size: 0.9rem; }
+@media (max-width: 768px) {
+  .sponsor-section { position: static; transform: none; margin-top: 20px; justify-content: center; }
+}
 
 /* Wand cursor like main page */
 @media (min-width: 992px){
@@ -209,20 +253,26 @@ footer{padding:40px;text-align:center;border-top:1px solid var(--gold);backgroun
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute"><filter id="gold-texture" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="3" result="noise" /><feDiffuseLighting in="noise" lighting-color="#d4af37" surfaceScale="3" result="coloredNoise"><feDistantLight azimuth="45" elevation="60" /></feDiffuseLighting><feSpecularLighting in="noise" surfaceScale="6" specularConstant="1" specularExponent="20" lighting-color="#ffecb3" result="specular"><fePointLight x="-5000" y="-10000" z="20000" /></feSpecularLighting><feComposite in="specular" in2="SourceAlpha" operator="in" result="specularText" /><feComposite in="coloredNoise" in2="SourceAlpha" operator="in" result="coloredText" /><feMerge><feMergeNode in="coloredText" /><feMergeNode in="specularText" /></feMerge></filter></svg>
-<nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+<nav class="navbar navbar-expand-lg sticky-top navbar-dark">
   <div class="container">
-    <a class="navbar-brand" href="main.html">Hogwarts Hacks</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav"><span class="navbar-toggler-icon"></span></button>
-    <div id="nav" class="collapse navbar-collapse justify-content-end">
+    <a class="navbar-brand" href="main.html">
+        <span style="display: block;">Hogwarts</span>
+        <span style="display: block;">Hackathon</span>
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"><span class="navbar-toggler-icon"></span></button>
+    <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
       <ul class="navbar-nav align-items-center">
-        <li class="nav-item"><a class="nav-link" href="main.html">Great Hall</a></li>
-        <li class="nav-item"><a class="nav-link" href="main.html#houses">Houses</a></li>
-        <li class="nav-item"><a class="nav-link" href="#teams">Teams</a></li>
+        <li class="nav-item me-3">
+          <button id="volumeControl" class="btn btn-link volume-btn" type="button" title="Toggle Background Music">
+              <i class="fas fa-volume-up"></i>
+          </button>
+      </li>
+        <li class="nav-item"><a class="nav-link" href="main.html#home">Great Hall</a></li>
+        <li class="nav-item"><a class="nav-link" href="teams.html">Teams</a></li>
         <li class="nav-item"><a class="nav-link" href="organizers.html">Organizers</a></li>
         <li class="nav-item"><a class="nav-link" href="timeline.html">Timeline</a></li>
-        <li class="nav-item"><a class="nav-link" href="faq.html">FAQs</a></li>
         <li class="nav-item"><a class="nav-link" href="rules.html">Rules</a></li>
-        <li class="nav-item"><a class="nav-link register-btn" href="register.html">Register</a></li>
+        <li class="nav-item"><a class="nav-link" href="faq.html">FAQs</a></li>
       </ul>
     </div>
   </div>
@@ -280,6 +330,11 @@ footer{padding:40px;text-align:center;border-top:1px solid var(--gold);backgroun
   <div class="container">
     <p>Mischief Managed &copy; 2025 Hogwarts Hackathon</p>
     <small>"I solemnly swear this code is up to good."</small>
+    <div class="sponsor-section">
+      <p class="sponsor-label">Sponsored by</p>
+      <img src="assets/mmm.jpg" alt="MEG Multi Media" class="sponsor-logo">
+      <span class="sponsor-name">MEG Multi Media</span>
+    </div>
   </div>
 </footer>
 
@@ -464,6 +519,11 @@ window.addEventListener('click', (e) => {
 });
 </script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="loading-screen.js"></script>
+<script src="audio-control.js"></script>
+<script src="disable-copy.js"></script>
 <script src="api-integration.js"></script>
+<script>
+</script>
 </body>
 </html>

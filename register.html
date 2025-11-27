@@ -41,6 +41,12 @@
             width: 100%; margin: 0; padding: 0;
             overflow-x: hidden; 
             background-color: var(--bg-dark);
+            /* Disable text selection */
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
         }
 
         /* --- CONTENT WRAPPER --- */
@@ -165,11 +171,193 @@
         .btn-submit { width: 100%; margin-top: 40px; padding: 15px; background: transparent; border: 2px solid var(--ink-color); color: var(--ink-color); font-family: 'Cinzel Decorative'; font-size: 1.5rem; transition: 0.3s; cursor: pointer; }
         .btn-submit:hover { background: var(--ink-color); color: var(--parchment-base); box-shadow: 0 0 15px rgba(44, 27, 24, 0.5); }
 
+        /* Download QR Button Hover Effect */
+        #downloadQRBtn:hover {
+            background: #000;
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(44, 27, 24, 0.5);
+        }
+
+        /* Terms and Conditions Modal */
+        .terms-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+        .terms-modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .terms-modal-content {
+            background-color: var(--parchment-base);
+            background-image: url('https://www.transparenttextures.com/patterns/aged-paper.png');
+            padding: 40px;
+            position: relative;
+            border: 5px double var(--ink-color);
+            box-shadow: 0 0 50px rgba(212, 175, 55, 0.3);
+            transform: scale(0.9);
+            transition: transform 0.3s;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .terms-modal-overlay.active .terms-modal-content {
+            transform: scale(1);
+        }
+        .terms-modal-close {
+            position: absolute;
+            top: -15px;
+            right: -15px;
+            width: 40px;
+            height: 40px;
+            background: #7f0000;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            transition: 0.3s;
+            font-size: 1.2rem;
+        }
+        .terms-modal-close:hover {
+            transform: scale(1.1);
+            background: #900;
+        }
+        .terms-modal-title {
+            font-family: 'Cinzel Decorative';
+            color: var(--ink-color);
+            font-size: 1.8rem;
+            text-align: center;
+            border-bottom: 2px solid var(--ink-color);
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+        .terms-modal-body {
+            font-family: 'Crimson Text';
+            color: var(--ink-color);
+            font-size: 1.1rem;
+            line-height: 1.8;
+        }
+        .terms-modal-body h4 {
+            font-family: 'Cinzel Decorative';
+            color: var(--ink-color);
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-size: 1.3rem;
+        }
+        .terms-modal-body ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        .terms-modal-body li {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+        .terms-modal-body li:before {
+            content: "⚡";
+            position: absolute;
+            left: 0;
+            color: var(--gold);
+        }
+        .terms-modal-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        .btn-accept-terms {
+            padding: 12px 30px;
+            background: var(--ink-color);
+            color: var(--parchment-base);
+            border: 2px solid var(--ink-color);
+            font-family: 'Cinzel Decorative';
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .btn-accept-terms:hover {
+            background: #000;
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(44, 27, 24, 0.5);
+        }
+        .btn-decline-terms {
+            padding: 12px 30px;
+            background: transparent;
+            color: var(--ink-color);
+            border: 2px solid var(--ink-color);
+            font-family: 'Cinzel Decorative';
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .btn-decline-terms:hover {
+            background: rgba(44, 27, 24, 0.1);
+        }
+
         .navbar { background-color: rgba(10, 10, 10, 0.9); border-bottom: 1px solid rgba(212, 175, 55, 0.3); padding: 1rem 0; z-index: 100; backdrop-filter: blur(10px); }
-        .navbar-brand, .nav-link { font-family: 'Cinzel Decorative'; color: var(--gold); transition: 0.3s; }
+        
+        /* Volume Control Button */
+        .volume-btn {
+            color: var(--gold);
+            font-size: 1.2rem;
+            padding: 5px 10px;
+            border: none;
+            background: transparent;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .volume-btn:hover {
+            color: #ffd700;
+            transform: scale(1.1);
+        }
+        .volume-btn.volume-off {
+            opacity: 0.6;
+        }
+        .volume-btn.volume-on {
+            opacity: 1;
+        }
+        
+        .navbar-brand { 
+            font-family: 'Cinzel Decorative'; 
+            font-weight: 900; 
+            text-transform: uppercase; 
+            line-height: 1.1; 
+            color: #ffd700; 
+            filter: url(#gold-texture); 
+            font-size: 1.5rem; 
+            transition: 0.3s;
+        }
+        @media (max-width: 768px) { 
+            .navbar-brand { font-size: 1.2rem; } 
+        }
+        .nav-link { font-family: 'Cinzel Decorative'; color: var(--gold); transition: 0.3s; }
         .form-check-input { background-color: #333; border-color: #666; width: 3em; height: 1.5em; cursor: pointer; }
         .form-check-input:checked { background-color: var(--gold); border-color: var(--gold); }
         footer { padding: 40px; text-align: center; border-top: 1px solid var(--gold); background: #0a0a0a; position: relative; z-index: 10; color: #777; }
+        footer .container { position: relative; }
+        .sponsor-section { position: absolute; right: 0; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: center; gap: 5px; }
+        .sponsor-label { font-family: 'Cinzel Decorative'; color: #777; font-size: 0.8rem; margin: 0; text-transform: uppercase; letter-spacing: 1px; }
+        .sponsor-logo { height: 40px; width: auto; }
+        .sponsor-name { font-family: 'Cinzel Decorative'; color: #777; font-size: 0.9rem; }
+        @media (max-width: 768px) {
+            .sponsor-section { position: static; transform: none; margin-top: 20px; justify-content: center; }
+        }
 
         /* =========================================
            TICKET OVERLAY CSS
@@ -374,6 +562,10 @@
         }
     </style>
 </head>
+    <svg width="0" height="0" style="position: absolute;">
+        <filter id="gold-texture" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="3" result="noise" /><feDiffuseLighting in="noise" lighting-color="#d4af37" surfaceScale="3" result="coloredNoise"><feDistantLight azimuth="45" elevation="60" /></feDiffuseLighting><feSpecularLighting in="noise" surfaceScale="6" specularConstant="1" specularExponent="20" lighting-color="#ffecb3" result="specular"><fePointLight x="-5000" y="-10000" z="20000" /></feSpecularLighting><feComposite in="specular" in2="SourceAlpha" operator="in" result="specularText" /><feComposite in="coloredNoise" in2="SourceAlpha" operator="in" result="coloredText" /><feMerge><feMergeNode in="coloredText" /><feMergeNode in="specularText" /></feMerge><feDropShadow dx="4" dy="4" stdDeviation="3" flood-color="#000" flood-opacity="0.8"/></filter>
+    </svg>
+
 <body>
 
     <div id="magic-viewport"></div>
@@ -389,18 +581,24 @@
     <div id="site-wrapper">
         <nav class="navbar navbar-expand-lg sticky-top navbar-dark">
             <div class="container">
-                <a class="navbar-brand" href="index.html">Hogwarts Hacks</a>
+                <a class="navbar-brand" href="main.html">
+                    <span style="display: block;">Hogwarts</span>
+                    <span style="display: block;">Hackathon</span>
+                </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"><span class="navbar-toggler-icon"></span></button>
                 <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
                     <ul class="navbar-nav align-items-center">
-                        <li class="nav-item me-4">
-                            <div class="form-check form-switch mb-0 d-flex align-items-center">
-                                <input class="form-check-input" type="checkbox" id="magicToggle">
-                                <label class="form-check-label" for="magicToggle">Try Magic</label>
-                            </div>
+                        <li class="nav-item me-3">
+                            <button id="volumeControl" class="btn btn-link volume-btn" type="button" title="Toggle Background Music">
+                                <i class="fas fa-volume-up"></i>
+                            </button>
                         </li>
-                        <li class="nav-item"><a class="nav-link" href="main.html">Great Hall</a></li>
-                        <li class="nav-item"><a class="nav-link active" href="#">Registration</a></li>
+                        <li class="nav-item"><a class="nav-link" href="main.html#home">Great Hall</a></li>
+                        <li class="nav-item"><a class="nav-link" href="teams.html">Teams</a></li>
+                        <li class="nav-item"><a class="nav-link" href="organizers.html">Organizers</a></li>
+                        <li class="nav-item"><a class="nav-link" href="timeline.html">Timeline</a></li>
+                        <li class="nav-item"><a class="nav-link" href="rules.html">Rules</a></li>
+                        <li class="nav-item"><a class="nav-link" href="faq.html">FAQs</a></li>
                     </ul>
                 </div>
             </div>
@@ -416,6 +614,13 @@
                 </div>
 
                 <form id="registrationForm">
+                    <!-- GVPT Notice -->
+                    <div style="margin-bottom: 30px; margin-top: -10px; text-align: center; padding: 5px 0;">
+                        <div style="font-family: 'Courier New', monospace; font-size: 1.6rem; font-weight: 900; color: #ff0000; text-transform: uppercase; letter-spacing: 4px; line-height: 1.8;">
+                            GVPT(RUSHIKONDA) STUDENTS ARE NOT ALLOWED  TO PARTICIPATE
+                        </div>
+                    </div>
+                    
                     <h4 class="section-title">Team Details</h4>
                     <div class="row">
                         <div class="col-md-6">
@@ -448,8 +653,6 @@
                                 <div class="custom-select-wrapper" id="teamSizeSelect">
                                     <div class="custom-select-trigger"><span>4 Wizards</span></div>
                                     <div class="custom-options">
-                                        <span class="custom-option" data-value="1">1 Wizard</span>
-                                        <span class="custom-option" data-value="2">2 Wizards</span>
                                         <span class="custom-option" data-value="3">3 Wizards</span>
                                         <span class="custom-option" data-value="4" class="selected">4 Wizards</span>
                                     </div>
@@ -459,9 +662,45 @@
                         </div>
                     </div>
 
+                    <!-- Price Display -->
+                    <div class="row" style="margin-top: 20px; margin-bottom: 20px;">
+                        <div class="col-md-12">
+                            <div style="background: rgba(212, 175, 55, 0.1); border: 2px solid var(--gold); padding: 20px; border-radius: 8px; text-align: center;">
+                                <div style="font-family: 'Cinzel Decorative'; color: var(--ink-color); font-size: 1.2rem; margin-bottom: 10px;">
+                                    Registration Fee
+                                </div>
+                                <div style="font-family: 'Crimson Text'; color: var(--ink-color); font-size: 1rem; margin-bottom: 5px;">
+                                    ₹349 per person
+                                </div>
+                                <div id="totalPriceDisplay" style="font-family: 'Cinzel Decorative'; color: var(--gold); font-size: 1.8rem; font-weight: bold;">
+                                    Total: ₹1,396
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div id="membersContainer"></div>
 
                     <h4 class="section-title">Gringotts Transaction</h4>
+                    
+                    <!-- QR Code Display -->
+                    <div class="row" style="margin-bottom: 30px;">
+                        <div class="col-md-12" style="text-align: center;">
+                            <div style="margin-bottom: 15px;">
+                                <label class="magic-label" style="font-size: 1.1rem;">Scan QR Code to Pay</label>
+                            </div>
+                            <div id="qrCodeContainer" style="display: inline-block; padding: 15px; background: var(--parchment-base); border-radius: 10px; box-shadow: none; position: relative; border: none;">
+                                <img id="qrCodeImage" src="assets/1396.jpg" alt="Payment QR Code" style="max-width: 250px; height: auto; display: block; border: none; outline: none;">
+                                <button type="button" id="downloadQRBtn" style="position: absolute; bottom: 10px; right: 10px; width: 40px; height: 40px; background: var(--ink-color); color: var(--parchment-base); border: 2px solid var(--ink-color); border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s; box-shadow: 0 2px 8px rgba(0,0,0,0.3); font-size: 1.1rem;">
+                                    <i class="fas fa-download"></i>
+                                </button>
+                            </div>
+                            <div style="margin-top: 10px; font-family: 'Crimson Text'; color: var(--ink-color); font-size: 0.9rem;">
+                                Amount: <span id="qrAmountDisplay" style="font-weight: bold; color: var(--gold);">₹1,396</span>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
@@ -482,6 +721,15 @@
                         </div>
                     </div>
 
+                    <div class="form-group" style="margin-top: 30px;">
+                        <div class="form-check" style="display: flex; align-items: center; gap: 10px;">
+                            <input type="checkbox" class="form-check-input" id="termsCheckbox" required style="width: 20px; height: 20px; cursor: pointer; accent-color: var(--ink-color);">
+                            <label class="form-check-label" for="termsCheckbox" style="color: var(--ink-color); font-family: 'Crimson Text'; font-size: 1rem; cursor: pointer; user-select: none;">
+                                I agree to the <a href="#" id="termsLink" style="color: var(--gold); text-decoration: underline;">Terms and Conditions</a>
+                            </label>
+                        </div>
+                    </div>
+
                     <button type="submit" class="btn btn-submit">
                         <i class="fas fa-feather-alt"></i> Seal The Contract
                     </button>
@@ -492,6 +740,11 @@
         <footer>
             <div class="container">
                 <p>Mischief Managed &copy; 2025 Hogwarts Hackathon</p>
+                <div class="sponsor-section">
+                    <p class="sponsor-label" style="font-family: 'Cinzel Decorative'; color: #777; font-size: 0.8rem; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;">Sponsored by</p>
+                    <img src="assets/mmm.jpg" alt="MEG Multi Media" class="sponsor-logo">
+                    <span class="sponsor-name">MEG Multi Media</span>
+                </div>
             </div>
         </footer>
     </div>
@@ -560,10 +813,12 @@
         
         let magicEnabled = false;
 
-        toggleBtn.addEventListener('change', (e) => {
-            magicEnabled = e.target.checked;
-            if (magicEnabled) { document.body.classList.add('magic-on'); } else { document.body.classList.remove('magic-on'); }
-        });
+        if (toggleBtn) {
+            toggleBtn.addEventListener('change', (e) => {
+                magicEnabled = e.target.checked;
+                if (magicEnabled) { document.body.classList.add('magic-on'); } else { document.body.classList.remove('magic-on'); }
+            });
+        }
 
         window.addEventListener('mousemove', (e) => {
             if (isDesktop.matches) {
@@ -662,7 +917,10 @@
                 wrapper.querySelector('.custom-select-trigger span').textContent = text;
                 wrapper.querySelector('input[type="hidden"]').value = value;
                 
-                if(wrapper.id === 'teamSizeSelect') renderMembers(value);
+                if(wrapper.id === 'teamSizeSelect') {
+                    renderMembers(value);
+                    updatePriceAndQR(value);
+                }
                 wrapper.classList.remove('open'); 
             });
         });
@@ -682,15 +940,74 @@
                     <div class="member-block mt-4">
                         <h4 class="section-title">Wizard ${i} ${i == 1 ? '(Leader)' : ''}</h4>
                         <div class="row">
-                            <div class="col-md-4"><div class="form-group"><label class="magic-label">Full Name</label><input type="text" class="magic-input" required></div></div>
-                            <div class="col-md-4"><div class="form-group"><label class="magic-label">Owl Post (Email)</label><input type="email" class="magic-input" required></div></div>
-                            <div class="col-md-4"><div class="form-group"><label class="magic-label">Magical Contact</label><input type="tel" class="magic-input" required></div></div>
+                            <div class="col-md-3"><div class="form-group"><label class="magic-label">Full Name</label><input type="text" class="magic-input" required></div></div>
+                            <div class="col-md-3"><div class="form-group"><label class="magic-label">Owl Post (Email)</label><input type="email" class="magic-input" required></div></div>
+                            <div class="col-md-3"><div class="form-group"><label class="magic-label">Magical Contact</label><input type="tel" class="magic-input" required></div></div>
+                            <div class="col-md-3"><div class="form-group"><label class="magic-label">College Name</label><input type="text" class="magic-input" placeholder="e.g., Hogwarts School" required></div></div>
                         </div>
                     </div>`;
                 membersContainer.insertAdjacentHTML('beforeend', memberHTML);
             }
         }
-        renderMembers(4); 
+
+        function updatePriceAndQR(teamSize) {
+            const pricePerPerson = 349;
+            const totalPrice = pricePerPerson * parseInt(teamSize);
+            const formattedPrice = totalPrice.toLocaleString('en-IN');
+            
+            // Update price display
+            const totalPriceDisplay = document.getElementById('totalPriceDisplay');
+            if (totalPriceDisplay) {
+                totalPriceDisplay.textContent = `Total: ₹${formattedPrice}`;
+            }
+            
+            // Update QR code and amount
+            const qrCodeImage = document.getElementById('qrCodeImage');
+            const qrAmountDisplay = document.getElementById('qrAmountDisplay');
+            
+            if (teamSize == 3) {
+                if (qrCodeImage) qrCodeImage.src = 'assets/1047.jpg';
+                if (qrAmountDisplay) qrAmountDisplay.textContent = '₹1,047';
+            } else if (teamSize == 4) {
+                if (qrCodeImage) qrCodeImage.src = 'assets/1396.jpg';
+                if (qrAmountDisplay) qrAmountDisplay.textContent = '₹1,396';
+            }
+        }
+
+        // Download QR Code functionality
+        function downloadQRCode() {
+            const qrImage = document.getElementById('qrCodeImage');
+            if (!qrImage) return;
+            
+            // Get the image source
+            const imageUrl = qrImage.src;
+            
+            // Create a temporary anchor element
+            const link = document.createElement('a');
+            link.href = imageUrl;
+            
+            // Get the amount to use in filename
+            const amountDisplay = document.getElementById('qrAmountDisplay');
+            const amount = amountDisplay ? amountDisplay.textContent.replace('₹', '').replace(',', '') : '1396';
+            link.download = `payment-qr-${amount}.jpg`;
+            
+            // Trigger download
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Initialize download button
+        document.addEventListener('DOMContentLoaded', function() {
+            const downloadBtn = document.getElementById('downloadQRBtn');
+            if (downloadBtn) {
+                downloadBtn.addEventListener('click', downloadQRCode);
+            }
+        });
+
+        // Initialize with default team size of 4
+        renderMembers(4);
+        updatePriceAndQR(4); 
 
         function updateFileName(inputId, labelId) {
             const input = document.getElementById(inputId);
@@ -711,9 +1028,192 @@
                 ticketOverlay.style.display = 'none';
             }
         }
+
+        // Terms and Conditions Modal
+        function openTermsModal() {
+            const modal = document.getElementById('termsModal');
+            if (modal) {
+                modal.classList.add('active');
+            }
+        }
+
+        function closeTermsModal() {
+            const modal = document.getElementById('termsModal');
+            if (modal) {
+                modal.classList.remove('active');
+            }
+        }
+
+        function declineTerms() {
+            const checkbox = document.getElementById('termsCheckbox');
+            if (checkbox) {
+                checkbox.checked = false;
+                delete checkbox.dataset.accepted; // Remove acceptance flag
+            }
+            closeTermsModal();
+        }
+
+        function acceptTerms() {
+            const checkbox = document.getElementById('termsCheckbox');
+            if (checkbox) {
+                checkbox.checked = true;
+                checkbox.dataset.accepted = 'true'; // Mark as accepted
+            }
+            closeTermsModal();
+        }
+
+        // Initialize terms modal handlers
+        document.addEventListener('DOMContentLoaded', function() {
+            const termsLink = document.getElementById('termsLink');
+            const termsCheckbox = document.getElementById('termsCheckbox');
+            const termsLabel = termsCheckbox ? termsCheckbox.closest('.form-check').querySelector('label') : null;
+            const closeBtn = document.getElementById('termsModalClose');
+            const acceptBtn = document.getElementById('termsAcceptBtn');
+            const declineBtn = document.getElementById('termsDeclineBtn');
+
+            if (termsLink) {
+                termsLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    openTermsModal();
+                });
+            }
+
+            if (termsLabel) {
+                termsLabel.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    openTermsModal();
+                });
+            }
+
+            // Handle checkbox interaction - open modal if unchecked, allow uncheck if checked
+            if (termsCheckbox) {
+                termsCheckbox.addEventListener('click', function(e) {
+                    // If checkbox is already checked, allow unchecking (don't prevent default)
+                    if (this.checked) {
+                        // Allow the default behavior to uncheck - don't prevent it
+                        // Remove the accepted flag when unchecking
+                        delete this.dataset.accepted;
+                        return;
+                    }
+                    // If unchecked, prevent checking and open modal
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.checked = false;
+                    openTermsModal();
+                });
+                
+                // Handle change event to prevent checking without acceptance
+                termsCheckbox.addEventListener('change', function(e) {
+                    // If trying to check without acceptance, prevent and open modal
+                    if (this.checked && !this.dataset.accepted) {
+                        // This shouldn't happen if click handler works, but as safety
+                        e.preventDefault();
+                        this.checked = false;
+                        openTermsModal();
+                    } else if (!this.checked) {
+                        // If unchecking, remove the accepted flag
+                        delete this.dataset.accepted;
+                    }
+                }, true); // Use capture phase to catch it early
+            }
+
+            if (closeBtn) {
+                closeBtn.addEventListener('click', closeTermsModal);
+            }
+
+            if (declineBtn) {
+                declineBtn.addEventListener('click', declineTerms);
+            }
+
+            if (acceptBtn) {
+                acceptBtn.addEventListener('click', acceptTerms);
+            }
+
+            // Close modal when clicking outside
+            const modalOverlay = document.getElementById('termsModal');
+            if (modalOverlay) {
+                modalOverlay.addEventListener('click', function(e) {
+                    if (e.target === modalOverlay) {
+                        closeTermsModal();
+                    }
+                });
+            }
+        });
     </script>
     
+    <!-- Terms and Conditions Modal -->
+    <div id="termsModal" class="terms-modal-overlay">
+        <div class="terms-modal-content">
+            <button id="termsModalClose" class="terms-modal-close" aria-label="Close">&times;</button>
+            <h2 class="terms-modal-title">Terms and Conditions</h2>
+            <div class="terms-modal-body">
+                <p>By participating in the Hogwarts Hackathon, you agree to the following terms and conditions:</p>
+                
+                <h4>1. Eligibility</h4>
+                <ul>
+                    <li>All team members must be currently enrolled students or recent graduates (within 2 years).</li>
+                    <li>Each team must consist of 2-4 members.</li>
+                    <li>Participants must register before the deadline.</li>
+                </ul>
+
+                <h4>2. Code of Conduct</h4>
+                <ul>
+                    <li>All participants must maintain professional and respectful behavior throughout the event.</li>
+                    <li>Harassment, discrimination, or any form of inappropriate conduct will result in immediate disqualification.</li>
+                    <li>Participants must follow all event rules and guidelines.</li>
+                </ul>
+
+                <h4>3. Project Requirements</h4>
+                <ul>
+                    <li>All code must be original work created during the hackathon period.</li>
+                    <li>Use of third-party libraries and APIs is allowed, but must be properly attributed.</li>
+                    <li>Projects must align with the selected problem statement and domain.</li>
+                </ul>
+
+                <h4>4. Intellectual Property</h4>
+                <ul>
+                    <li>Participants retain ownership of their projects.</li>
+                    <li>By submitting, participants grant the organizers permission to showcase their work.</li>
+                    <li>All team members must agree on project ownership and distribution.</li>
+                </ul>
+
+                <h4>5. Payment and Refunds</h4>
+                <ul>
+                    <li>Registration fees are non-refundable once payment is confirmed.</li>
+                    <li>Payment must be completed before the registration deadline.</li>
+                    <li>In case of event cancellation, refunds will be processed as per policy.</li>
+                </ul>
+
+                <h4>6. Disqualification</h4>
+                <ul>
+                    <li>Violation of any rules may result in immediate disqualification.</li>
+                    <li>Decisions made by the organizing committee are final.</li>
+                    <li>Disqualified teams will not be eligible for prizes or certificates.</li>
+                </ul>
+
+                <h4>7. Liability</h4>
+                <ul>
+                    <li>Organizers are not responsible for any loss or damage to personal property.</li>
+                    <li>Participants are responsible for their own safety and well-being.</li>
+                    <li>Participants must have valid health insurance coverage.</li>
+                </ul>
+
+                <p style="margin-top: 20px; font-style: italic; color: #5d4037;">
+                    By checking the box, you acknowledge that you have read, understood, and agree to abide by all the terms and conditions stated above.
+                </p>
+            </div>
+            <div class="terms-modal-actions">
+                <button class="btn-decline-terms" id="termsDeclineBtn">Decline</button>
+                <button class="btn-accept-terms" id="termsAcceptBtn">Accept</button>
+            </div>
+        </div>
+    </div>
+
     <!-- API Integration - Must be loaded after all other scripts -->
     <script src="api-integration.js"></script>
+    <script src="loading-screen.js"></script>
+    <script src="audio-control.js"></script>
+    <script src="disable-copy.js"></script>
 </body>
 </html>

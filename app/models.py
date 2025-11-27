@@ -10,6 +10,7 @@ class Team(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     team_name = db.Column(db.String(200), nullable=False, unique=True)
     house = db.Column(db.String(50), nullable=False)
+    college_name = db.Column(db.String(200), nullable=True)
     team_size = db.Column(db.Integer, nullable=False)
     utr_transaction_id = db.Column(db.String(200), nullable=False)
     payment_proof_path = db.Column(db.String(500), nullable=True)
@@ -26,6 +27,7 @@ class Team(db.Model):
             'id': self.id,
             'team_name': self.team_name,
             'house': self.house,
+            'college_name': self.college_name or '',
             'team_size': self.team_size,
             'registered_at': self.registered_at.isoformat() if self.registered_at else None,
             'approval_status': self.approval_status,
@@ -36,13 +38,29 @@ class Team(db.Model):
         }
     
     def to_dict_summary(self):
+        # Safely get college_name - handle case where column might not exist
+        college_name = ''
+        try:
+            if hasattr(self, 'college_name'):
+                college_name = self.college_name or ''
+        except (AttributeError, KeyError):
+            college_name = ''
+        
+        # Safely get members
+        members_list = []
+        try:
+            if self.members:
+                members_list = [member.name for member in self.members]
+        except (AttributeError, Exception):
+            members_list = []
+        
         return {
             'id': self.id,
             'name': self.team_name,
             'house': self.house,
-            'members': [member.name for member in self.members],
+            'members': members_list,
             'projectUrl': '',  # Can be added later
-            'college': '',  # Can be added later
+            'college': college_name,
             'description': f'A brave team from {self.house} house',
             'approval_status': self.approval_status
         }
@@ -55,6 +73,7 @@ class Member(db.Model):
     name = db.Column(db.String(200), nullable=False)
     email = db.Column(db.String(200), nullable=False)
     phone = db.Column(db.String(20), nullable=False)
+    college_name = db.Column(db.String(200), nullable=True)
     is_leader = db.Column(db.Boolean, default=False)
     member_order = db.Column(db.Integer, nullable=False)  # Order in team (1, 2, 3, 4)
     
@@ -64,6 +83,7 @@ class Member(db.Model):
             'name': self.name,
             'email': self.email,
             'phone': self.phone,
+            'college_name': self.college_name or '',
             'is_leader': self.is_leader,
             'member_order': self.member_order
         }
@@ -74,7 +94,7 @@ class ProblemStatement(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(300), nullable=False)
     description = db.Column(db.Text, nullable=False)
-    domain = db.Column(db.String(50), nullable=False)  # web, ai, app, blockchain
+    domain = db.Column(db.String(50), nullable=False)  # gryffindor, slytherin, ravenclaw, hufflepuff, muggles
     difficulty = db.Column(db.String(20), nullable=False)  # easy, medium, hard
     house = db.Column(db.String(50), nullable=True)  # null means available to all houses
     created_at = db.Column(db.DateTime, default=datetime.utcnow)

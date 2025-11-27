@@ -21,6 +21,12 @@
             width: 100%; margin: 0; padding: 0;
             overflow-x: hidden; 
             background-color: var(--bg-dark);
+            /* Disable text selection */
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
         }
 
         /* --- CONTENT WRAPPER --- */
@@ -191,7 +197,20 @@
             .cursor-trail{animation:fade-trail .4s linear forwards;}
         }
         .navbar { background-color: rgba(10, 10, 10, 0.9); border-bottom: 1px solid rgba(212, 175, 55, 0.3); padding: 1rem 0; z-index: 100; backdrop-filter: blur(10px); }
-        .navbar-brand, .nav-link { font-family: 'Cinzel Decorative'; color: var(--gold); transition: 0.3s; }
+        .navbar-brand { 
+            font-family: 'Cinzel Decorative'; 
+            font-weight: 900; 
+            text-transform: uppercase; 
+            line-height: 1.1; 
+            color: #ffd700; 
+            filter: url(#gold-texture); 
+            font-size: 1.5rem; 
+            transition: 0.3s;
+        }
+        @media (max-width: 768px) { 
+            .navbar-brand { font-size: 1.2rem; } 
+        }
+        .nav-link { font-family: 'Cinzel Decorative'; color: var(--gold); transition: 0.3s; }
         .nav-link:hover { color: #fff; text-shadow: 0 0 15px var(--gold); }
         
         .form-check-input { background-color: #333; border-color: #666; width: 3em; height: 1.5em; }
@@ -221,6 +240,9 @@
         footer { padding: 40px; text-align: center; border-top: 1px solid var(--gold); background: #0a0a0a; position: relative; z-index: 10; color: #777; }
     </style>
 </head>
+    <svg width="0" height="0" style="position: absolute;">
+        <filter id="gold-texture" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="3" result="noise" /><feDiffuseLighting in="noise" lighting-color="#d4af37" surfaceScale="3" result="coloredNoise"><feDistantLight azimuth="45" elevation="60" /></feDiffuseLighting><feSpecularLighting in="noise" surfaceScale="6" specularConstant="1" specularExponent="20" lighting-color="#ffecb3" result="specular"><fePointLight x="-5000" y="-10000" z="20000" /></feSpecularLighting><feComposite in="specular" in2="SourceAlpha" operator="in" result="specularText" /><feComposite in="coloredNoise" in2="SourceAlpha" operator="in" result="coloredText" /><feMerge><feMergeNode in="coloredText" /><feMergeNode in="specularText" /></feMerge><feDropShadow dx="4" dy="4" stdDeviation="3" flood-color="#000" flood-opacity="0.8"/></filter>
+    </svg>
 <body>
 
     <div id="magic-viewport"></div>
@@ -234,18 +256,14 @@
     <div id="site-wrapper">
         <nav class="navbar navbar-expand-lg sticky-top navbar-dark">
             <div class="container">
-                <a class="navbar-brand" href="#">Hogwarts Hacks</a>
+                <a class="navbar-brand" href="#">
+                    <span style="display: block;">Hogwarts</span>
+                    <span style="display: block;">Hackathon</span>
+                </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"><span class="navbar-toggler-icon"></span></button>
                 <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
                     <ul class="navbar-nav align-items-center">
-                        <li class="nav-item me-4">
-                            <div class="form-check form-switch mb-0 d-flex align-items-center">
-                                <input class="form-check-input" type="checkbox" id="magicToggle">
-                                <label class="form-check-label" for="magicToggle">Try Magic</label>
-                            </div>
-                        </li>
                         <li class="nav-item"><a class="nav-link" href="#home">Great Hall</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#houses">Houses</a></li>
                         <li class="nav-item"><a class="nav-link" href="teams.html">Teams</a></li>
                         <li class="nav-item"><a class="nav-link" href="organizers.html">Organizers</a></li>
                         <li class="nav-item"><a class="nav-link" href="timeline.html">Timeline</a></li>
@@ -290,6 +308,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="disable-copy.js"></script>
 
     <script>
         const isDesktop = window.matchMedia("(min-width: 992px)");
@@ -303,16 +322,18 @@
         let broomInterval, spellInterval, broomTrailInterval;
 
         // --- TOGGLE LOGIC ---
-        toggleBtn.addEventListener('change', (e) => {
-            magicEnabled = e.target.checked;
-            if (magicEnabled) { 
-                document.body.classList.add('magic-on');
-                startLoops(); 
-            } else { 
-                document.body.classList.remove('magic-on');
-                stopLoops(); 
-            }
-        });
+        if (toggleBtn) {
+            toggleBtn.addEventListener('change', (e) => {
+                magicEnabled = e.target.checked;
+                if (magicEnabled) { 
+                    document.body.classList.add('magic-on');
+                    startLoops(); 
+                } else { 
+                    document.body.classList.remove('magic-on');
+                    stopLoops(); 
+                }
+            });
+        }
 
         function startLoops() {
             if (!isDesktop.matches) return;

@@ -28,6 +28,12 @@
         body {
             background-color: var(--bg-dark);
             background: radial-gradient(circle at center, #1f1f35 0%, #000000 100%), url('https://www.transparenttextures.com/patterns/stardust.png');
+            /* Disable text selection */
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
             background-attachment: fixed;
             color: #eee;
             min-height: 100vh;
@@ -66,9 +72,43 @@
         @keyframes fade-trail { 0% { opacity: 0.8; transform: scale(1); } 100% { opacity: 0; transform: scale(0.2) translate(0, 10px); } }
 
         /* --- NAVBAR --- */
-        .navbar { background: rgba(10, 10, 10, 0.95); border-bottom: 1px solid rgba(212, 175, 55, 0.3); }
-        .navbar-brand { font-family: 'Cinzel Decorative'; color: var(--gold) !important; }
-        .admin-badge { border: 1px solid var(--gold); padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; margin-left: 10px; color: var(--gold); }
+        .navbar { background-color: rgba(10, 10, 10, 0.9); border-bottom: 1px solid rgba(212, 175, 55, 0.3); padding: 1rem 0; z-index: 100; backdrop-filter: blur(10px); }
+        .navbar-brand { 
+            font-family: 'Cinzel Decorative'; 
+            font-weight: 900; 
+            text-transform: uppercase; 
+            line-height: 1.1; 
+            color: #ffd700; 
+            filter: url(#gold-texture); 
+            font-size: 1.5rem; 
+            transition: 0.3s;
+        }
+        @media (max-width: 768px) { 
+            .navbar-brand { font-size: 1.2rem; } 
+        }
+        .nav-link { font-family: 'Cinzel Decorative'; color: var(--gold); transition: 0.3s; }
+        .nav-link:hover { color: #fff; text-shadow: 0 0 15px var(--gold); }
+        
+        /* Volume Control Button */
+        .volume-btn {
+            color: var(--gold);
+            font-size: 1.2rem;
+            padding: 5px 10px;
+            border: none;
+            background: transparent;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .volume-btn:hover {
+            color: #ffd700;
+            transform: scale(1.1);
+        }
+        .volume-btn.volume-off {
+            opacity: 0.6;
+        }
+        .volume-btn.volume-on {
+            opacity: 1;
+        }
 
         /* --- DASHBOARD LAYOUT --- */
         .dashboard-container { padding: 40px 20px; max-width: 1200px; margin: 0 auto; }
@@ -264,11 +304,13 @@
     <div class="dashboard-container">
         <h2 class="section-title">The Chronicles</h2>
         <div class="stats-grid">
-            <div class="stat-card main"><i class="fa-solid fa-users-rectangle stat-icon"></i><div class="stat-number">542</div><div class="stat-label">Total Fellowships</div></div>
-            <div class="stat-card"><i class="fa-solid fa-spider stat-icon"></i><div class="stat-number">12</div><div class="stat-label">Web</div></div>
-            <div class="stat-card"><i class="fa-solid fa-brain stat-icon"></i><div class="stat-number">8</div><div class="stat-label">AI</div></div>
-            <div class="stat-card"><i class="fa-solid fa-mobile-screen stat-icon"></i><div class="stat-number">10</div><div class="stat-label">App</div></div>
-            <div class="stat-card"><i class="fa-solid fa-link stat-icon"></i><div class="stat-number">5</div><div class="stat-label">Chain</div></div>
+            <div class="stat-card main"><i class="fa-solid fa-users stat-icon"></i><div class="stat-number" id="totalMembers">0</div><div class="stat-label">Total Members</div></div>
+            <div class="stat-card main"><i class="fa-solid fa-users-rectangle stat-icon"></i><div class="stat-number" id="totalTeams">0</div><div class="stat-label">Total Teams</div></div>
+            <div class="stat-card"><i class="fa-solid fa-coins stat-icon"></i><div class="stat-number" id="gryffindorCount">0</div><div class="stat-label">Gryffindor (FinTech)</div></div>
+            <div class="stat-card"><i class="fa-solid fa-shield-halved stat-icon"></i><div class="stat-number" id="slytherinCount">0</div><div class="stat-label">Slytherin (Cyber Security)</div></div>
+            <div class="stat-card"><i class="fa-solid fa-graduation-cap stat-icon"></i><div class="stat-number" id="ravenclawCount">0</div><div class="stat-label">Ravenclaw (Smart Education)</div></div>
+            <div class="stat-card"><i class="fa-solid fa-wheat-awn stat-icon"></i><div class="stat-number" id="hufflepuffCount">0</div><div class="stat-label">Hufflepuff (Agriculture)</div></div>
+            <div class="stat-card"><i class="fa-solid fa-plane stat-icon"></i><div class="stat-number" id="mugglesCount">0</div><div class="stat-label">Muggles (Tourism)</div></div>
         </div>
 
         <div class="control-panel">
@@ -279,8 +321,8 @@
                 <button class="action-btn approve-btn" onclick="window.location.href='accept_team.html'">
                     <i class="fa-solid fa-stamp me-2"></i> Approve Fellowships
                 </button>
-                <button class="action-btn" onclick="window.location.href='review_marks.html'">
-                    <i class="fa-solid fa-star me-2"></i> Add Review Marks
+                <button class="action-btn" onclick="window.location.href='manage_teams.html'">
+                    <i class="fa-solid fa-users-gear me-2"></i> Manage Teams
                 </button>
                 <button class="action-btn" id="loginToggleBtn" onclick="toggleLogin()" style="background: transparent; border: 2px solid var(--gold); color: var(--gold);">
                     <i class="fa-solid fa-key me-2"></i> <span id="loginToggleText">Enable Logins</span>
@@ -288,17 +330,15 @@
                 <button class="action-btn" id="registrationToggleBtn" onclick="toggleRegistration()" style="background: transparent; border: 2px solid var(--gold); color: var(--gold);">
                     <i class="fa-solid fa-scroll me-2"></i> <span id="registrationToggleText">Enable Registration</span>
                 </button>
-                <button class="action-btn" id="downloadDbBtn" onclick="downloadDatabase()" style="background: transparent; border: 2px solid var(--gold); color: var(--gold);">
-                    <i class="fa-solid fa-database me-2"></i> Download Database
-                </button>
             </div>
 
             <div class="filter-group">
                 <button class="filter-btn active" onclick="filterQuests('all', this)">All</button>
-                <button class="filter-btn" onclick="filterQuests('web', this)">Web</button>
-                <button class="filter-btn" onclick="filterQuests('ai', this)">AI</button>
-                <button class="filter-btn" onclick="filterQuests('app', this)">App</button>
-                <button class="filter-btn" onclick="filterQuests('blockchain', this)">Chain</button>
+                <button class="filter-btn" onclick="filterQuests('gryffindor', this)">Gryffindor (FinTech)</button>
+                <button class="filter-btn" onclick="filterQuests('slytherin', this)">Slytherin (Cyber Security)</button>
+                <button class="filter-btn" onclick="filterQuests('ravenclaw', this)">Ravenclaw (Smart Education)</button>
+                <button class="filter-btn" onclick="filterQuests('hufflepuff', this)">Hufflepuff (Agriculture)</button>
+                <button class="filter-btn" onclick="filterQuests('muggles', this)">Muggles (Tourism)</button>
             </div>
         </div>
 
@@ -327,10 +367,11 @@
                         <div class="custom-select-wrapper" id="domainSelect">
                             <div class="custom-select-trigger"><span>Select Realm...</span></div>
                             <div class="custom-options">
-                                <span class="custom-option" data-value="web">Web Wizardry</span>
-                                <span class="custom-option" data-value="ai">Artificial Intellect</span>
-                                <span class="custom-option" data-value="app">Mobile Magic</span>
-                                <span class="custom-option" data-value="blockchain">Chain of Secrets</span>
+                                <span class="custom-option" data-value="gryffindor">Gryffindor (FinTech)</span>
+                                <span class="custom-option" data-value="slytherin">Slytherin (Cyber Security)</span>
+                                <span class="custom-option" data-value="ravenclaw">Ravenclaw (Smart Education)</span>
+                                <span class="custom-option" data-value="hufflepuff">Hufflepuff (Agriculture)</span>
+                                <span class="custom-option" data-value="muggles">Muggles (Tourism)</span>
                             </div>
                             <input type="hidden" id="problemDomain" name="domain">
                         </div>
@@ -511,8 +552,16 @@
                         const card = document.createElement('div');
                         card.className = `admin-card filter-item ${stmt.domain}`;
                         card.setAttribute('data-stmt-id', stmt.id);
+                        const domainNames = {
+                            'gryffindor': 'Gryffindor (FinTech)',
+                            'slytherin': 'Slytherin (Cyber Security)',
+                            'ravenclaw': 'Ravenclaw (Smart Education)',
+                            'hufflepuff': 'Hufflepuff (Agriculture)',
+                            'muggles': 'Muggles (Tourism)'
+                        };
+                        const domainDisplay = domainNames[stmt.domain] || stmt.domain.charAt(0).toUpperCase() + stmt.domain.slice(1);
                         card.innerHTML = `
-                            <span class="card-tag">${stmt.domain.charAt(0).toUpperCase() + stmt.domain.slice(1)}</span>
+                            <span class="card-tag">${domainDisplay}</span>
                             <h3 class="card-title">${stmt.title}</h3>
                             <p class="card-desc">${stmt.description}</p>
                             <div class="card-meta">
@@ -548,8 +597,37 @@
             sessionStorage.removeItem('adminName');
         }
         
+        // Load statistics
+        async function loadStatistics() {
+            try {
+                const response = await fetch('/api/admin/statistics');
+                const data = await response.json();
+                
+                if (data.success && data.statistics) {
+                    const stats = data.statistics;
+                    
+                    // Update total members
+                    document.getElementById('totalMembers').textContent = stats.total_members || 0;
+                    
+                    // Update total teams
+                    document.getElementById('totalTeams').textContent = stats.total_teams || 0;
+                    
+                    // Update domain counts
+                    const domainCounts = stats.by_domain || {};
+                    document.getElementById('gryffindorCount').textContent = domainCounts.gryffindor || 0;
+                    document.getElementById('slytherinCount').textContent = domainCounts.slytherin || 0;
+                    document.getElementById('ravenclawCount').textContent = domainCounts.ravenclaw || 0;
+                    document.getElementById('hufflepuffCount').textContent = domainCounts.hufflepuff || 0;
+                    document.getElementById('mugglesCount').textContent = domainCounts.muggles || 0;
+                }
+            } catch (error) {
+                console.error('Error loading statistics:', error);
+            }
+        }
+        
         // Load on page load
         loadProblemStatements();
+        loadStatistics();
         
         // Check login toggle status
         async function checkLoginToggle() {
@@ -762,45 +840,10 @@
             });
         }
 
-        // Download database function (admin only)
-        async function downloadDatabase() {
-            // Get admin credentials from session
-            const adminName = sessionStorage.getItem('adminName');
-            if (!adminName) {
-                alert('Admin session expired. Please login again.');
-                window.location.href = '/admin-login';
-                return;
-            }
-            
-            const password = prompt('Enter admin password to download database:');
-            if (!password) return;
-            
-            try {
-                const apiUrl = `/api/admin/download-db?username=${encodeURIComponent(adminName)}&password=${encodeURIComponent(password)}`;
-                const response = await fetch(apiUrl, {
-                    method: 'GET',
-                });
-                
-                if (response.ok) {
-                    const blob = await response.blob();
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = 'hogwarts_hackathon.db';
-                    document.body.appendChild(a);
-                    a.click();
-                    window.URL.revokeObjectURL(url);
-                    document.body.removeChild(a);
-                } else {
-                    const error = await response.json();
-                    alert(error.error || 'Failed to download database');
-                }
-            } catch (error) {
-                console.error('Download error:', error);
-                alert('Error downloading database: ' + error.message);
-            }
-        }
-
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="loading-screen.js"></script>
+    <script src="audio-control.js"></script>
+    <script src="disable-copy.js"></script>
 </body>
 </html>

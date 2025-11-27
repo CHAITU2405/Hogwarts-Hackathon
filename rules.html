@@ -19,8 +19,9 @@
         }
 
         /* --- GLOBAL CURSOR RESET --- */
-        html, body, button, a, input, select, textarea, .btn, .card, div, span, li, i {
-            cursor: none !important;
+        @media (min-width: 992px) {
+            *, html, body, a, button, input, label, select { cursor: none !important; }
+            #wand { display: flex !important; }
         }
 
         body {
@@ -33,17 +34,88 @@
         }
 
         /* --- WAND CURSOR --- */
-        #wand { position: fixed; top: 0; left: 0; width: 10px; height: 50px; pointer-events: none; z-index: 10000; will-change: transform; transform-origin: top left; filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.9)); display: none; flex-direction: column; align-items: center; }
-        #wand-tip { width: 4px; height: 4px; background: #fff; border-radius: 50%; box-shadow: 0 0 10px #fff, 0 0 20px var(--gold); z-index: 2; margin-bottom: -1px; }
-        #wand-shaft { width: 3px; height: 60%; background: linear-gradient(to right, #5d4037, #8d6e63, #5d4037); border-radius: 0 0 2px 2px; }
-        #wand-handle { width: 8px; height: 40%; background: repeating-linear-gradient(45deg, #2d2d2d, #1a1a1a 3px, #3a3a3a 3px, #2d2d2d 6px); border-radius: 3px; }
-        @media (min-width: 992px) { #wand { display: flex; } }
+        #wand { 
+            position: fixed; top: 0; left: 0; 
+            width: 50px; height: auto; 
+            pointer-events: none; z-index: 10000; will-change: transform; 
+            transform-origin: top left; 
+            filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.6)) drop-shadow(2px 3px 6px rgba(0,0,0,0.95)); 
+            display: none; 
+            animation: wandGlow 2s ease-in-out infinite;
+        }
+        #wand img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        @keyframes wandGlow {
+            0%, 100% { filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.6)) drop-shadow(2px 3px 6px rgba(0,0,0,0.95)); }
+            50% { filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.8)) drop-shadow(2px 3px 8px rgba(0,0,0,0.95)) drop-shadow(0 0 20px rgba(255, 255, 100, 0.4)); }
+        }
+        /* Cursor trail */
+        .cursor-trail {
+            position: fixed;
+            width: 3px;
+            height: 3px;
+            background: var(--gold);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 10001;
+            animation: fade-trail .5s linear forwards;
+            box-shadow: 0 0 5px var(--gold);
+        }
+        @keyframes fade-trail {
+            0% { opacity: .8; transform: scale(1); }
+            100% { opacity: 0; transform: scale(.2) translate(0,10px); }
+        }
 
         /* --- NAVBAR --- */
         .navbar { background: rgba(10, 10, 10, 0.95); border-bottom: 1px solid rgba(212, 175, 55, 0.3); }
-        .navbar-brand { font-family: 'Cinzel Decorative'; color: var(--gold) !important; }
-        .nav-link { font-family: 'Cinzel Decorative'; color: var(--gold) !important; transition: 0.3s; }
-        .nav-link:hover { color: #fff !important; text-shadow: 0 0 15px var(--gold); }
+        .navbar-brand { 
+            font-family: 'Cinzel Decorative'; 
+            font-weight: 900; 
+            text-transform: uppercase; 
+            line-height: 1.1; 
+            color: #ffd700; 
+            filter: url(#gold-texture); 
+            font-size: 1.5rem; 
+            transition: 0.3s;
+        }
+        @media (max-width: 768px) { 
+            .navbar-brand { font-size: 1.2rem; } 
+        }
+        .navbar-nav .nav-link { 
+            font-family: 'Cinzel Decorative', cursive; 
+            color: var(--gold) !important; 
+            font-size: 1rem; 
+            margin-left: 15px;
+            transition: color 0.3s ease, text-shadow 0.3s ease;
+        }
+        .navbar-nav .nav-link:hover, .navbar-nav .nav-link.active { 
+            color: #fff !important; 
+            text-shadow: 0 0 10px var(--gold); 
+        }
+        
+        /* Volume Control Button */
+        .volume-btn {
+            color: var(--gold);
+            font-size: 1.2rem;
+            padding: 5px 10px;
+            border: none;
+            background: transparent;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .volume-btn:hover {
+            color: #ffd700;
+            transform: scale(1.1);
+        }
+        .volume-btn.volume-off {
+            opacity: 0.6;
+        }
+        .volume-btn.volume-on {
+            opacity: 1;
+        }
 
         /* --- LAYOUT --- */
         .container { padding-top: 50px; padding-bottom: 80px; max-width: 1000px; }
@@ -57,11 +129,12 @@
             background-image: url('https://www.transparenttextures.com/patterns/aged-paper.png');
             border: 15px solid #1a0f0d;
             border-radius: 5px;
-            padding: 40px;
+            padding: 50px 40px 40px 40px;
             position: relative;
             box-shadow: 0 0 50px rgba(0,0,0,0.8), inset 0 0 100px rgba(62, 39, 35, 0.4);
             color: var(--ink);
             filter: url(#wrinkle-paper);
+            margin-top: 40px; /* Space for decorations */
         }
 
         /* Ornamental Corners */
@@ -70,10 +143,39 @@
             border: 3px double var(--ink);
             z-index: 5;
         }
+        /* Removed "corner" logic from border style to just be lines */
         .co-tl { top: 15px; left: 15px; border-right: none; border-bottom: none; }
         .co-tr { top: 15px; right: 15px; border-left: none; border-bottom: none; }
         .co-bl { bottom: 15px; left: 15px; border-right: none; border-top: none; }
         .co-br { bottom: 15px; right: 15px; border-left: none; border-top: none; }
+
+        /* --- DECORATIONS (Hat & Hedwig) --- */
+        
+        /* Sorting Hat (Top Left Edge) */
+        .sorting-hat-deco {
+            position: absolute;
+            top: -55px;
+            left: -45px;
+            width: 100px;
+            height: auto;
+            z-index: 20;
+            transform: rotate(-15deg);
+            filter: drop-shadow(5px 5px 10px rgba(0,0,0,0.6));
+            pointer-events: none;
+        }
+
+        /* Hedwig (Top Center) */
+        .hedwig-deco {
+            position: absolute;
+            top: -70px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 110px;
+            height: auto;
+            z-index: 20;
+            filter: drop-shadow(0 5px 10px rgba(0,0,0,0.5));
+            pointer-events: none;
+        }
 
         /* Header Text */
         .decree-header {
@@ -81,6 +183,7 @@
             border-bottom: 3px double var(--ink);
             padding-bottom: 20px;
             margin-bottom: 30px;
+            margin-top: 10px;
         }
         .decree-title {
             font-family: 'Cinzel Decorative';
@@ -123,8 +226,9 @@
             position: relative;
             padding-left: 25px;
         }
+        /* Replaced emoji with CSS shape or font icon if desired, but simple bullet is cleaner or keep icon */
         .rule-list li::before {
-            content: "✦";
+            content: "✦"; /* Keeping this symbol as it fits magic theme well without being an emoji per se */
             position: absolute;
             left: 0;
             color: #7f0000;
@@ -140,19 +244,21 @@
             border-top: 2px solid rgba(42, 27, 21, 0.3);
         }
         .ministry-seal {
-            width: 80px; height: 80px;
-            background: #7f0000;
-            border-radius: 50%;
-            display: inline-flex;
+            width: auto; height: auto;
+            background: transparent;
+            border: none;
+            border-radius: 0;
+            display: flex;
+            flex-direction: column;
             align-items: center; justify-content: center;
             color: #fff;
             font-family: 'Cinzel Decorative';
             font-size: 0.8rem;
             text-align: center;
-            border: 4px double #d4af37;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
-            margin-bottom: 10px;
-            transform: rotate(-15deg);
+            padding: 0;
+            box-shadow: none;
+            margin-bottom: 5px;
+            transform: none;
         }
         .signed-by {
             font-family: 'Pinyon Script';
@@ -168,24 +274,28 @@
     <!-- SVG Filter -->
     <svg width="0" height="0"><filter id="wrinkle-paper"><feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="3" result="noise" /><feDiffuseLighting in="noise" lighting-color="#fff" surfaceScale="2"><feDistantLight azimuth="45" elevation="60" /></feDiffuseLighting><feComposite operator="in" in2="SourceGraphic" result="textured"/><feBlend mode="multiply" in="textured" in2="SourceGraphic"/></filter></svg>
 
-    <div id="wand"><div id="wand-tip"></div><div id="wand-shaft"></div><div id="wand-handle"></div></div>
+    <div id="wand"><img src="assets/wand.png" alt="Wand cursor"></div>
 
     <nav class="navbar navbar-expand-lg sticky-top navbar-dark">
         <div class="container-fluid px-5">
-            <a class="navbar-brand" href="main.html">Hogwarts Hacks</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" style="border-color: rgba(212,175,55,0.3);">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+            <a class="navbar-brand" href="main.html">
+                <span style="display: block;">Hogwarts</span>
+                <span style="display: block;">Hackathon</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"><span class="navbar-toggler-icon"></span></button>
             <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
                 <ul class="navbar-nav align-items-center">
+                    <li class="nav-item me-3">
+                        <button id="volumeControl" class="btn btn-link volume-btn" type="button" title="Toggle Background Music">
+                            <i class="fas fa-volume-up"></i>
+                        </button>
+                    </li>
                     <li class="nav-item"><a class="nav-link" href="main.html">Great Hall</a></li>
-                    <li class="nav-item"><a class="nav-link" href="main.html#houses">Houses</a></li>
                     <li class="nav-item"><a class="nav-link" href="teams.html">Teams</a></li>
-                    <li class="nav-item"><a class="nav-link" href="leaderboard.html">Leaderboard</a></li>
                     <li class="nav-item"><a class="nav-link" href="organizers.html">Organizers</a></li>
                     <li class="nav-item"><a class="nav-link" href="timeline.html">Timeline</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="rules.html">Rules</a></li>
                     <li class="nav-item"><a class="nav-link" href="faq.html">FAQs</a></li>
-                    <li class="nav-item"><a class="nav-link" href="rules.html">Rules</a></li>
                 </ul>
             </div>
         </div>
@@ -198,6 +308,8 @@
         </div>
 
         <div class="decree-board">
+            
+          
             <!-- Corners -->
             <div class="corner-ornament co-tl"></div>
             <div class="corner-ornament co-tr"></div>
@@ -217,6 +329,8 @@
                     <li>All Wizards/Witches must be present in the Great Hall (Venue) for the duration of the hackathon.</li>
                     <li>Wizards/Witches ID cards will be given at registeration desk at the starting of the hackathon.</li>
                     <li>Cross college teams are also allowed to participate in the hackathon.</li>
+                    <li>If any GVPT(RUSHIKONDA) students are found participating, they will be removed from the team.</li>
+                    <li style="color: #ff0000; font-weight: bold;">GVPT(RUSHIKONDA) STUDENTS ARE NOT ALLOWED  TO PARTICIPATE</li>
                 </ul>
             </div>
 
@@ -242,7 +356,7 @@
 
             <div class="proclamation-footer">
                 <div class="ministry-seal">
-                    Ministry<br>Approved
+                    <img src="assets/stamp.png" alt="Stamp" style="max-width: 160px; height: auto; display: block; margin-bottom: 5px;">
                 </div>
                 <div class="signed-by">Albus Dumbledore</div>
                 <div style="font-family: 'Crimson Text'; font-size: 0.9rem; margin-top: 5px;">Headmaster</div>
@@ -250,16 +364,75 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // --- WAND CURSOR ---
         const wand = document.getElementById('wand');
         const isDesktop = window.matchMedia("(min-width: 992px)");
+        
+        window.addEventListener('mousemove', (e) => {
         if (isDesktop.matches) {
-            window.addEventListener('mousemove', (e) => {
-                wand.style.transform = `translate(${e.clientX}px, ${e.clientY}px) rotate(-25deg)`;
-            });
+                wand.style.transform = `translate(${e.clientX}px, ${e.clientY}px) rotate(15deg)`;
+                
+                // Create cursor trail
+                const mobile = window.matchMedia('(max-width:600px)').matches;
+                const chance = mobile ? 0.25 : 0.5;
+                if (Math.random() > (1 - chance)) {
+                    const wandRect = wand.getBoundingClientRect();
+                    const angle = 15 * (Math.PI / 180);
+                    const tipRelX = (wandRect.width / 2) - 20;
+                    const tipRelY = -5;
+                    const tipX = wandRect.left + tipRelX * Math.cos(angle) - tipRelY * Math.sin(angle);
+                    const tipY = wandRect.top + tipRelX * Math.sin(angle) + tipRelY * Math.cos(angle);
+                    
+                    const trail = document.createElement('div');
+                    trail.className = 'cursor-trail';
+                    trail.style.left = `${tipX}px`;
+                    trail.style.top = `${tipY}px`;
+                    document.body.appendChild(trail);
+                    setTimeout(() => trail.remove(), 500);
+                }
+            }
+        });
+        
+        // Click sprinkle animation
+        window.addEventListener('click', (e) => {
+            if (!isDesktop.matches) return;
+            if (e.target.closest('a') || e.target.closest('button') || e.target.closest('.btn')) return;
+            
+            const wandRect = wand.getBoundingClientRect();
+            const angle = 15 * (Math.PI / 180);
+            const tipRelX = (wandRect.width / 2) - 20;
+            const tipRelY = -5;
+            const tipX = wandRect.left + tipRelX * Math.cos(angle) - tipRelY * Math.sin(angle);
+            const tipY = wandRect.top + tipRelX * Math.sin(angle) + tipRelY * Math.cos(angle);
+            
+            // Create burst of sprinkles on click
+            for (let i = 0; i < 8; i++) {
+                const sprinkle = document.createElement('div');
+                sprinkle.style.cssText = `
+                    position: fixed;
+                    left: ${tipX}px;
+                    top: ${tipY}px;
+                    width: 4px;
+                    height: 4px;
+                    background: #d4af37;
+                    border-radius: 50%;
+                    pointer-events: none;
+                    z-index: 9999;
+                    box-shadow: 0 0 6px #d4af37;
+                `;
+                document.body.appendChild(sprinkle);
+                const angle2 = (Math.PI * 2 * i) / 8;
+                const distance = 30 + Math.random() * 20;
+                sprinkle.animate([
+                    { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+                    { transform: `translate(${Math.cos(angle2) * distance}px, ${Math.sin(angle2) * distance}px) scale(0)`, opacity: 0 }
+                ], { duration: 500, easing: 'ease-out' }).onfinish = () => sprinkle.remove();
         }
+        });
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="loading-screen.js"></script>
+    <script src="audio-control.js"></script>
 </body>
 </html>

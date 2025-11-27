@@ -1,43 +1,27 @@
 from flask import Flask, send_from_directory, send_file
 from app.config import Config
-from app.models import db, Admin
+from app.models import db
 from app.routes import register_blueprints
 from pathlib import Path
-from werkzeug.security import generate_password_hash
 import os
 
 def create_app():
     # Get project root directory
     BASE_DIR = Path(__file__).parent.parent
     
-    app = Flask(__name__, 
-                static_folder=str(BASE_DIR), 
-                static_url_path='')
+    # Don't use static_folder for root - we'll serve files manually
+    # This prevents static file serving from intercepting API routes
+    app = Flask(__name__)
     app.config.from_object(Config)
     
     # Initialize database
     db.init_app(app)
     
-    # Register blueprints
-    register_blueprints(app)
-    
-    # Create tables and initialize default admin
+    # Create tables
     with app.app_context():
         db.create_all()
-        
-        # Create default admin if it doesn't exist
-        default_admin_username = 'harry potter'
-        default_admin = Admin.query.filter_by(username=default_admin_username).first()
-        if not default_admin:
-            default_admin = Admin(
-                username=default_admin_username,
-                password_hash=generate_password_hash('hogwarts house cup')
-            )
-            db.session.add(default_admin)
-            db.session.commit()
-            print(f"Default admin '{default_admin_username}' created successfully")
     
-    # Serve HTML files
+    # Serve HTML files - register these BEFORE the catch-all route
     @app.route('/')
     def index():
         main_path = BASE_DIR / 'main.html'
@@ -53,8 +37,16 @@ def create_app():
             return send_file(str(login_path))
         return {'error': 'login.html not found'}, 404
     
+    # Register blueprints AFTER specific routes but BEFORE catch-all
+    # This ensures API routes are matched before the catch-all route
+    register_blueprints(app)
+    
     @app.route('/<path:filename>')
     def serve_file(filename):
+        # Don't serve API routes - let the blueprint handle them
+        if filename.startswith('api/'):
+            return {'error': 'API route not found'}, 404
+        
         file_path = BASE_DIR / filename
         # Serve files if they exist
         if file_path.exists() and file_path.is_file():
@@ -62,11 +54,4 @@ def create_app():
         return {'error': 'File not found'}, 404
     
     return app
-
-
-# Expose a top-level WSGI application callable so servers can import
-# the package `app` and find `app` (e.g. `gunicorn app:app`).
-# This will initialize the app at import-time which is suitable for
-# typical deployment environments like Render.
-app = create_app()
 

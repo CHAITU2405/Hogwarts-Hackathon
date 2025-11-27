@@ -5,11 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Hogwarts Hackathon - Organizers & Mentors</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Crimson+Text:ital,wght@0,400;1,400&display=swap" rel="stylesheet" />
   <style>
     /* --- Base Variables & Background --- */
     :root { --gold: #d4af37; --bg-dark: #0d0d10; }
-    body { background: radial-gradient(circle at 50% 20%, #20202b 0%, #0d0d10 70%) fixed; color: #cfcfcf; overflow-x: hidden; }
+    body { background: radial-gradient(circle at 50% 20%, #20202b 0%, #0d0d10 70%) fixed; color: #cfcfcf; overflow-x: hidden; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; -webkit-touch-callout: none; }
 
     /* --- Typography --- */
     .cinzel { font-family: 'Cinzel Decorative', cursive; }
@@ -166,9 +167,42 @@
 
     /* --- Nav & Button Styles (Preserved) --- */
     .navbar { background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.1); padding: 10px 0; }
-    .navbar-brand { font-family: 'Cinzel Decorative'; color: var(--gold) !important; font-size: 1.5rem; }
+    .navbar-brand { 
+        font-family: 'Cinzel Decorative'; 
+        font-weight: 900; 
+        text-transform: uppercase; 
+        line-height: 1.1; 
+        color: #ffd700; 
+        filter: url(#gold-texture); 
+        font-size: 1.5rem; 
+        transition: 0.3s;
+    }
+    @media (max-width: 768px) { 
+        .navbar-brand { font-size: 1.2rem; } 
+    }
     .nav-link { color: #ccc !important; font-family: 'Cinzel Decorative'; font-size: 0.9rem; transition: .3s; }
     .nav-link:hover { color: var(--gold) !important; text-shadow: 0 0 8px var(--gold); }
+    
+    /* Volume Control Button */
+    .volume-btn {
+        color: var(--gold);
+        font-size: 1.2rem;
+        padding: 5px 10px;
+        border: none;
+        background: transparent;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    .volume-btn:hover {
+        color: #ffd700;
+        transform: scale(1.1);
+    }
+    .volume-btn.volume-off {
+        opacity: 0.6;
+    }
+    .volume-btn.volume-on {
+        opacity: 1;
+    }
     @media (max-width: 991px) {
       .navbar { padding: 8px 0; }
       .navbar-brand { font-size: 1.3rem; }
@@ -221,21 +255,26 @@
     <filter id="gold-texture"><feTurbulence type="fractalNoise" baseFrequency="0.5" numOctaves="3" /><feComposite operator="in" in2="SourceGraphic" result="composite" /><feColorMatrix type="matrix" values="0 0 0 0 0.83 0 0 0 0 0.68 0 0 0 0 0.21 0 0 0 1 0" /></filter>
   </svg>
 
-  <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+  <nav class="navbar navbar-expand-lg sticky-top navbar-dark">
     <div class="container">
-      <a class="navbar-brand" href="#">Hogwarts Hacks</a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav"><span class="navbar-toggler-icon"></span></button>
-      <div id="nav" class="collapse navbar-collapse justify-content-end">
+      <a class="navbar-brand" href="main.html">
+        <span style="display: block;">Hogwarts</span>
+        <span style="display: block;">Hackathon</span>
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"><span class="navbar-toggler-icon"></span></button>
+      <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
         <ul class="navbar-nav align-items-center">
-          <li class="nav-item"><a class="nav-link" href="main.html">Great Hall</a></li>
-          <li class="nav-item"><a class="nav-link" href="main.html#houses">Houses</a></li>
+          <li class="nav-item me-3">
+              <button id="volumeControl" class="btn btn-link volume-btn" type="button" title="Toggle Background Music">
+                  <i class="fas fa-volume-up"></i>
+              </button>
+          </li>
+          <li class="nav-item"><a class="nav-link" href="main.html#home">Great Hall</a></li>
           <li class="nav-item"><a class="nav-link" href="teams.html">Teams</a></li>
-          <li class="nav-item"><a class="nav-link" href="leaderboard.html">Leaderboard</a></li>
-          <li class="nav-item"><a class="nav-link" href="#">Organizers</a></li>
+          <li class="nav-item"><a class="nav-link" href="organizers.html">Organizers</a></li>
           <li class="nav-item"><a class="nav-link" href="timeline.html">Timeline</a></li>
-          <li class="nav-item"><a class="nav-link" href="faq.html">FAQs</a></li>
           <li class="nav-item"><a class="nav-link" href="rules.html">Rules</a></li>
-          <li class="nav-item"><a class="nav-link register-btn" href="register.html">Register</a></li>
+          <li class="nav-item"><a class="nav-link" href="faq.html">FAQs</a></li>
         </ul>
       </div>
     </div>
@@ -337,7 +376,7 @@
                 <img src="images/Nikhil.jpg" class="mentor-img" alt="Mentor">
                 <div class="mentor-info">
                   <h5>Nikhil Vinod</h5>
-                  <span>Tech Volunteer</span>
+                  <span>Tech Co-ordinator</span>
                 </div>
               </a>
               <a class="mentor-item" href="www.linkedin.com/in/tarun-siva-sai-seelaboyina-839102302
@@ -345,7 +384,7 @@
                 <img src="images/tarun siva sai.jpg" class="mentor-img" alt="Mentor">
                 <div class="mentor-info">
                   <h5>Tarun Siva Sai</h5>
-                  <span>co ordinator</span>
+                  <span>Co-ordinator</span>
                 </div>
               </a>
 
@@ -365,7 +404,7 @@
                 <img src="images/ravindra.jpg" class="mentor-img" alt="Mentor">
                 <div class="mentor-info">
                   <h5>Ravindra Babu Gunnu</h5>
-                  <span>Tech Volunteer</span>
+                  <span>Tech Co-ordinator</span>
                 </div>
               </a>
 
@@ -384,7 +423,7 @@
                 <img src="images/dhishitha.png" class="mentor-img" alt="Mentor">
                 <div class="mentor-info">
                   <h5>Disitha</h5>
-                  <span>co ordinator</span>
+ krishna veni                  <span>co ordinator</span>
                 </div>
               </a>
 
@@ -543,15 +582,6 @@
                 </div>
               </a>
 
-              <a class="mentor-item" href="https://www.linkedin.com/in/samanvitha-korada-59b000334?utm_source=share_via&utm_content=profile&utm_medium=member_android
-                  " target="_blank" rel="noopener noreferrer">
-                <img src="images/Samanvitha Korada.jpg" class="mentor-img" alt="Mentor">
-                <div class="mentor-info">
-                  <h5>Samanvitha Korada</h5>
-                  <span>co ordinator</span>
-                </div>
-              </a>
-
               <a class="mentor-item" href="https://www.linkedin.com/in/akhila-vaddi-803085253?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app
 
                   " target="_blank" rel="noopener noreferrer">
@@ -681,6 +711,9 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="loading-screen.js"></script>
+  <script src="audio-control.js"></script>
+  <script src="disable-copy.js"></script>
   <script>
     // Wand cursor with sprinkles on movement
     const wand = document.getElementById('wand');
@@ -757,6 +790,8 @@
         }
       });
     }
+  </script>
+  <script>
   </script>
 </body>
 </html> 
