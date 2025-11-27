@@ -3,7 +3,7 @@
     'use strict';
     
     // Create audio element and preload
-    const bgMusic = new Audio('assets/harry bg.wav');
+    const bgMusic = new Audio('assets/Harry bg.wav');
     bgMusic.loop = true;
     bgMusic.volume = 0.5; // Set volume to 50%
     bgMusic.preload = 'auto'; // Preload the audio
@@ -59,6 +59,17 @@
             window.dispatchEvent(new CustomEvent('audioReady'));
             // Try to play immediately
             attemptPlay();
+        }
+    });
+    
+    // Handle audio loading errors
+    bgMusic.addEventListener('error', function(e) {
+        console.error('Audio loading error:', e);
+        console.error('Audio file path:', bgMusic.src);
+        // Try alternative path if first one fails
+        if (bgMusic.src.includes('harry bg.wav')) {
+            bgMusic.src = 'assets/Harry bg.wav';
+            bgMusic.load();
         }
     });
     
@@ -122,9 +133,21 @@
             // Save that user disabled music
             localStorage.setItem('bgMusicEnabled', 'false');
         } else {
-            bgMusic.play().catch(err => {
-                console.log('Play failed:', err);
-            });
+            // Ensure audio is ready before playing
+            if (!audioReady) {
+                // Wait for audio to be ready
+                bgMusic.addEventListener('canplaythrough', function playWhenReady() {
+                    bgMusic.removeEventListener('canplaythrough', playWhenReady);
+                    bgMusic.play().catch(err => {
+                        console.log('Play failed:', err);
+                    });
+                }, { once: true });
+                bgMusic.load();
+            } else {
+                bgMusic.play().catch(err => {
+                    console.log('Play failed:', err);
+                });
+            }
             isPlaying = true;
             volumeBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
             volumeBtn.classList.remove('volume-off');

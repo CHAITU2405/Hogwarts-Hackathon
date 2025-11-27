@@ -295,6 +295,9 @@
         <div class="container">
             <a class="navbar-brand" href="#">Hogwarts Hacks <span class="admin-badge">Admin</span></a>
             <div class="d-flex align-items-center">
+                <button id="volumeControl" class="volume-btn me-3" title="Toggle Music">
+                    <i class="fas fa-volume-mute"></i>
+                </button>
                 <span class="me-3" style="font-family: 'Crimson Text'; color: #aaa;" id="adminNameDisplay"></span>
                 <a href="login.html" class="btn btn-sm btn-outline-secondary" style="font-family: 'Cinzel Decorative';" onclick="logout()">Logout</a>
             </div>
@@ -329,6 +332,9 @@
                 </button>
                 <button class="action-btn" id="registrationToggleBtn" onclick="toggleRegistration()" style="background: transparent; border: 2px solid var(--gold); color: var(--gold);">
                     <i class="fa-solid fa-scroll me-2"></i> <span id="registrationToggleText">Enable Registration</span>
+                </button>
+                <button class="action-btn" onclick="downloadDatabase()" style="background: transparent; border: 2px solid var(--gold); color: var(--gold);">
+                    <i class="fa-solid fa-database me-2"></i> Download Database
                 </button>
             </div>
 
@@ -838,6 +844,16 @@
                     setTimeout(() => card.classList.add('fade-in'), 10);
                 }
             });
+        }
+
+        function downloadDatabase() {
+            // Create a temporary link to download the database
+            const link = document.createElement('a');
+            link.href = '/api/admin/download-database';
+            link.download = 'hogwarts_hackathon.db';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
 
     </script>

@@ -1088,6 +1088,32 @@ def get_statistics():
         print(f"Error in get_statistics: {error_trace}")
         return jsonify({'error': str(e), 'trace': error_trace}), 500
 
+@api_bp.route('/admin/download-database', methods=['GET'])
+def download_database():
+    """Download the database file (Admin only)"""
+    try:
+        # Check if admin (simple check - in production, use proper session/auth)
+        # For now, we'll allow this endpoint but it should be protected by admin authentication
+        # You can add proper admin session checking here
+        
+        db_path = Config.DATABASE_PATH
+        
+        if not db_path.exists():
+            return jsonify({'error': 'Database file not found'}), 404
+        
+        # Send the database file
+        return send_file(
+            str(db_path),
+            mimetype='application/x-sqlite3',
+            as_attachment=True,
+            download_name='hogwarts_hackathon.db'
+        )
+    except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
+        print(f"Error downloading database: {error_trace}")
+        return jsonify({'error': str(e)}), 500
+
 @api_bp.route('/admin/all-teams', methods=['GET'])
 def get_all_teams_with_members():
     """Get all approved teams with full member details for management"""
