@@ -99,15 +99,24 @@ Set the following environment variables in your Render dashboard (or `.env` file
 
 ### Render-Specific Notes
 
-**Important**: Render may block SMTP port 587. If emails are not sending on Render:
+**SMTP works on Render!** The application automatically tries multiple connection methods:
+
+1. **TLS on port 587** (standard Gmail)
+2. **SSL on port 465** (alternative Gmail)
+3. **Automatic fallback** - if one method fails, it tries the next
+
+**If emails are not sending on Render:**
 
 1. **Check Render logs** for SMTP connection errors
-2. **Alternative solutions**:
-   - Use a service like SendGrid, Mailgun, or AWS SES
-   - Update `SMTP_SERVER` and `SMTP_PORT` to use these services
-   - Or use Render's built-in email service if available
+2. **Verify environment variables** are set correctly:
+   - `SENDER_EMAIL` = your Gmail address
+   - `SENDER_PASSWORD` = Gmail App Password (16 characters, no spaces)
+3. **Check Gmail settings**:
+   - Ensure "Less secure app access" is enabled OR use App Password
+   - Make sure 2-Step Verification is enabled (required for App Passwords)
+4. **The app will try multiple ports automatically** - no manual configuration needed
 
-3. **If SMTP is blocked**, the application will still work - team approval will succeed, but emails won't be sent. Check the server logs for email errors.
+**If SMTP still fails**, the application will still work - team approval will succeed, but emails won't be sent. Check the server logs for specific error messages.
 
 ### Testing Email
 

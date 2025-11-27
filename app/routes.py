@@ -42,9 +42,10 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1].lower() in Config.ALLOWED_EXTENSIONS
 
 def send_credentials_email(receiver_email, team_name, username, password, team_lead_name):
-    """Send login credentials to team lead via email using SMTP with retry logic"""
+    """Send login credentials to team lead via email using SMTP with multiple connection methods"""
     import socket
     import time
+    import ssl
     
     # Get email configuration from Config
     sender_email = Config.SENDER_EMAIL
@@ -87,118 +88,136 @@ Hogwarts Hackathon Team"""
     
     msg.attach(MIMEText(body, "plain"))
     
-    # Retry logic - try up to 3 times
-    max_retries = 3
-    retry_delay = 2  # seconds
+    # Try multiple connection methods for Render compatibility
+    # Method 1: TLS on port 587 (standard)
+    # Method 2: SSL on port 465 (alternative)
+    connection_methods = [
+        {'port': smtp_port, 'use_ssl': False, 'use_tls': True, 'name': f'TLS on port {smtp_port}'},
+        {'port': 465, 'use_ssl': True, 'use_tls': False, 'name': 'SSL on port 465'},
+        {'port': 587, 'use_ssl': False, 'use_tls': True, 'name': 'TLS on port 587'},
+    ]
     
-    for attempt in range(1, max_retries + 1):
-        server = None
-        try:
-            print(f"Attempting to send email (attempt {attempt}/{max_retries}) to {receiver_email}")
-            
-            # Set socket timeout
-            socket.setdefaulttimeout(15)  # 15 second timeout for SMTP operations
-            
-            # Create SMTP connection with timeout
-            server = smtplib.SMTP(smtp_server, smtp_port, timeout=15)
-            
-            # Enable debug output for troubleshooting (set to 0 to disable)
-            # server.set_debuglevel(1)
-            
-            # Start TLS encryption
-            server.starttls()
-            
-            # Login
-            server.login(sender_email, sender_password)
-            
-            # Send email
-            server.sendmail(sender_email, [receiver_email], msg.as_string())
-            
-            # Close connection
-            server.quit()
+    # Remove duplicates if port is already 587 or 465
+    seen_ports = set()
+    unique_methods = []
+    for method in connection_methods:
+        if method['port'] not in seen_ports:
+            seen_ports.add(method['port'])
+            unique_methods.append(method)
+    connection_methods = unique_methods
+    
+    # Retry logic - try each method up to 2 times
+    max_retries_per_method = 2
+    
+    for method in connection_methods:
+        for attempt in range(1, max_retries_per_method + 1):
             server = None
-            
-            print(f"✓ Email sent successfully to {receiver_email} on attempt {attempt}")
-            return True
-            
-        except smtplib.SMTPAuthenticationError as e:
-            error_msg = f"SMTP Authentication Error: {e}"
-            print(error_msg)
-            print("Check if SENDER_EMAIL and SENDER_PASSWORD are correct")
-            if server:
-                try:
-                    server.quit()
-                except:
-                    pass
-            # Don't retry authentication errors
-            return False
-            
-        except smtplib.SMTPConnectError as e:
-            error_msg = f"SMTP Connection Error (attempt {attempt}/{max_retries}): {e}"
-            print(error_msg)
-            print(f"Could not connect to {smtp_server}:{smtp_port}")
-            if server:
-                try:
-                    server.quit()
-                except:
-                    pass
-            if attempt < max_retries:
-                print(f"Retrying in {retry_delay} seconds...")
-                time.sleep(retry_delay)
-                retry_delay *= 2  # Exponential backoff
-            else:
-                print("All connection attempts failed. Check if Render is blocking SMTP ports.")
-                return False
+            try:
+                print(f"Attempting {method['name']} (attempt {attempt}/{max_retries_per_method}) to send email to {receiver_email}")
                 
-        except socket.timeout as e:
-            error_msg = f"SMTP Timeout Error (attempt {attempt}/{max_retries}): {e}"
-            print(error_msg)
-            if server:
-                try:
-                    server.quit()
-                except:
-                    pass
-            if attempt < max_retries:
-                print(f"Retrying in {retry_delay} seconds...")
-                time.sleep(retry_delay)
-                retry_delay *= 2
-            else:
-                print("All timeout attempts failed. Network or firewall issue.")
-                return False
+                # Set socket timeout
+                socket.setdefaulttimeout(20)  # 20 second timeout for SMTP operations
                 
-        except smtplib.SMTPException as e:
-            error_msg = f"SMTP Error (attempt {attempt}/{max_retries}): {e}"
-            print(error_msg)
-            if server:
-                try:
-                    server.quit()
-                except:
-                    pass
-            if attempt < max_retries:
-                print(f"Retrying in {retry_delay} seconds...")
-                time.sleep(retry_delay)
-                retry_delay *= 2
-            else:
-                return False
+                # Create SMTP connection based on method
+                if method['use_ssl']:
+                    # SSL connection (port 465)
+                    context = ssl.create_default_context()
+                    server = smtplib.SMTP_SSL(smtp_server, method['port'], timeout=20, context=context)
+                else:
+                    # Regular SMTP connection
+                    server = smtplib.SMTP(smtp_server, method['port'], timeout=20)
+                    if method['use_tls']:
+                        # Start TLS encryption
+                        server.starttls(context=ssl.create_default_context())
                 
-        except Exception as e:
-            import traceback
-            error_msg = f"Unexpected error sending email (attempt {attempt}/{max_retries}): {e}"
-            print(error_msg)
-            print(f"Traceback: {traceback.format_exc()}")
-            if server:
-                try:
-                    server.quit()
-                except:
-                    pass
-            if attempt < max_retries:
-                print(f"Retrying in {retry_delay} seconds...")
-                time.sleep(retry_delay)
-                retry_delay *= 2
-            else:
-                return False
+                # Login
+                server.login(sender_email, sender_password)
+                
+                # Send email
+                server.sendmail(sender_email, [receiver_email], msg.as_string())
+                
+                # Close connection
+                server.quit()
+                server = None
+                
+                print(f"✓ Email sent successfully to {receiver_email} using {method['name']}")
+                return True
+                
+            except smtplib.SMTPAuthenticationError as e:
+                error_msg = f"SMTP Authentication Error: {e}"
+                print(error_msg)
+                print("Check if SENDER_EMAIL and SENDER_PASSWORD are correct")
+                if server:
+                    try:
+                        server.quit()
+                    except:
+                        pass
+                # Don't retry authentication errors - try next method
+                break
+                
+            except (smtplib.SMTPConnectError, ConnectionRefusedError, OSError) as e:
+                error_msg = f"SMTP Connection Error ({method['name']}, attempt {attempt}): {e}"
+                print(error_msg)
+                if server:
+                    try:
+                        server.quit()
+                    except:
+                        pass
+                if attempt < max_retries_per_method:
+                    print(f"Retrying {method['name']} in 2 seconds...")
+                    time.sleep(2)
+                else:
+                    print(f"Failed with {method['name']}, trying next method...")
+                    break
+                    
+            except socket.timeout as e:
+                error_msg = f"SMTP Timeout Error ({method['name']}, attempt {attempt}): {e}"
+                print(error_msg)
+                if server:
+                    try:
+                        server.quit()
+                    except:
+                        pass
+                if attempt < max_retries_per_method:
+                    print(f"Retrying {method['name']} in 2 seconds...")
+                    time.sleep(2)
+                else:
+                    print(f"Timeout with {method['name']}, trying next method...")
+                    break
+                    
+            except smtplib.SMTPException as e:
+                error_msg = f"SMTP Error ({method['name']}, attempt {attempt}): {e}"
+                print(error_msg)
+                if server:
+                    try:
+                        server.quit()
+                    except:
+                        pass
+                if attempt < max_retries_per_method:
+                    print(f"Retrying {method['name']} in 2 seconds...")
+                    time.sleep(2)
+                else:
+                    print(f"Failed with {method['name']}, trying next method...")
+                    break
+                    
+            except Exception as e:
+                import traceback
+                error_msg = f"Unexpected error ({method['name']}, attempt {attempt}): {e}"
+                print(error_msg)
+                print(f"Traceback: {traceback.format_exc()}")
+                if server:
+                    try:
+                        server.quit()
+                    except:
+                        pass
+                if attempt < max_retries_per_method:
+                    print(f"Retrying {method['name']} in 2 seconds...")
+                    time.sleep(2)
+                else:
+                    print(f"Failed with {method['name']}, trying next method...")
+                    break
     
-    print(f"✗ Failed to send email to {receiver_email} after {max_retries} attempts")
+    print(f"✗ Failed to send email to {receiver_email} after trying all connection methods")
     return False
 
 @api_bp.route('/register', methods=['POST'])

@@ -24,7 +24,7 @@ class Config:
     SENDER_EMAIL = os.environ.get('SENDER_EMAIL') or 'hogwartshackathon@gmail.com'
     SENDER_PASSWORD = os.environ.get('SENDER_PASSWORD') or ''
     SMTP_SERVER = os.environ.get('SMTP_SERVER') or 'smtp.gmail.com'
-    SMTP_PORT = int(os.environ.get('SMTP_PORT') or '587')
+    SMTP_PORT = int(os.environ.get('SMTP_PORT') or '587')  # 587 for TLS, 465 for SSL
     
     # Ensure directories exist
     @staticmethod
