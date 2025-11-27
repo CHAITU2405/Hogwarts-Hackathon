@@ -117,6 +117,15 @@
             font-family: 'Cinzel Decorative', cursive; font-weight: 700; font-size: 1rem; color: var(--ink-color); padding: 8px 5px; transition: 0.3s; border-radius: 0;
         }
         .magic-input:focus { outline: none; border-bottom: 2px solid var(--gold); background: rgba(212, 175, 55, 0.05); }
+        .magic-input:invalid { border-bottom-color: #c62828; }
+        .validation-message {
+            display: block;
+            color: #c62828;
+            font-family: 'Crimson Text', serif;
+            font-size: 0.85rem;
+            margin-top: 5px;
+            font-style: italic;
+        }
 
         /* --- DROPDOWN CSS --- */
         #houseSelect { z-index: 100 !important; }
@@ -351,16 +360,6 @@
         .form-check-input:checked { background-color: var(--gold); border-color: var(--gold); }
         footer { padding: 40px; text-align: center; border-top: 1px solid var(--gold); background: #0a0a0a; position: relative; z-index: 10; color: #777; }
         footer .container { position: relative; }
-        .sponsor-section { position: absolute; right: 0; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: center; gap: 5px; }
-        .sponsor-label { font-family: 'Cinzel Decorative'; color: #777; font-size: 0.8rem; margin: 0; text-transform: uppercase; letter-spacing: 1px; }
-        .sponsor-logo { height: 40px; width: auto; }
-        .sponsor-name { font-family: 'Cinzel Decorative'; color: #777; font-size: 0.9rem; }
-        .edu-rays-section { position: absolute; left: 0; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: center; gap: 5px; }
-        .edu-rays-label { font-family: 'Cinzel Decorative'; color: #777; font-size: 0.8rem; margin: 0; text-transform: uppercase; letter-spacing: 1px; }
-        .edu-rays-logo { height: 40px; width: auto; }
-        @media (max-width: 768px) {
-            .sponsor-section, .edu-rays-section { position: static; transform: none; margin-top: 20px; justify-content: center; }
-        }
 
         /* =========================================
            TICKET OVERLAY CSS
@@ -714,7 +713,8 @@
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label class="magic-label">UTR / Transaction ID</label>
-                                <input type="text" class="magic-input" placeholder="e.g., UPI12345678" required>
+                                <input type="text" id="utrInput" name="utr_transaction_id" class="magic-input" placeholder="e.g., 6364024845020" pattern="[A-Za-z0-9]{8,20}" title="UTR must be 8-20 alphanumeric characters" required>
+                                <small class="validation-message" id="utrError" style="display: none; color: #c62828; font-family: 'Crimson Text'; font-size: 0.85rem; margin-top: 5px;"></small>
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -749,16 +749,6 @@
         <footer>
             <div class="container">
                 <p>Mischief Managed &copy; 2025 Hogwarts Hackathon</p>
-                <div class="edu-rays-section">
-                    <p class="edu-rays-label">Organized by</p>
-                    <img src="assets/edu-rays.png" alt="Edu-Rays" class="edu-rays-logo">
-                    <span class="sponsor-name">Edu-Rays</span>
-                </div>
-                <div class="sponsor-section">
-                    <p class="sponsor-label" style="font-family: 'Cinzel Decorative'; color: #777; font-size: 0.8rem; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;">Sponsored by</p>
-                    <img src="assets/mmm.jpg" alt="MEG Multi Media" class="sponsor-logo">
-                    <span class="sponsor-name">MEG Multi Media</span>
-                </div>
             </div>
         </footer>
     </div>
@@ -954,14 +944,39 @@
                     <div class="member-block mt-4">
                         <h4 class="section-title">Wizard ${i} ${i == 1 ? '(Leader)' : ''}</h4>
                         <div class="row">
-                            <div class="col-md-3"><div class="form-group"><label class="magic-label">Full Name</label><input type="text" class="magic-input" required></div></div>
-                            <div class="col-md-3"><div class="form-group"><label class="magic-label">Owl Post (Email)</label><input type="email" class="magic-input" required></div></div>
-                            <div class="col-md-3"><div class="form-group"><label class="magic-label">Magical Contact</label><input type="tel" class="magic-input" required></div></div>
-                            <div class="col-md-3"><div class="form-group"><label class="magic-label">College Name</label><input type="text" class="magic-input" placeholder="e.g., Hogwarts School" required></div></div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label class="magic-label">Full Name</label>
+                                    <input type="text" name="member_${i}_name" class="magic-input" required>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label class="magic-label">Owl Post (Email)</label>
+                                    <input type="email" name="member_${i}_email" class="magic-input member-email" pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}" title="Please enter a valid email address" required>
+                                    <small class="validation-message member-email-error" style="display: none; color: #c62828; font-family: 'Crimson Text'; font-size: 0.85rem; margin-top: 5px;"></small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label class="magic-label">Magical Contact</label>
+                                    <input type="tel" name="member_${i}_phone" class="magic-input member-phone" pattern="[0-9]{10}" maxlength="10" title="Phone number must be exactly 10 digits" required>
+                                    <small class="validation-message member-phone-error" style="display: none; color: #c62828; font-family: 'Crimson Text'; font-size: 0.85rem; margin-top: 5px;"></small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label class="magic-label">College Name</label>
+                                    <input type="text" name="member_${i}_college" class="magic-input" placeholder="e.g., Hogwarts School" required>
+                                </div>
+                            </div>
                         </div>
                     </div>`;
                 membersContainer.insertAdjacentHTML('beforeend', memberHTML);
             }
+            
+            // Add event listeners for validation
+            setupFieldValidations();
         }
 
         function updatePriceAndQR(teamSize) {
@@ -1021,7 +1036,191 @@
 
         // Initialize with default team size of 4
         renderMembers(4);
-        updatePriceAndQR(4); 
+        updatePriceAndQR(4);
+        
+        // Field Validation Functions
+        function setupFieldValidations() {
+            // Phone number validation - only allow digits and max 10
+            const phoneInputs = document.querySelectorAll('.member-phone');
+            phoneInputs.forEach(input => {
+                input.addEventListener('input', function(e) {
+                    // Remove any non-digit characters
+                    this.value = this.value.replace(/[^0-9]/g, '');
+                    // Limit to 10 digits
+                    if (this.value.length > 10) {
+                        this.value = this.value.slice(0, 10);
+                    }
+                    validatePhone(this);
+                });
+                
+                input.addEventListener('blur', function() {
+                    validatePhone(this);
+                });
+            });
+            
+            // Email validation
+            const emailInputs = document.querySelectorAll('.member-email');
+            emailInputs.forEach(input => {
+                input.addEventListener('blur', function() {
+                    validateEmail(this);
+                });
+                
+                input.addEventListener('input', function() {
+                    // Clear error on input
+                    const errorElement = this.parentElement.querySelector('.member-email-error');
+                    if (errorElement) {
+                        errorElement.style.display = 'none';
+                        this.style.borderBottomColor = '';
+                    }
+                });
+            });
+            
+            // UTR validation
+            const utrInput = document.getElementById('utrInput');
+            if (utrInput) {
+                utrInput.addEventListener('input', function(e) {
+                    // Allow alphanumeric characters only
+                    this.value = this.value.replace(/[^A-Za-z0-9]/g, '');
+                    validateUTR(this);
+                });
+                
+                utrInput.addEventListener('blur', function() {
+                    validateUTR(this);
+                });
+            }
+        }
+        
+        function validatePhone(input) {
+            const value = input.value.trim();
+            const errorElement = input.parentElement.querySelector('.member-phone-error');
+            
+            if (value.length === 0) {
+                if (errorElement) {
+                    errorElement.textContent = 'Phone number is required';
+                    errorElement.style.display = 'block';
+                }
+                input.style.borderBottomColor = '#c62828';
+                return false;
+            } else if (value.length !== 10) {
+                if (errorElement) {
+                    errorElement.textContent = 'Phone number must be exactly 10 digits';
+                    errorElement.style.display = 'block';
+                }
+                input.style.borderBottomColor = '#c62828';
+                return false;
+            } else if (!/^[0-9]{10}$/.test(value)) {
+                if (errorElement) {
+                    errorElement.textContent = 'Phone number must contain only digits';
+                    errorElement.style.display = 'block';
+                }
+                input.style.borderBottomColor = '#c62828';
+                return false;
+            } else {
+                if (errorElement) {
+                    errorElement.style.display = 'none';
+                }
+                input.style.borderBottomColor = '';
+                return true;
+            }
+        }
+        
+        function validateEmail(input) {
+            const value = input.value.trim();
+            const errorElement = input.parentElement.querySelector('.member-email-error');
+            const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            
+            if (value.length === 0) {
+                if (errorElement) {
+                    errorElement.textContent = 'Email is required';
+                    errorElement.style.display = 'block';
+                }
+                input.style.borderBottomColor = '#c62828';
+                return false;
+            } else if (!emailRegex.test(value)) {
+                if (errorElement) {
+                    errorElement.textContent = 'Please enter a valid email address (e.g., example@domain.com)';
+                    errorElement.style.display = 'block';
+                }
+                input.style.borderBottomColor = '#c62828';
+                return false;
+            } else {
+                if (errorElement) {
+                    errorElement.style.display = 'none';
+                }
+                input.style.borderBottomColor = '';
+                return true;
+            }
+        }
+        
+        function validateUTR(input) {
+            const value = input.value.trim();
+            const errorElement = document.getElementById('utrError');
+            
+            if (value.length === 0) {
+                if (errorElement) {
+                    errorElement.textContent = 'UTR / Transaction ID is required';
+                    errorElement.style.display = 'block';
+                }
+                input.style.borderBottomColor = '#c62828';
+                return false;
+            } else if (value.length < 8) {
+                if (errorElement) {
+                    errorElement.textContent = 'UTR must be at least 8 characters';
+                    errorElement.style.display = 'block';
+                }
+                input.style.borderBottomColor = '#c62828';
+                return false;
+            } else if (value.length > 12) {
+                if (errorElement) {
+                    errorElement.textContent = 'UTR must not exceed 12 characters';
+                    errorElement.style.display = 'block';
+                }
+                input.style.borderBottomColor = '#c62828';
+                return false;
+            } else if (!/^[A-Za-z0-9]+$/.test(value)) {
+                if (errorElement) {
+                    errorElement.textContent = 'UTR must contain only letters and numbers';
+                    errorElement.style.display = 'block';
+                }
+                input.style.borderBottomColor = '#c62828';
+                return false;
+            } else {
+                if (errorElement) {
+                    errorElement.style.display = 'none';
+                }
+                input.style.borderBottomColor = '';
+                return true;
+            }
+        }
+        
+        // Validate all fields before form submission
+        function validateAllFields() {
+            let isValid = true;
+            
+            // Validate UTR
+            const utrInput = document.getElementById('utrInput');
+            if (utrInput && !validateUTR(utrInput)) {
+                isValid = false;
+            }
+            
+            // Validate all phone numbers
+            const phoneInputs = document.querySelectorAll('.member-phone');
+            phoneInputs.forEach(input => {
+                if (!validatePhone(input)) {
+                    isValid = false;
+                }
+            });
+            
+            // Validate all emails
+            const emailInputs = document.querySelectorAll('.member-email');
+            emailInputs.forEach(input => {
+                if (!validateEmail(input)) {
+                    isValid = false;
+                }
+            });
+            
+            return isValid;
+        } 
 
         function updateFileName(inputId, labelId) {
             const input = document.getElementById(inputId);

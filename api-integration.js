@@ -72,6 +72,19 @@ function setupRegistrationForm() {
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
         
+        // Validate all fields before submission
+        if (typeof validateAllFields === 'function') {
+            if (!validateAllFields()) {
+                alert('Please fix the validation errors before submitting the form.');
+                // Scroll to first error
+                const firstError = document.querySelector('.validation-message[style*="block"]');
+                if (firstError) {
+                    firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                return;
+            }
+        }
+        
         // Check if registration is enabled before allowing submission
         try {
             const statusResponse = await fetchWithTimeout('/api/admin/registration-toggle', {

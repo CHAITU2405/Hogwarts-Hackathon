@@ -325,14 +325,36 @@
         .house-section { padding: 80px 0; position: relative; z-index: 2; background: rgba(20, 20, 20, 0.9); border-top: 1px solid #333; flex-grow: 1; }
         footer { padding: 40px; text-align: center; border-top: 1px solid var(--gold); background: #0a0a0a; position: relative; z-index: 10; color: #777; }
         footer .container { position: relative; }
-        .sponsor-section { position: absolute; right: 0; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: center; gap: 5px; }
-        .sponsor-label { font-family: 'Cinzel Decorative'; color: #777; font-size: 0.8rem; margin: 0; text-transform: uppercase; letter-spacing: 1px; }
-        .sponsor-logo { height: 40px; width: auto; }
-        .edu-rays-section { position: absolute; left: 0; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: center; gap: 5px; }
-        .edu-rays-label { font-family: 'Cinzel Decorative'; color: #777; font-size: 0.8rem; margin: 0; text-transform: uppercase; letter-spacing: 1px; }
-        .edu-rays-logo { height: 40px; width: auto; }
-        @media (max-width: 768px) {
-            .sponsor-section, .edu-rays-section { position: static; transform: none; margin: 15px 0; }
+        /* Sponsors Section */
+        .sponsor-card {
+            background: rgba(20, 20, 20, 0.8);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 150px;
+        }
+        .sponsor-card:hover {
+            border-color: var(--gold);
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(212, 175, 55, 0.3);
+        }
+        .sponsor-card img {
+            max-width: 100%;
+            max-height: 80px;
+            object-fit: contain;
+            margin-bottom: 10px;
+        }
+        .sponsor-card .sponsor-name {
+            font-family: 'Cinzel Decorative';
+            color: var(--gold);
+            font-size: 1rem;
+            margin-top: 10px;
         }
         .sponsor-name { font-family: 'Cinzel Decorative'; color: #777; font-size: 0.9rem; }
         @media (max-width: 768px) {
@@ -538,20 +560,164 @@
             </div>
         </section>
 
+        <section id="sponsors" class="house-section" style="padding-top: 40px;">
+            <div class="container">
+                <h2 class="text-center mb-5" style="color: var(--gold); font-family: 'Cinzel Decorative';">Our Sponsors</h2>
+                <div class="row justify-content-center g-4" id="sponsorsContainer">
+                    <div class="col-12 text-center">
+                        <p style="color: #777;">Loading sponsors...</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <script>
+        // BULLETPROOF SPONSOR LOADER - Works on all environments
+        (function() {
+            var attempts = 0;
+            var maxAttempts = 3;
+            
+            function getApiUrl() {
+                // Try relative URL first (works when Flask serves both frontend and API)
+                // This is the most reliable for forwarded ports
+                var relativeUrl = '/api/sponsors';
+                var absoluteUrl = window.location.origin + '/api/sponsors';
+                
+                console.log('Current origin:', window.location.origin);
+                console.log('Current href:', window.location.href);
+                console.log('Relative URL:', relativeUrl);
+                console.log('Absolute URL:', absoluteUrl);
+                
+                // Use relative URL - Flask serves both frontend and API on same port
+                return relativeUrl;
+            }
+            
+            function renderSponsors(data, container) {
+                if (data && data.success && data.sponsors && data.sponsors.length > 0) {
+                    var html = '';
+                    for (var i = 0; i < data.sponsors.length; i++) {
+                        var sponsor = data.sponsors[i];
+                        var logoUrl = sponsor.logo_path || '';
+                        if (logoUrl.indexOf('uploads/') === 0) {
+                            logoUrl = window.location.origin + '/api/' + logoUrl;
+                        }
+                        var clickAttr = sponsor.redirect_url ? ' onclick="window.open(\'' + sponsor.redirect_url.replace(/'/g, "\\'") + '\', \'_blank\')" style="cursor: pointer;"' : '';
+                        html += '<div class="col-lg-3 col-md-4 col-sm-6 mb-4"><div class="sponsor-card"' + clickAttr + '>';
+                        html += '<img src="' + logoUrl.replace(/"/g, '&quot;') + '" alt="' + (sponsor.name || '').replace(/"/g, '&quot;') + '" style="max-width: 100%; max-height: 80px; object-fit: contain; margin-bottom: 10px;" onerror="this.style.display=\'none\'">';
+                        html += '<div class="sponsor-name" style="font-family: \'Cinzel Decorative\'; color: var(--gold); font-size: 1rem; margin-top: 10px;">' + (sponsor.name || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>';
+                        html += '</div></div>';
+                    }
+                    container.innerHTML = html;
+                    console.log('✅ Sponsors rendered successfully:', data.sponsors.length);
+                    return true;
+                } else {
+                    container.innerHTML = '<div class="col-12 text-center"><p style="color: #777; font-family: \'Crimson Text\';">No sponsors yet.</p></div>';
+                    return false;
+                }
+            }
+            
+            function loadAndRender() {
+                attempts++;
+                var container = document.getElementById('sponsorsContainer');
+                if (!container) {
+                    if (attempts < maxAttempts) {
+                        setTimeout(loadAndRender, 100);
+                    }
+                    return;
+                }
+                
+                var apiUrl = getApiUrl();
+                
+                // Try fetch first (modern browsers)
+                if (typeof fetch !== 'undefined') {
+                    console.log('Using fetch to load sponsors...');
+                    fetch(apiUrl, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        mode: 'cors',
+                        credentials: 'same-origin'
+                    })
+                    .then(function(response) {
+                        console.log('Fetch response status:', response.status);
+                        if (!response.ok) {
+                            throw new Error('HTTP ' + response.status + ': ' + response.statusText);
+                        }
+                        return response.json();
+                    })
+                    .then(function(data) {
+                        console.log('Fetch success, data:', data);
+                        renderSponsors(data, container);
+                    })
+                    .catch(function(error) {
+                        console.error('Fetch error:', error);
+                        // Fallback to XHR
+                        tryXHR(apiUrl, container);
+                    });
+                } else {
+                    // Use XHR directly
+                    tryXHR(apiUrl, container);
+                }
+            }
+            
+            function tryXHR(apiUrl, container) {
+                console.log('Using XMLHttpRequest to load sponsors...');
+                var xhr = new XMLHttpRequest();
+                xhr.open('GET', apiUrl, true);
+                xhr.timeout = 10000; // 10 second timeout
+                
+                xhr.onload = function() {
+                    console.log('XHR status:', xhr.status);
+                    if (xhr.status === 200) {
+                        try {
+                            var data = JSON.parse(xhr.responseText);
+                            console.log('XHR success, data:', data);
+                            renderSponsors(data, container);
+                        } catch(e) {
+                            console.error('JSON parse error:', e);
+                            container.innerHTML = '<div class="col-12 text-center"><p style="color: #c62828;">Error parsing response.</p></div>';
+                        }
+                    } else {
+                        console.error('XHR failed with status:', xhr.status);
+                        container.innerHTML = '<div class="col-12 text-center"><p style="color: #c62828;">Failed to load sponsors (Status: ' + xhr.status + ').</p></div>';
+                    }
+                };
+                
+                xhr.onerror = function() {
+                    console.error('XHR network error');
+                    container.innerHTML = '<div class="col-12 text-center"><p style="color: #c62828;">Network error. Check console for details.</p></div>';
+                };
+                
+                xhr.ontimeout = function() {
+                    console.error('XHR timeout');
+                    container.innerHTML = '<div class="col-12 text-center"><p style="color: #c62828;">Request timeout. Please refresh.</p></div>';
+                };
+                
+                xhr.send();
+            }
+            
+            // Run immediately and on DOM ready
+            loadAndRender();
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', function() {
+                    if (attempts < maxAttempts) {
+                        loadAndRender();
+                    }
+                });
+            }
+            setTimeout(function() {
+                if (attempts < maxAttempts) {
+                    loadAndRender();
+                }
+            }, 1000);
+        })();
+        </script>
+
         <footer>
             <div class="container">
                 <p>Mischief Managed &copy; 2025 Hogwarts Hackathon</p>
                 <small>"I solemnly swear that I am up to no good code."</small>
-                <div class="edu-rays-section">
-                    <p class="edu-rays-label">Organized by</p>
-                    <img src="assets/edu-rays.png" alt="Edu-Rays" class="edu-rays-logo">
-                    <span class="sponsor-name">Edu-Rays</span>
-                </div>
-                <div class="sponsor-section">
-                    <p class="sponsor-label" style="font-family: 'Cinzel Decorative'; color: #777; font-size: 0.8rem; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;">Sponsored by</p>
-                    <img src="assets/mmm.jpg" alt="MEG Multi Media" class="sponsor-logo">
-                    <span class="sponsor-name">MEG Multi Media</span>
-                </div>
             </div>
         </footer>
     </div>
@@ -798,7 +964,7 @@
                     });
             });
         }
-
+        
         // Check registration toggle status
         async function checkRegistrationToggle() {
             try {
@@ -829,13 +995,163 @@
             }
         }
         
-        // Check on page load
-        checkLoginToggle();
-        checkRegistrationToggle();
+        // Load sponsors dynamically
+        async function loadSponsors() {
+            console.log('=== loadSponsors() called ==='); // Debug log
+            try {
+                console.log('Fetching sponsors from /api/sponsors...'); // Debug log
+                const response = await fetchWithTimeout('/api/sponsors', {
+                    method: 'GET',
+                    timeout: 10000
+                });
+                
+                console.log('Response status:', response.status, response.statusText); // Debug log
+                
+                if (!response.ok) {
+                    console.error('Failed to fetch sponsors:', response.status, response.statusText);
+                    const container = document.getElementById('sponsorsContainer');
+                    if (container) {
+                        container.innerHTML = '<div class="col-12 text-center"><p style="color: #c62828; font-family: \'Crimson Text\';">Failed to load sponsors. Please refresh the page.</p></div>';
+                    }
+                    return;
+                }
+                
+                const data = await response.json();
+                console.log('Sponsors data received:', JSON.stringify(data, null, 2)); // Debug log
+                const container = document.getElementById('sponsorsContainer');
+                
+                if (!container) {
+                    console.error('ERROR: Sponsors container element not found!');
+                    console.error('Looking for element with id="sponsorsContainer"');
+                    return;
+                }
+                
+                console.log('Container found:', container); // Debug log
+                console.log('Container parent:', container.parentElement); // Debug log
+                
+                if (data.success && data.sponsors && data.sponsors.length > 0) {
+                    console.log(`Loading ${data.sponsors.length} sponsors`); // Debug log
+                    container.innerHTML = ''; // Clear any existing content
+                    container.style.display = 'block'; // Ensure container is visible
+                    container.style.visibility = 'visible'; // Ensure container is visible
+                    container.style.opacity = '1'; // Ensure container is visible
+                    
+                    // Test: Add a simple test div first
+                    const testDiv = document.createElement('div');
+                    testDiv.className = 'col-12';
+                    testDiv.innerHTML = '<p style="color: #0f0; font-weight: bold;">TEST: Sponsors loading...</p>';
+                    container.appendChild(testDiv);
+                    console.log('Test div added to container'); // Debug log
+                    
+                    data.sponsors.forEach((sponsor, index) => {
+                        console.log(`Processing sponsor ${index + 1}/${data.sponsors.length}:`, sponsor.name);
+                        const col = document.createElement('div');
+                        col.className = 'col-lg-3 col-md-4 col-sm-6';
+                        
+                        const card = document.createElement('div');
+                        card.className = 'sponsor-card';
+                        
+                        if (sponsor.redirect_url) {
+                            card.style.cursor = 'pointer';
+                            card.onclick = () => window.open(sponsor.redirect_url, '_blank');
+                        }
+                        
+                        const img = document.createElement('img');
+                        // Handle logo path - if it starts with 'uploads/', use API endpoint, otherwise use as-is
+                        let logoUrl = sponsor.logo_path || '';
+                        if (logoUrl.startsWith('uploads/')) {
+                            // Convert uploads/sponsors/filename.jpg to /api/uploads/sponsors/filename.jpg
+                            logoUrl = '/api/' + logoUrl;
+                        } else if (logoUrl && !logoUrl.startsWith('http://') && !logoUrl.startsWith('https://') && !logoUrl.startsWith('/')) {
+                            // If it's a relative path without uploads/, assume it's in assets
+                            logoUrl = logoUrl.startsWith('assets/') ? logoUrl : 'assets/' + logoUrl;
+                        }
+                        img.src = logoUrl;
+                        img.alt = sponsor.name;
+                        img.loading = 'lazy'; // Lazy load images
+                        console.log('Loading sponsor:', sponsor.name, 'Logo URL:', logoUrl); // Debug log
+                        img.onerror = function() {
+                            console.error('Failed to load logo for:', sponsor.name, 'URL:', logoUrl);
+                            this.style.display = 'none';
+                            const nameDiv = document.createElement('div');
+                            nameDiv.className = 'sponsor-name';
+                            nameDiv.textContent = sponsor.name;
+                            card.appendChild(nameDiv);
+                        };
+                        
+                        const nameDiv = document.createElement('div');
+                        nameDiv.className = 'sponsor-name';
+                        nameDiv.textContent = sponsor.name;
+                        
+                        card.appendChild(img);
+                        card.appendChild(nameDiv);
+                        col.appendChild(card);
+                        container.appendChild(col);
+                        console.log(`Added sponsor card ${index + 1} to DOM`); // Debug log
+                    });
+                    
+                    // Remove test div if it exists
+                    const testDivs = container.querySelectorAll('.col-12 p[style*="TEST"]');
+                    testDivs.forEach(div => {
+                        if (div.parentElement) {
+                            div.parentElement.remove();
+                        }
+                    });
+                    
+                    console.log('All sponsors loaded successfully. Container children:', container.children.length); // Debug log
+                    console.log('Container HTML length:', container.innerHTML.length); // Debug log
+                    const computedStyle = window.getComputedStyle(container);
+                    console.log('Container CSS - display:', computedStyle.display, 'visibility:', computedStyle.visibility, 'opacity:', computedStyle.opacity); // Debug log
+                } else {
+                    console.log('No sponsors found or empty array. Data:', JSON.stringify(data, null, 2)); // Debug log
+                    container.innerHTML = '<div class="col-12 text-center"><p style="color: #777; font-family: \'Crimson Text\';">No sponsors yet.</p></div>';
+                }
+            } catch (error) {
+                console.error('ERROR loading sponsors:', error);
+                console.error('Error stack:', error.stack);
+                const container = document.getElementById('sponsorsContainer');
+                if (container) {
+                    container.innerHTML = '<div class="col-12 text-center"><p style="color: #c62828; font-family: \'Crimson Text\';">Error loading sponsors: ' + error.message + '</p></div>';
+                } else {
+                    console.error('Container not found even in error handler!');
+                }
+            }
+            console.log('=== loadSponsors() finished ==='); // Debug log
+        }
+
+        // Initialize on page load
+        function initializePage() {
+            console.log('=== initializePage() called ==='); // Debug log
+            
+            // Verify container exists
+            const testContainer = document.getElementById('sponsorsContainer');
+            console.log('Sponsors container check:', testContainer ? 'FOUND' : 'NOT FOUND'); // Debug log
+            
+            checkLoginToggle();
+            checkRegistrationToggle();
+            // loadSponsors(); // Disabled - using inline script in sponsors section instead
         
         // Check every 5 seconds to update if admin changes it
         setInterval(checkLoginToggle, 5000);
         setInterval(checkRegistrationToggle, 5000);
+            
+            // Show mobile notice on mobile devices
+            checkMobileDevice();
+            window.addEventListener('resize', checkMobileDevice);
+        }
+        
+        // Run when DOM is ready
+        console.log('Script loading, document.readyState:', document.readyState); // Debug log
+        if (document.readyState === 'loading') {
+            console.log('Adding DOMContentLoaded listener'); // Debug log
+            document.addEventListener('DOMContentLoaded', initializePage);
+        } else {
+            // DOM is already loaded
+            console.log('DOM already loaded, calling initializePage immediately'); // Debug log
+            initializePage();
+        }
+        
+        // Fallback removed - using inline script in sponsors section
         
         // Show mobile notice on mobile devices
         function checkMobileDevice() {
@@ -845,10 +1161,6 @@
                 mobileNotice.style.display = isMobile ? 'block' : 'none';
             }
         }
-        
-        // Check on load and resize
-        checkMobileDevice();
-        window.addEventListener('resize', checkMobileDevice);
     </script>
 </body>
 </html>

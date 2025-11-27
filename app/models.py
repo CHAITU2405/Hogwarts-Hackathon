@@ -230,3 +230,23 @@ class Review(db.Model):
                 'criteria': []
             }
 
+class Sponsor(db.Model):
+    __tablename__ = 'sponsors'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False)
+    logo_path = db.Column(db.String(500), nullable=False)  # Path to logo image
+    redirect_url = db.Column(db.String(500), nullable=True)  # Optional redirect link
+    display_order = db.Column(db.Integer, default=0)  # For ordering sponsors
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'logo_path': self.logo_path,
+            'redirect_url': self.redirect_url or '',
+            'display_order': self.display_order,
+            'created_at': self.created_at.isoformat() if self.created_at else None
+        }
+

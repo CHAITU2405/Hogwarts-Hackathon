@@ -3,7 +3,7 @@ from werkzeug.utils import secure_filename
 from werkzeug.security import check_password_hash, generate_password_hash
 import os
 from pathlib import Path
-from app.models import db, Team, Member, ProblemStatement, AdminSettings, Admin, TeamLogin, Review
+from app.models import db, Team, Member, ProblemStatement, AdminSettings, Admin, TeamLogin, Review, Sponsor
 from app.config import Config
 from datetime import datetime
 import io
@@ -22,8 +22,13 @@ api_bp = Blueprint('api', __name__, url_prefix='/api')
 # Add CORS headers
 @api_bp.after_request
 def after_request(response):
-    response.headers.add('Access-Control-Allow-Origin', '*')
-    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    origin = request.headers.get('Origin')
+    if origin:
+        response.headers.add('Access-Control-Allow-Origin', origin)
+        response.headers.add('Access-Control-Allow-Credentials', 'true')
+    else:
+        response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Admin-Auth')
     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
     return response
 
@@ -460,13 +465,25 @@ def update_team_repo():
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
-@api_bp.route('/uploads/<filename>', methods=['GET'])
-def uploaded_file(filename):
+@api_bp.route('/uploads/<path:filepath>', methods=['GET'])
+def uploaded_file(filepath):
+    """Serve uploaded files including files in subdirectories (e.g., uploads/sponsors/logo.jpg)"""
     try:
-        upload_folder = str(Config.UPLOAD_FOLDER)
-        return send_from_directory(upload_folder, filename)
-    except FileNotFoundError:
-        return jsonify({'error': 'File not found'}), 404
+        upload_folder = Config.UPLOAD_FOLDER
+        file_path = upload_folder / filepath
+        
+        # Security check: ensure file is within upload folder
+        try:
+            file_path.resolve().relative_to(upload_folder.resolve())
+        except ValueError:
+            return jsonify({'error': 'Invalid file path'}), 403
+        
+        if file_path.exists() and file_path.is_file():
+            return send_file(str(file_path))
+        else:
+            return jsonify({'error': 'File not found'}), 404
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 # ============ ADMIN ROUTES ============
 
@@ -832,6 +849,9 @@ def login():
         if is_admin or (username.lower() == 'harry potter' and password == 'hogwarts school'):
             # Admin credentials
             if username.lower() == 'harry potter' and password == 'hogwarts school':
+                # Set admin session
+                session['is_admin'] = True
+                session['admin_username'] = 'Harry Potter'
                 return jsonify({
                     'success': True,
                     'message': 'Admin login successful',
@@ -1614,6 +1634,127 @@ def export_review_marks():
             download_name='review_marks.xlsx'
         )
         
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# Sponsor Management Endpoints
+@api_bp.route('/admin/sponsors', methods=['GET'])
+def get_sponsors():
+    """Get all sponsors"""
+    try:
+        sponsors = Sponsor.query.order_by(Sponsor.display_order, Sponsor.created_at).all()
+        return jsonify({
+            'success': True,
+            'sponsors': [sponsor.to_dict() for sponsor in sponsors]
+        }), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@api_bp.route('/admin/sponsors', methods=['POST'])
+def add_sponsor():
+    """Add a new sponsor (admin only)"""
+    try:
+        # Check if admin is logged in - check both session and request header as fallback
+        is_admin_session = session.get('is_admin', False)
+        # Also check for admin header (for cases where session cookies aren't working)
+        admin_header = request.headers.get('X-Admin-Auth', '').lower() == 'true'
+        
+        if not is_admin_session and not admin_header:
+            # Debug: log session info
+            print(f"Session check failed. Session keys: {list(session.keys())}, is_admin: {is_admin_session}, header: {admin_header}")
+            return jsonify({'error': 'Unauthorized. Please log in as admin first.'}), 401
+        
+        # Get form data (for file uploads, use form data, not JSON)
+        name = request.form.get('name', '').strip()
+        redirect_url = request.form.get('redirect_url', '').strip()
+        display_order = int(request.form.get('display_order', 0) or 0)
+        
+        if not name:
+            return jsonify({'error': 'Sponsor name is required'}), 400
+        
+        # Handle file upload - logo is required as file
+        logo_path = None
+        if 'logo' in request.files:
+            file = request.files['logo']
+            if file and file.filename and allowed_file(file.filename):
+                filename = secure_filename(file.filename)
+                # Add timestamp to avoid conflicts
+                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_')
+                filename = timestamp + filename
+                sponsors_dir = Config.UPLOAD_FOLDER / 'sponsors'
+                sponsors_dir.mkdir(parents=True, exist_ok=True)
+                file_path = sponsors_dir / filename
+                file.save(str(file_path))
+                logo_path = f'uploads/sponsors/{filename}'
+            else:
+                return jsonify({'error': 'Invalid logo file. Please upload a valid image file (PNG, JPG, JPEG, GIF)'}), 400
+        else:
+            return jsonify({'error': 'Logo image file is required'}), 400
+        
+        if not logo_path:
+            return jsonify({'error': 'Failed to upload logo file'}), 400
+        
+        sponsor = Sponsor(
+            name=name,
+            logo_path=logo_path,
+            redirect_url=redirect_url if redirect_url else None,
+            display_order=display_order
+        )
+        
+        db.session.add(sponsor)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Sponsor added successfully',
+            'sponsor': sponsor.to_dict()
+        }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        import traceback
+        print(f"Error adding sponsor: {e}")
+        print(traceback.format_exc())
+        return jsonify({'error': str(e)}), 500
+
+@api_bp.route('/admin/sponsors/<int:sponsor_id>', methods=['DELETE'])
+def delete_sponsor(sponsor_id):
+    """Delete a sponsor (admin only)"""
+    try:
+        # Check if admin is logged in
+        if not session.get('is_admin'):
+            return jsonify({'error': 'Unauthorized'}), 401
+        
+        sponsor = Sponsor.query.get_or_404(sponsor_id)
+        
+        # Delete logo file if it exists
+        if sponsor.logo_path and os.path.exists(sponsor.logo_path):
+            try:
+                os.remove(sponsor.logo_path)
+            except:
+                pass
+        
+        db.session.delete(sponsor)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Sponsor deleted successfully'
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@api_bp.route('/sponsors', methods=['GET'])
+def get_public_sponsors():
+    """Get all sponsors for public display"""
+    try:
+        sponsors = Sponsor.query.order_by(Sponsor.display_order, Sponsor.created_at).all()
+        return jsonify({
+            'success': True,
+            'sponsors': [sponsor.to_dict() for sponsor in sponsors]
+        }), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

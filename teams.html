@@ -219,15 +219,6 @@ body{background:radial-gradient(circle at 50% 30%, #1e1e2c 0%, #0a0a0d 80%) fixe
 
 footer{padding:40px;text-align:center;border-top:1px solid var(--gold);background:#0a0a0a;color:#777;margin-top:100px;}
 footer .container { position: relative; }
-.sponsor-section { position: absolute; right: 0; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: center; gap: 5px; }
-.sponsor-label { font-family: 'Cinzel Decorative'; color: #777; font-size: 0.8rem; margin: 0; text-transform: uppercase; letter-spacing: 1px; }
-.sponsor-logo { height: 40px; width: auto; }
-.edu-rays-section { position: absolute; left: 0; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: center; gap: 5px; }
-.edu-rays-label { font-family: 'Cinzel Decorative'; color: #777; font-size: 0.8rem; margin: 0; text-transform: uppercase; letter-spacing: 1px; }
-.edu-rays-logo { height: 40px; width: auto; }
-@media (max-width: 768px) {
-    .sponsor-section, .edu-rays-section { position: static; transform: none; margin: 15px 0; }
-}
 .sponsor-name { font-family: 'Cinzel Decorative'; color: #777; font-size: 0.9rem; }
 @media (max-width: 768px) {
   .sponsor-section { position: static; transform: none; margin-top: 20px; justify-content: center; }
@@ -336,16 +327,6 @@ footer .container { position: relative; }
   <div class="container">
     <p>Mischief Managed &copy; 2025 Hogwarts Hackathon</p>
     <small>"I solemnly swear this code is up to good."</small>
-    <div class="edu-rays-section">
-      <p class="edu-rays-label">Organized by</p>
-      <img src="assets/edu-rays.png" alt="Edu-Rays" class="edu-rays-logo">
-      <span class="sponsor-name">Edu-Rays</span>
-    </div>
-    <div class="sponsor-section">
-      <p class="sponsor-label">Sponsored by</p>
-      <img src="assets/mmm.jpg" alt="MEG Multi Media" class="sponsor-logo">
-      <span class="sponsor-name">MEG Multi Media</span>
-    </div>
   </div>
 </footer>
 
