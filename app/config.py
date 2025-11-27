@@ -20,6 +20,12 @@ class Config:
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf'}
     
+    # Email configuration - use environment variables for security
+    SENDER_EMAIL = os.environ.get('SENDER_EMAIL') or 'hogwartshackathon@gmail.com'
+    SENDER_PASSWORD = os.environ.get('SENDER_PASSWORD') or ''
+    SMTP_SERVER = os.environ.get('SMTP_SERVER') or 'smtp.gmail.com'
+    SMTP_PORT = int(os.environ.get('SMTP_PORT') or '587')
+    
     # Ensure directories exist
     @staticmethod
     def init_app(app):

@@ -41,16 +41,23 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in Config.ALLOWED_EXTENSIONS
 
-# Email configuration
-SENDER_EMAIL = "hogwartshackathon@gmail.com"
-SENDER_PASSWORD = "cszf wruj ejlg exgu"  # Gmail App Password
-
 def send_credentials_email(receiver_email, team_name, username, password, team_lead_name):
     """Send login credentials to team lead via email"""
     try:
+        # Get email configuration from Config
+        sender_email = Config.SENDER_EMAIL
+        sender_password = Config.SENDER_PASSWORD
+        smtp_server = Config.SMTP_SERVER
+        smtp_port = Config.SMTP_PORT
+        
+        # Check if email credentials are configured
+        if not sender_email or not sender_password:
+            print("Email credentials not configured - cannot send email")
+            return False
+        
         # Create message
         msg = MIMEMultipart()
-        msg["From"] = SENDER_EMAIL
+        msg["From"] = sender_email
         msg["To"] = receiver_email
         msg["Subject"] = f"Welcome to Hogwarts Hackathon - Your Team Login Credentials"
         
@@ -80,16 +87,35 @@ Hogwarts Hackathon Team
         
         msg.attach(MIMEText(body, "plain"))
         
-        # Sending Email
-        server = smtplib.SMTP("smtp.gmail.com", 587)
+        # Sending Email with timeout
+        import socket
+        socket.setdefaulttimeout(10)  # 10 second timeout for SMTP operations
+        
+        server = smtplib.SMTP(smtp_server, smtp_port, timeout=10)
         server.starttls()
-        server.login(SENDER_EMAIL, SENDER_PASSWORD)
-        server.sendmail(SENDER_EMAIL, receiver_email, msg.as_string())
+        server.login(sender_email, sender_password)
+        server.sendmail(sender_email, receiver_email, msg.as_string())
         server.quit()
         
+        print(f"Email sent successfully to {receiver_email}")
         return True
+    except smtplib.SMTPAuthenticationError as e:
+        print(f"SMTP Authentication Error: {e}")
+        print("Check if SENDER_EMAIL and SENDER_PASSWORD are correct")
+        return False
+    except smtplib.SMTPConnectError as e:
+        print(f"SMTP Connection Error: {e}")
+        print(f"Could not connect to {Config.SMTP_SERVER}:{Config.SMTP_PORT}")
+        print("Render may be blocking SMTP ports. Consider using a service like SendGrid or Mailgun.")
+        return False
+    except socket.timeout as e:
+        print(f"SMTP Timeout Error: {e}")
+        print("SMTP connection timed out - Render may be blocking or network issue")
+        return False
     except Exception as e:
+        import traceback
         print(f"Error sending email: {e}")
+        print(f"Traceback: {traceback.format_exc()}")
         return False
 
 @api_bp.route('/register', methods=['POST'])
@@ -356,9 +382,8 @@ def approve_team(team_id):
         email_sent = False
         email_error = None
         try:
-            # Only try to send email if email credentials are configured
-            from app.config import Config
-            if hasattr(Config, 'SENDER_EMAIL') and Config.SENDER_EMAIL and hasattr(Config, 'SENDER_PASSWORD') and Config.SENDER_PASSWORD:
+            # Check if email credentials are configured
+            if Config.SENDER_EMAIL and Config.SENDER_PASSWORD:
                 email_sent = send_credentials_email(
                     receiver_email=team_lead.email,
                     team_name=team.team_name,
@@ -366,8 +391,11 @@ def approve_team(team_id):
                     password=team.utr_transaction_id,
                     team_lead_name=team_lead.name
                 )
+                if not email_sent:
+                    email_error = "Email sending failed - check server logs for details"
             else:
                 print("Email credentials not configured - skipping email send")
+                email_error = "Email credentials not configured in environment variables"
         except Exception as e:
             email_error = str(e)
             print(f"Email sending failed (non-critical): {email_error}")

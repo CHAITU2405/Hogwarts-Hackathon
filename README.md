@@ -76,10 +76,50 @@ SQLite database is stored in `instance/hogwarts_hackathon.db`
 └── README.md            # This file
 ```
 
+## Email Configuration
+
+The application sends email notifications when teams are approved. To enable email functionality:
+
+### Environment Variables
+
+Set the following environment variables in your Render dashboard (or `.env` file for local development):
+
+- `SENDER_EMAIL`: Your Gmail address (e.g., `hogwartshackathon@gmail.com`)
+- `SENDER_PASSWORD`: Gmail App Password (not your regular password)
+- `SMTP_SERVER`: SMTP server (default: `smtp.gmail.com`)
+- `SMTP_PORT`: SMTP port (default: `587`)
+
+### Setting up Gmail App Password
+
+1. Go to your Google Account settings
+2. Enable 2-Step Verification
+3. Go to "App passwords" section
+4. Generate a new app password for "Mail"
+5. Use this 16-character password as `SENDER_PASSWORD`
+
+### Render-Specific Notes
+
+**Important**: Render may block SMTP port 587. If emails are not sending on Render:
+
+1. **Check Render logs** for SMTP connection errors
+2. **Alternative solutions**:
+   - Use a service like SendGrid, Mailgun, or AWS SES
+   - Update `SMTP_SERVER` and `SMTP_PORT` to use these services
+   - Or use Render's built-in email service if available
+
+3. **If SMTP is blocked**, the application will still work - team approval will succeed, but emails won't be sent. Check the server logs for email errors.
+
+### Testing Email
+
+- If email credentials are not set, the app will skip email sending (non-critical)
+- Check server logs for email sending status
+- Email failures won't prevent team approval
+
 ## Notes
 
 - The frontend files (HTML, CSS, assets) remain unchanged
 - Payment screenshots are stored in the `uploads/` directory
 - Team names must be unique
 - Email addresses must be unique across all members
+- Email sending is optional - team approval works even if email fails
 
