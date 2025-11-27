@@ -121,6 +121,13 @@
             padding-bottom: 0px; 
             overflow: hidden; 
         }
+        
+        @media (max-width: 768px) {
+            .timeline-container {
+                overflow: visible; /* Allow dots to be visible outside container on mobile */
+                padding-left: 0; /* Remove any padding that might affect positioning */
+            }
+        }
 
         /* --- RAILWAY TRACKS --- */
         .timeline-track {
@@ -289,6 +296,7 @@
             transition: all 0.4s ease;
         }
         
+        
         #last-stop {
             top: 50%;
             transform: translate(-50%, -50%);
@@ -349,24 +357,48 @@
             .timeline-track, .footsteps-layer { 
                 left: 30px; 
                 width: 30px;
+                transform: translateX(0);
             }
-            .timeline-dot { 
-                left: 30px; 
-                transform: translateX(-50%);
-            }
-            #last-stop {
-                left: 30px;
-                transform: translate(-50%, -50%);
-            }
-            #hogwarts-express { 
-                left: 30px; 
-                width: 40px; 
-                height: 40px;
-                font-size: 1.2rem;
-            }
+            /* Track center is at 45px from container (30px + 15px)
+               Dots are absolutely positioned within .timeline-row
+               Row has padding-left: 70px, but absolute positioning is relative to padding box
+               So left: 0 would be at 70px from container
+               To get to 45px from container: left = 45px - 70px = -25px
+               But we need to ensure dots are visible, so position them correctly
+            */
             .timeline-row, .timeline-row.right { 
                 flex-direction: column; 
                 padding-left: 70px; 
+                position: relative;
+                overflow: visible; /* Ensure dots are visible even if positioned outside padding */
+            }
+            /* Position dots to align with track center
+               Track center: 45px from container (30px + 15px)
+               Row has padding-left: 70px
+               Absolute positioning relative to padding box: left: 0 = 70px from container
+               To align with track center at 45px: left = 45px - 70px = -25px
+            */
+            .timeline-dot { 
+                left: -35px; 
+                transform: translateX(-50%);
+                width: 20px;
+                height: 20px;
+                z-index: 15;
+            }
+            #last-stop {
+                left: -35px;
+                transform: translate(-50%, -50%);
+                width: 20px;
+                height: 20px;
+                z-index: 15;
+            }
+            /* Center train on the track - train is positioned relative to container */
+            #hogwarts-express { 
+                left: 45px; 
+                width: 36px; 
+                height: 36px;
+                font-size: 1.1rem;
+                transform: translate(-50%, -50%);
             }
             .timeline-content { width: 100%; }
             .destination-container { padding-left: 30px; }
@@ -802,7 +834,8 @@
             // move train using transform (better performance)
             const isMobile = window.matchMedia('(max-width: 768px)').matches;
             if (isMobile) {
-                train.style.transform = `translateX(-50%) translateY(${progressPx}px)`;
+                // On mobile, train is already centered at 45px, so use -50% for X and add Y offset
+                train.style.transform = `translate(-50%, ${progressPx}px)`;
             } else {
                 train.style.transform = `translate(-50%, ${progressPx}px)`;
             }

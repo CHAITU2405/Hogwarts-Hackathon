@@ -405,6 +405,281 @@ function renderTeamsFromAPI(teams) {
     }).join('');
 }
 
+// Sponsors page integration (same pattern as teams)
+async function loadSponsorsFromAPI() {
+    const container = document.getElementById('sponsorsDisplay');
+    if (!container) return;
+    
+    try {
+        const apiUrl = '/api/sponsors';
+        console.log('Fetching sponsors from:', apiUrl);
+        
+        const response = await fetch(apiUrl, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            mode: 'cors',
+            credentials: 'same-origin'
+        });
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Response error:', response.status, errorText);
+            throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        console.log('Sponsors data received:', data);
+        
+        if (data.success && data.sponsors) {
+            renderSponsorsFromAPI(data.sponsors);
+        } else {
+            throw new Error(data.error || 'Failed to load sponsors');
+        }
+    } catch (error) {
+        console.error('Error loading sponsors:', error);
+        const container = document.getElementById('sponsorsDisplay');
+        if (container) {
+            container.innerHTML = '<div class="col-12 text-center"><p style="color: #ef5350; font-family: \'Crimson Text\';">Error loading sponsors. Please refresh the page.</p></div>';
+        }
+    }
+}
+
+function renderSponsorsFromAPI(sponsors) {
+    const container = document.getElementById('sponsorsDisplay');
+    if (!container) {
+        console.error('renderSponsorsFromAPI: Container not found!');
+        return;
+    }
+    
+    console.log('renderSponsorsFromAPI: Rendering', sponsors.length, 'sponsors');
+    
+    // Show message if no sponsors
+    if (!sponsors || sponsors.length === 0) {
+        container.innerHTML = '<div class="col-12 text-center"><p style="color: #777; font-family: \'Crimson Text\';">No sponsors yet.</p></div>';
+        return;
+    }
+    
+    const html = sponsors.map(sponsor => {
+        // Handle logo path
+        let logoUrl = sponsor.logo_path || '';
+        if (logoUrl.startsWith('uploads/')) {
+            logoUrl = '/api/' + logoUrl;
+        } else if (logoUrl && !logoUrl.startsWith('http://') && !logoUrl.startsWith('https://') && !logoUrl.startsWith('/')) {
+            logoUrl = logoUrl.startsWith('assets/') ? logoUrl : 'assets/' + logoUrl;
+        }
+        
+        // Build onclick handler if redirect_url exists
+        const onclickAttr = sponsor.redirect_url 
+            ? `onclick="window.open('${sponsor.redirect_url}', '_blank')" style="cursor: pointer;"`
+            : '';
+        
+        // Simple layout: just photo and name
+        return `
+            <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                <div class="sponsor-card" ${onclickAttr}>
+                    <img src="${logoUrl}" 
+                         alt="${sponsor.name || 'Sponsor'}" 
+                         style="max-width: 100%; max-height: 100px; object-fit: contain; margin-bottom: 15px;" 
+                         loading="lazy"
+                         onerror="this.style.display='none';">
+                    <div class="sponsor-name" style="font-family: 'Cinzel Decorative'; color: var(--gold); font-size: 1rem;">${sponsor.name || 'Sponsor'}</div>
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    console.log('renderSponsorsFromAPI: Setting innerHTML, length:', html.length);
+    container.innerHTML = html;
+    
+    // CRITICAL: Force container to be visible - MULTIPLE METHODS
+    // Method 1: Direct style properties
+    container.style.display = 'flex';
+    container.style.visibility = 'visible';
+    container.style.opacity = '1';
+    
+    // Method 2: Use setProperty with !important
+    container.style.setProperty('display', 'flex', 'important');
+    container.style.setProperty('visibility', 'visible', 'important');
+    container.style.setProperty('opacity', '1', 'important');
+    
+    // Method 3: Remove any classes that might hide it
+    container.classList.remove('d-none', 'hidden', 'invisible');
+    container.classList.add('d-flex');
+    
+    // Method 4: Force via setTimeout to override any delayed styles
+    setTimeout(() => {
+        container.style.setProperty('display', 'flex', 'important');
+        container.style.setProperty('visibility', 'visible', 'important');
+        container.style.setProperty('opacity', '1', 'important');
+        
+        const computedDisplay = window.getComputedStyle(container).display;
+        console.log('renderSponsorsFromAPI: Container display after timeout:', computedDisplay);
+        
+        if (computedDisplay === 'none') {
+            console.error('renderSponsorsFromAPI: STILL HIDDEN after all attempts!');
+            
+            // Debug: Log all computed styles
+            const computedStyles = window.getComputedStyle(container);
+            console.error('Computed styles:', {
+                display: computedStyles.display,
+                visibility: computedStyles.visibility,
+                opacity: computedStyles.opacity,
+                position: computedStyles.position,
+                width: computedStyles.width,
+                height: computedStyles.height
+            });
+            
+            // Check parent visibility
+            const parent = container.parentElement;
+            if (parent) {
+                const parentStyles = window.getComputedStyle(parent);
+                console.error('Parent styles:', {
+                    display: parentStyles.display,
+                    visibility: parentStyles.visibility,
+                    opacity: parentStyles.opacity
+                });
+            }
+            
+            // Nuclear option: Remove and re-add the element
+            const parentEl = container.parentElement;
+            const nextSibling = container.nextSibling;
+            const newContainer = container.cloneNode(false);
+            newContainer.id = 'sponsorsContainer';
+            newContainer.className = container.className;
+            newContainer.innerHTML = container.innerHTML;
+            newContainer.style.setProperty('display', 'flex', 'important');
+            newContainer.style.setProperty('visibility', 'visible', 'important');
+            newContainer.style.setProperty('opacity', '1', 'important');
+            
+            if (parentEl) {
+                container.remove();
+                if (nextSibling) {
+                    parentEl.insertBefore(newContainer, nextSibling);
+                } else {
+                    parentEl.appendChild(newContainer);
+                }
+                console.log('renderSponsorsFromAPI: Replaced container element');
+            }
+            
+            // Last resort: create a style element with maximum specificity
+            let styleEl = document.getElementById('forceSponsorsVisible');
+            if (!styleEl) {
+                styleEl = document.createElement('style');
+                styleEl.id = 'forceSponsorsVisible';
+                styleEl.textContent = `
+                    #sponsorsDisplay,
+                    #sponsorsDisplay.row,
+                    div#sponsorsDisplay,
+                    div#sponsorsDisplay.row,
+                    div.row#sponsorsDisplay,
+                    section#sponsors #sponsorsDisplay,
+                    section#sponsors div#sponsorsDisplay,
+                    section#sponsors div#sponsorsDisplay.row {
+                        display: flex !important;
+                        visibility: visible !important;
+                        opacity: 1 !important;
+                    }
+                `;
+                document.head.appendChild(styleEl);
+            }
+        }
+    }, 100);
+    
+    console.log('renderSponsorsFromAPI: After setting, container children:', container.children.length);
+    
+    // Check all parent elements for visibility issues
+    let currentEl = container;
+    let parentChain = [];
+    while (currentEl && currentEl !== document.body) {
+        const styles = window.getComputedStyle(currentEl);
+        parentChain.push({
+            tag: currentEl.tagName,
+            id: currentEl.id,
+            classes: currentEl.className,
+            display: styles.display,
+            visibility: styles.visibility,
+            opacity: styles.opacity
+        });
+        currentEl = currentEl.parentElement;
+    }
+    console.log('renderSponsorsFromAPI: Parent chain visibility:', parentChain);
+    
+    const computedDisplay = window.getComputedStyle(container).display;
+    console.log('renderSponsorsFromAPI: Container display after forcing:', computedDisplay);
+    
+    // Method 5: Ensure parent section is visible
+    const sponsorsSection = container.closest('#sponsors, .house-section');
+    if (sponsorsSection) {
+        sponsorsSection.style.setProperty('display', 'block', 'important');
+        sponsorsSection.style.setProperty('visibility', 'visible', 'important');
+        sponsorsSection.style.setProperty('opacity', '1', 'important');
+    }
+    
+    // Method 6: Use MutationObserver to watch for style changes and force visibility
+    const observer = new MutationObserver((mutations) => {
+        const currentDisplay = window.getComputedStyle(container).display;
+        if (currentDisplay === 'none') {
+            console.warn('renderSponsorsFromAPI: Detected display:none, forcing visibility');
+            container.style.setProperty('display', 'flex', 'important');
+            container.style.setProperty('visibility', 'visible', 'important');
+            container.style.setProperty('opacity', '1', 'important');
+            
+            // Also check parent
+            const parent = container.parentElement;
+            if (parent) {
+                const parentDisplay = window.getComputedStyle(parent).display;
+                if (parentDisplay === 'none') {
+                    parent.style.setProperty('display', 'block', 'important');
+                }
+            }
+        }
+    });
+    
+    observer.observe(container, {
+        attributes: true,
+        attributeFilter: ['style', 'class'],
+        childList: false,
+        subtree: false
+    });
+    
+    // Also observe parent
+    const parent = container.parentElement;
+    if (parent) {
+        observer.observe(parent, {
+            attributes: true,
+            attributeFilter: ['style', 'class'],
+            childList: false,
+            subtree: false
+        });
+    }
+    
+    // Store observer on container for cleanup if needed
+    container._sponsorObserver = observer;
+    
+    // Method 7: Periodic check to force visibility (every 500ms for 5 seconds)
+    let checkCount = 0;
+    const maxChecks = 10;
+    const forceInterval = setInterval(() => {
+        checkCount++;
+        const currentDisplay = window.getComputedStyle(container).display;
+        if (currentDisplay === 'none') {
+            console.warn(`renderSponsorsFromAPI: Periodic check ${checkCount}: Still hidden, forcing...`);
+            container.style.setProperty('display', 'flex', 'important');
+            container.style.setProperty('visibility', 'visible', 'important');
+            container.style.setProperty('opacity', '1', 'important');
+        } else {
+            clearInterval(forceInterval);
+            console.log('renderSponsorsFromAPI: Periodic checks stopped - container is visible');
+        }
+        
+        if (checkCount >= maxChecks) {
+            clearInterval(forceInterval);
+        }
+    }, 500);
+}
+
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     // Setup registration form if on registration page
@@ -426,6 +701,25 @@ document.addEventListener('DOMContentLoaded', function() {
         if (searchInput) {
             searchInput.addEventListener('input', loadTeamsFromAPI);
         }
+    }
+    
+    // Setup sponsors section if on main page
+    const sponsorsContainer = document.getElementById('sponsorsDisplay');
+    if (sponsorsContainer) {
+        console.log('Found sponsorsDisplay, loading sponsors...');
+        loadSponsorsFromAPI();
+    } else {
+        console.log('sponsorsDisplay not found on DOMContentLoaded, will try again...');
+        // Try again after a short delay in case DOM isn't fully ready
+        setTimeout(() => {
+            const retryContainer = document.getElementById('sponsorsDisplay');
+            if (retryContainer) {
+                console.log('Found sponsorsDisplay on retry, loading sponsors...');
+                loadSponsorsFromAPI();
+            } else {
+                console.error('sponsorsDisplay still not found after retry');
+            }
+        }, 100);
     }
 });
 
