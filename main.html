@@ -409,6 +409,11 @@
         <section id="home" class="hero-section">
             <div class="container">
                 <h1 class="harry-potter-title">Hogwarts<br>Hackathon</h1>
+                <div id="mobileNotice" style="display: none; margin: 15px 0; padding: 15px; background: rgba(212, 175, 55, 0.1); border: 1px solid var(--gold); border-radius: 8px; text-align: center;">
+                    <p style="color: var(--gold); font-style: italic; font-size: 1rem; margin: 0; font-family: 'Cinzel Decorative';">
+                        <i class="fas fa-laptop me-2"></i>For the best experience, please open this site on a laptop/desktop.
+                    </p>
+                </div>
                 <div id="registrationMessage" style="display: none; margin: 15px 0;">
                     <p style="color: var(--gold); font-style: italic; font-size: 1.1rem; margin: 0; font-family: 'Cinzel Decorative'; text-align: center;">Registrations are closed</p>
                 </div>
@@ -795,6 +800,19 @@
         // Check every 5 seconds to update if admin changes it
         setInterval(checkLoginToggle, 5000);
         setInterval(checkRegistrationToggle, 5000);
+        
+        // Show mobile notice on mobile devices
+        function checkMobileDevice() {
+            const mobileNotice = document.getElementById('mobileNotice');
+            if (mobileNotice) {
+                const isMobile = window.matchMedia('(max-width: 991px)').matches;
+                mobileNotice.style.display = isMobile ? 'block' : 'none';
+            }
+        }
+        
+        // Check on load and resize
+        checkMobileDevice();
+        window.addEventListener('resize', checkMobileDevice);
     </script>
 </body>
 </html>

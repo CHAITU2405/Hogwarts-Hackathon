@@ -52,6 +52,19 @@ function setupRegistrationForm() {
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
         
+        // Check if registration is enabled before allowing submission
+        try {
+            const statusResponse = await fetch('/api/admin/registration-toggle');
+            const statusData = await statusResponse.json();
+            if (statusData.success && !statusData.enabled) {
+                alert('Registrations are currently closed');
+                return;
+            }
+        } catch (error) {
+            console.error('Error checking registration status:', error);
+            // Continue with submission if check fails (fail open)
+        }
+        
         // Collect form data
         const teamName = document.getElementById('teamNameInput').value.trim();
         const house = document.getElementById('houseInput').value;

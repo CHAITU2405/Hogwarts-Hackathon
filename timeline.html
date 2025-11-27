@@ -346,12 +346,38 @@
         }
 
         @media (max-width: 768px) {
-            .timeline-track, .footsteps-layer, .timeline-dot, #hogwarts-express { left: 30px; }
-            .timeline-row, .timeline-row.right { flex-direction: column; padding-left: 70px; }
+            .timeline-track, .footsteps-layer { 
+                left: 30px; 
+                width: 30px;
+            }
+            .timeline-dot { 
+                left: 30px; 
+                transform: translateX(-50%);
+            }
+            #last-stop {
+                left: 30px;
+                transform: translate(-50%, -50%);
+            }
+            #hogwarts-express { 
+                left: 30px; 
+                width: 40px; 
+                height: 40px;
+                font-size: 1.2rem;
+            }
+            .timeline-row, .timeline-row.right { 
+                flex-direction: column; 
+                padding-left: 70px; 
+            }
             .timeline-content { width: 100%; }
             .destination-container { padding-left: 30px; }
             #wand { display: none !important; }
             body { cursor: auto; }
+            .page-title { font-size: 2.5rem !important; }
+            .page-subtitle { font-size: 1.5rem !important; }
+            .board-btn { 
+                font-size: 1.5rem; 
+                padding: 12px 30px; 
+            }
         }
         
         .navbar { background-color: rgba(10, 10, 10, 0.9); border-bottom: 1px solid rgba(212, 175, 55, 0.3); padding: 1rem 0; z-index: 100; backdrop-filter: blur(10px); }
@@ -774,7 +800,12 @@
             if (progressPx > maxDistance) progressPx = maxDistance;
 
             // move train using transform (better performance)
-            train.style.transform = `translate(-50%, ${progressPx}px)`;
+            const isMobile = window.matchMedia('(max-width: 768px)').matches;
+            if (isMobile) {
+                train.style.transform = `translateX(-50%) translateY(${progressPx}px)`;
+            } else {
+                train.style.transform = `translate(-50%, ${progressPx}px)`;
+            }
 
             // Determine which station the train is *currently at*.
             // We'll find the nearest dot and only mark it active when the train
