@@ -55,3 +55,7 @@ def create_app():
     
     return app
 
+# Expose app instance for gunicorn compatibility
+# This allows 'gunicorn app:app' to work
+app = create_app()
+
