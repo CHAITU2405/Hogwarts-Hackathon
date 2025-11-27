@@ -1236,10 +1236,8 @@
         // This ensures the ticket only shows after data is confirmed saved in database
         
         function closeTicket() {
-            const ticketOverlay = document.getElementById('ticket-overlay');
-            if (ticketOverlay) {
-                ticketOverlay.style.display = 'none';
-            }
+            // Redirect to great hall (main.html)
+            window.location.href = 'main.html';
         }
 
         // Terms and Conditions Modal
