@@ -375,10 +375,12 @@ def get_teams():
                     except:
                         pass
                     
-                    # Get college name safely
+                    # Get college name from team members (first member's college)
                     college = ''
                     try:
-                        college = getattr(team, 'college_name', None) or ''
+                        if team.members and len(team.members) > 0:
+                            first_member = team.members[0]
+                            college = getattr(first_member, 'college_name', None) or ''
                     except:
                         pass
                     

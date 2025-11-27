@@ -10,7 +10,6 @@ class Team(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     team_name = db.Column(db.String(200), nullable=False, unique=True)
     house = db.Column(db.String(50), nullable=False)
-    college_name = db.Column(db.String(200), nullable=True)
     team_size = db.Column(db.Integer, nullable=False)
     utr_transaction_id = db.Column(db.String(200), nullable=False)
     payment_proof_path = db.Column(db.String(500), nullable=True)
@@ -28,7 +27,6 @@ class Team(db.Model):
             'id': self.id,
             'team_name': self.team_name,
             'house': self.house,
-            'college_name': self.college_name or '',
             'team_size': self.team_size,
             'registered_at': self.registered_at.isoformat() if self.registered_at else None,
             'approval_status': self.approval_status,
@@ -40,12 +38,15 @@ class Team(db.Model):
         }
     
     def to_dict_summary(self):
-        # Safely get college_name - handle case where column might not exist
+        # Get college name from team members (first member's college or empty)
         college_name = ''
         try:
-            if hasattr(self, 'college_name'):
-                college_name = self.college_name or ''
-        except (AttributeError, KeyError):
+            if self.members and len(self.members) > 0:
+                # Get college from first member (leader)
+                first_member = self.members[0]
+                if hasattr(first_member, 'college_name') and first_member.college_name:
+                    college_name = first_member.college_name
+        except (AttributeError, KeyError, Exception):
             college_name = ''
         
         # Safely get members

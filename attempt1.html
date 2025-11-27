@@ -238,6 +238,13 @@
         .border-gryffindor { border-top: 4px solid #740001; } .border-slytherin { border-top: 4px solid #1a472a; } .border-ravenclaw { border-top: 4px solid #0e1a40; } .border-hufflepuff { border-top: 4px solid #ecb939; }
         h4 { font-family: 'Cinzel Decorative'; color: var(--gold); }
         footer { padding: 40px; text-align: center; border-top: 1px solid var(--gold); background: #0a0a0a; position: relative; z-index: 10; color: #777; }
+        footer .container { position: relative; }
+        .edu-rays-section { position: absolute; left: 0; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: center; gap: 5px; }
+        .edu-rays-label { font-family: 'Cinzel Decorative'; color: #777; font-size: 0.8rem; margin: 0; text-transform: uppercase; letter-spacing: 1px; }
+        .edu-rays-logo { height: 40px; width: auto; }
+        @media (max-width: 768px) {
+            .edu-rays-section { position: static; transform: none; margin: 15px 0; }
+        }
     </style>
 </head>
     <svg width="0" height="0" style="position: absolute;">
@@ -303,6 +310,11 @@
             <div class="container">
                 <p>Mischief Managed &copy; 2025 Hogwarts Hackathon</p>
                 <small>"I solemnly swear that I am up to no good code."</small>
+                <div class="edu-rays-section">
+                    <p class="edu-rays-label">Organized by</p>
+                    <img src="assets/edu-rays.png" alt="Edu-Rays" class="edu-rays-logo">
+                    <span style="font-family: 'Cinzel Decorative'; color: #777; font-size: 0.9rem;">Edu-Rays</span>
+                </div>
             </div>
         </footer>
     </div>
