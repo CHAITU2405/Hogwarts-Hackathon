@@ -17,6 +17,7 @@ class Team(db.Model):
     registered_at = db.Column(db.DateTime, default=datetime.utcnow)
     approval_status = db.Column(db.String(20), default='pending')  # pending, approved, rejected
     selected_problem_statement_id = db.Column(db.Integer, db.ForeignKey('problem_statements.id'), nullable=True)
+    git_repo_url = db.Column(db.String(500), nullable=True)  # GitHub/GitLab repository URL
     
     # Relationships
     members = db.relationship('Member', backref='team', lazy=True, cascade='all, delete-orphan')
@@ -34,6 +35,7 @@ class Team(db.Model):
             'utr_transaction_id': self.utr_transaction_id,
             'payment_proof_path': self.payment_proof_path,
             'selected_problem_statement_id': self.selected_problem_statement_id,
+            'git_repo_url': self.git_repo_url or '',
             'members': [member.to_dict() for member in self.members]
         }
     
@@ -59,7 +61,7 @@ class Team(db.Model):
             'name': self.team_name,
             'house': self.house,
             'members': members_list,
-            'projectUrl': '',  # Can be added later
+            'projectUrl': self.git_repo_url or '',  # Git repository URL
             'college': college_name,
             'description': f'A brave team from {self.house} house',
             'approval_status': self.approval_status

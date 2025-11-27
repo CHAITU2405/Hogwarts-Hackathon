@@ -312,6 +312,33 @@
                     <i class="fa-solid fa-ticket me-2"></i>Generate Ticket
                 </button>
             </div>
+            
+            <!-- Git Repository Link Form -->
+            <div style="max-width: 600px; margin: 40px auto 0; padding: 25px; background: rgba(20, 20, 20, 0.8); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 8px; backdrop-filter: blur(5px);">
+                <h3 style="font-family: 'Cinzel Decorative'; color: var(--gold); margin-bottom: 20px; text-align: center; font-size: 1.5rem;">
+                    <i class="fa-brands fa-github me-2"></i>Submit Your Repository
+                </h3>
+                <form id="gitRepoForm" style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                    <input 
+                        type="url" 
+                        id="gitRepoInput" 
+                        placeholder="https://github.com/username/repository" 
+                        style="flex: 1; min-width: 250px; padding: 12px 15px; background: rgba(255, 255, 255, 0.05); border: 1px solid #444; border-radius: 6px; color: #fff; font-family: 'Crimson Text'; font-size: 1rem; transition: 0.3s; outline: none;"
+                        onfocus="this.style.borderColor='var(--gold)'; this.style.boxShadow='0 0 10px rgba(212, 175, 55, 0.3)';"
+                        onblur="this.style.borderColor='#444'; this.style.boxShadow='none';"
+                    />
+                    <button 
+                        type="submit" 
+                        id="submitRepoBtn"
+                        style="padding: 12px 25px; background: var(--gold); border: 1px solid var(--gold); color: #2c1b18; font-family: 'Cinzel Decorative'; font-size: 1rem; font-weight: bold; border-radius: 6px; cursor: pointer; transition: all 0.3s ease; white-space: nowrap;"
+                        onmouseover="this.style.background='#b8860b'; this.style.boxShadow='0 0 15px rgba(212, 175, 55, 0.5)';"
+                        onmouseout="this.style.background='var(--gold)'; this.style.boxShadow='none';"
+                    >
+                        <i class="fa-solid fa-paper-plane me-2"></i>Submit
+                    </button>
+                </form>
+                <div id="repoMessage" style="margin-top: 15px; text-align: center; font-family: 'Crimson Text'; font-size: 0.9rem; min-height: 20px;"></div>
+            </div>
         </div>
 
         <div class="filter-container">
@@ -710,9 +737,96 @@
             }
         });
         
+        // Load current git repo URL
+        async function loadCurrentRepoUrl() {
+            if (!teamId) return;
+            
+            try {
+                const response = await fetch(`/api/teams/${teamId}`);
+                const data = await response.json();
+                if (data.success && data.team.git_repo_url) {
+                    document.getElementById('gitRepoInput').value = data.team.git_repo_url;
+                }
+            } catch (error) {
+                console.error('Error loading repo URL:', error);
+            }
+        }
+        
+        // Handle git repo form submission
+        document.getElementById('gitRepoForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (!teamId) {
+                alert('Please log in to submit repository link');
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            const repoUrl = document.getElementById('gitRepoInput').value.trim();
+            const messageDiv = document.getElementById('repoMessage');
+            const submitBtn = document.getElementById('submitRepoBtn');
+            
+            if (!repoUrl) {
+                messageDiv.textContent = 'Please enter a repository URL';
+                messageDiv.style.color = '#f44336';
+                return;
+            }
+            
+            // Basic URL validation
+            try {
+                new URL(repoUrl);
+            } catch {
+                messageDiv.textContent = 'Please enter a valid URL (e.g., https://github.com/username/repo)';
+                messageDiv.style.color = '#f44336';
+                return;
+            }
+            
+            // Show loading state
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Submitting...';
+            submitBtn.disabled = true;
+            messageDiv.textContent = '';
+            
+            try {
+                const response = await fetch('/api/teams/update-repo', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        team_id: parseInt(teamId),
+                        git_repo_url: repoUrl
+                    })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    messageDiv.textContent = '✓ Repository link submitted successfully!';
+                    messageDiv.style.color = '#4caf50';
+                } else {
+                    messageDiv.textContent = data.error || 'Failed to submit repository link';
+                    messageDiv.style.color = '#f44336';
+                }
+            } catch (error) {
+                console.error('Error submitting repo URL:', error);
+                messageDiv.textContent = error.message || 'Error submitting repository link. Please try again.';
+                messageDiv.style.color = '#f44336';
+            } finally {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        });
+        
         // Load on page load
         loadTeamSelection().then(() => {
             loadProblemStatements();
+            loadCurrentRepoUrl();
         });
         
         // --- FILTER LOGIC ---

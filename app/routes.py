@@ -42,28 +42,29 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1].lower() in Config.ALLOWED_EXTENSIONS
 
 def send_credentials_email(receiver_email, team_name, username, password, team_lead_name):
-    """Send login credentials to team lead via email"""
-    try:
-        # Get email configuration from Config
-        sender_email = Config.SENDER_EMAIL
-        sender_password = Config.SENDER_PASSWORD
-        smtp_server = Config.SMTP_SERVER
-        smtp_port = Config.SMTP_PORT
-        
-        # Check if email credentials are configured
-        if not sender_email or not sender_password:
-            print("Email credentials not configured - cannot send email")
-            return False
-        
-        # Create message
-        msg = MIMEMultipart()
-        msg["From"] = sender_email
-        msg["To"] = receiver_email
-        msg["Subject"] = f"Welcome to Hogwarts Hackathon - Your Team Login Credentials"
-        
-        # Email body
-        body = f"""
-Dear {team_lead_name},
+    """Send login credentials to team lead via email using SMTP with retry logic"""
+    import socket
+    import time
+    
+    # Get email configuration from Config
+    sender_email = Config.SENDER_EMAIL
+    sender_password = Config.SENDER_PASSWORD
+    smtp_server = Config.SMTP_SERVER
+    smtp_port = Config.SMTP_PORT
+    
+    # Check if email credentials are configured
+    if not sender_email or not sender_password:
+        print("Email credentials not configured - cannot send email")
+        return False
+    
+    # Create message
+    msg = MIMEMultipart()
+    msg["From"] = sender_email
+    msg["To"] = receiver_email
+    msg["Subject"] = f"Welcome to Hogwarts Hackathon - Your Team Login Credentials"
+    
+    # Email body
+    body = f"""Dear {team_lead_name},
 
 Congratulations! Your team "{team_name}" has been approved for the Hogwarts Hackathon.
 
@@ -82,41 +83,123 @@ Important Notes:
 We look forward to seeing your magical creations!
 
 Best regards,
-Hogwarts Hackathon Team
-        """
-        
-        msg.attach(MIMEText(body, "plain"))
-        
-        # Sending Email with timeout
-        import socket
-        socket.setdefaulttimeout(10)  # 10 second timeout for SMTP operations
-        
-        server = smtplib.SMTP(smtp_server, smtp_port, timeout=10)
-        server.starttls()
-        server.login(sender_email, sender_password)
-        server.sendmail(sender_email, receiver_email, msg.as_string())
-        server.quit()
-        
-        print(f"Email sent successfully to {receiver_email}")
-        return True
-    except smtplib.SMTPAuthenticationError as e:
-        print(f"SMTP Authentication Error: {e}")
-        print("Check if SENDER_EMAIL and SENDER_PASSWORD are correct")
-        return False
-    except smtplib.SMTPConnectError as e:
-        print(f"SMTP Connection Error: {e}")
-        print(f"Could not connect to {Config.SMTP_SERVER}:{Config.SMTP_PORT}")
-        print("Render may be blocking SMTP ports. Consider using a service like SendGrid or Mailgun.")
-        return False
-    except socket.timeout as e:
-        print(f"SMTP Timeout Error: {e}")
-        print("SMTP connection timed out - Render may be blocking or network issue")
-        return False
-    except Exception as e:
-        import traceback
-        print(f"Error sending email: {e}")
-        print(f"Traceback: {traceback.format_exc()}")
-        return False
+Hogwarts Hackathon Team"""
+    
+    msg.attach(MIMEText(body, "plain"))
+    
+    # Retry logic - try up to 3 times
+    max_retries = 3
+    retry_delay = 2  # seconds
+    
+    for attempt in range(1, max_retries + 1):
+        server = None
+        try:
+            print(f"Attempting to send email (attempt {attempt}/{max_retries}) to {receiver_email}")
+            
+            # Set socket timeout
+            socket.setdefaulttimeout(15)  # 15 second timeout for SMTP operations
+            
+            # Create SMTP connection with timeout
+            server = smtplib.SMTP(smtp_server, smtp_port, timeout=15)
+            
+            # Enable debug output for troubleshooting (set to 0 to disable)
+            # server.set_debuglevel(1)
+            
+            # Start TLS encryption
+            server.starttls()
+            
+            # Login
+            server.login(sender_email, sender_password)
+            
+            # Send email
+            server.sendmail(sender_email, [receiver_email], msg.as_string())
+            
+            # Close connection
+            server.quit()
+            server = None
+            
+            print(f"✓ Email sent successfully to {receiver_email} on attempt {attempt}")
+            return True
+            
+        except smtplib.SMTPAuthenticationError as e:
+            error_msg = f"SMTP Authentication Error: {e}"
+            print(error_msg)
+            print("Check if SENDER_EMAIL and SENDER_PASSWORD are correct")
+            if server:
+                try:
+                    server.quit()
+                except:
+                    pass
+            # Don't retry authentication errors
+            return False
+            
+        except smtplib.SMTPConnectError as e:
+            error_msg = f"SMTP Connection Error (attempt {attempt}/{max_retries}): {e}"
+            print(error_msg)
+            print(f"Could not connect to {smtp_server}:{smtp_port}")
+            if server:
+                try:
+                    server.quit()
+                except:
+                    pass
+            if attempt < max_retries:
+                print(f"Retrying in {retry_delay} seconds...")
+                time.sleep(retry_delay)
+                retry_delay *= 2  # Exponential backoff
+            else:
+                print("All connection attempts failed. Check if Render is blocking SMTP ports.")
+                return False
+                
+        except socket.timeout as e:
+            error_msg = f"SMTP Timeout Error (attempt {attempt}/{max_retries}): {e}"
+            print(error_msg)
+            if server:
+                try:
+                    server.quit()
+                except:
+                    pass
+            if attempt < max_retries:
+                print(f"Retrying in {retry_delay} seconds...")
+                time.sleep(retry_delay)
+                retry_delay *= 2
+            else:
+                print("All timeout attempts failed. Network or firewall issue.")
+                return False
+                
+        except smtplib.SMTPException as e:
+            error_msg = f"SMTP Error (attempt {attempt}/{max_retries}): {e}"
+            print(error_msg)
+            if server:
+                try:
+                    server.quit()
+                except:
+                    pass
+            if attempt < max_retries:
+                print(f"Retrying in {retry_delay} seconds...")
+                time.sleep(retry_delay)
+                retry_delay *= 2
+            else:
+                return False
+                
+        except Exception as e:
+            import traceback
+            error_msg = f"Unexpected error sending email (attempt {attempt}/{max_retries}): {e}"
+            print(error_msg)
+            print(f"Traceback: {traceback.format_exc()}")
+            if server:
+                try:
+                    server.quit()
+                except:
+                    pass
+            if attempt < max_retries:
+                print(f"Retrying in {retry_delay} seconds...")
+                time.sleep(retry_delay)
+                retry_delay *= 2
+            else:
+                return False
+    
+    print(f"✗ Failed to send email to {receiver_email} after {max_retries} attempts")
+    return False
 
 @api_bp.route('/register', methods=['POST'])
 def register_team():
@@ -317,6 +400,43 @@ def get_team(team_id):
         }), 200
         
     except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@api_bp.route('/teams/update-repo', methods=['POST'])
+def update_team_repo():
+    """Update git repository URL for a team"""
+    try:
+        data = request.get_json()
+        team_id = data.get('team_id')
+        git_repo_url = data.get('git_repo_url', '').strip()
+        
+        if not team_id:
+            return jsonify({'error': 'Team ID is required'}), 400
+        
+        team = Team.query.get_or_404(team_id)
+        
+        # Validate URL format
+        if git_repo_url:
+            try:
+                from urllib.parse import urlparse
+                parsed = urlparse(git_repo_url)
+                if not parsed.scheme or not parsed.netloc:
+                    return jsonify({'error': 'Invalid URL format. Please provide a valid URL (e.g., https://github.com/username/repo)'}), 400
+            except Exception:
+                return jsonify({'error': 'Invalid URL format. Please provide a valid URL'}), 400
+        
+        # Update git repo URL
+        team.git_repo_url = git_repo_url if git_repo_url else None
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Repository URL updated successfully',
+            'team': team.to_dict()
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
 @api_bp.route('/uploads/<filename>', methods=['GET'])
