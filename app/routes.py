@@ -95,6 +95,11 @@ Hogwarts Hackathon Team
 @api_bp.route('/register', methods=['POST'])
 def register_team():
     try:
+        # Check if registration is enabled
+        setting = AdminSettings.query.filter_by(key='registration_enabled').first()
+        if not setting or setting.value.lower() != 'true':
+            return jsonify({'error': 'Registrations are currently closed'}), 403
+        
         # Get form data
         team_name = request.form.get('team_name', '').strip()
         house = request.form.get('house', '').strip()

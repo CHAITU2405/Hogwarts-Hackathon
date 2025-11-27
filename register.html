@@ -613,6 +613,12 @@
                     </p>
                 </div>
 
+                <div id="registrationClosedMessage" style="display: none; text-align: center; padding: 40px; margin-bottom: 30px;">
+                    <p style="color: var(--gold); font-style: italic; font-size: 1.5rem; font-family: 'Cinzel Decorative'; margin: 0;">
+                        Registrations are closed
+                    </p>
+                </div>
+
                 <form id="registrationForm">
                     <!-- GVPT Notice -->
                     <div style="margin-bottom: 30px; margin-top: -10px; text-align: center; padding: 5px 0;">
@@ -1139,6 +1145,53 @@
                     }
                 });
             }
+        });
+
+        // Check registration status on page load
+        async function checkRegistrationStatus() {
+            try {
+                const response = await fetch('/api/admin/registration-toggle');
+                const data = await response.json();
+                const form = document.getElementById('registrationForm');
+                const closedMessage = document.getElementById('registrationClosedMessage');
+                
+                if (data.success && !data.enabled) {
+                    // Registration is disabled - hide form and show message
+                    if (form) {
+                        form.style.display = 'none';
+                        // Disable all form inputs
+                        const inputs = form.querySelectorAll('input, select, button, textarea');
+                        inputs.forEach(input => {
+                            input.disabled = true;
+                        });
+                    }
+                    if (closedMessage) {
+                        closedMessage.style.display = 'block';
+                    }
+                } else {
+                    // Registration is enabled - show form and hide message
+                    if (form) {
+                        form.style.display = 'block';
+                        const inputs = form.querySelectorAll('input, select, button, textarea');
+                        inputs.forEach(input => {
+                            input.disabled = false;
+                        });
+                    }
+                    if (closedMessage) {
+                        closedMessage.style.display = 'none';
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking registration status:', error);
+                // On error, default to showing form (allow registration)
+            }
+        }
+
+        // Check registration status when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            checkRegistrationStatus();
+            // Check every 5 seconds to update if admin changes it
+            setInterval(checkRegistrationStatus, 5000);
         });
     </script>
     
