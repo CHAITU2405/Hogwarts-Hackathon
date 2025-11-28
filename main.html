@@ -573,9 +573,9 @@
             <div class="container">
                 <h2 class="text-center mb-5" style="color: var(--gold); font-family: 'Cinzel Decorative';">Our Sponsors</h2>
                 <div class="row justify-content-center g-4" id="sponsorsDisplay" style="display: flex !important; visibility: visible !important; opacity: 1 !important;">
-                    <div class="col-12 text-center">
+                        <div class="col-12 text-center">
                         <p style="color: #777; font-family: 'Crimson Text';">Loading sponsors...</p>
-                    </div>
+                        </div>
                 </div>
             </div>
         </section>
@@ -868,8 +868,8 @@
         function initializePage() {
             if (pageInitialized) {
                 console.log('[initializePage] Already initialized, skipping...');
-                return;
-            }
+                    return;
+                }
             pageInitialized = true;
             
             console.log('[initializePage] Initializing page...');
@@ -877,9 +877,9 @@
             checkRegistrationToggle();
             // Sponsors are loaded by api-integration.js (same pattern as teams)
         
-            // Check every 5 seconds to update if admin changes it
-            setInterval(checkLoginToggle, 5000);
-            setInterval(checkRegistrationToggle, 5000);
+        // Check every 5 seconds to update if admin changes it
+        setInterval(checkLoginToggle, 5000);
+        setInterval(checkRegistrationToggle, 5000);
             
             // Show mobile notice on mobile devices
             checkMobileDevice();
