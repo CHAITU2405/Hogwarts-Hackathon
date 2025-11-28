@@ -81,9 +81,14 @@ Password: {password}
 
 Please keep these credentials secure and use them to log in to the hackathon portal.
 
+Stay Connected:
+- Join our WhatsApp Group: https://chat.whatsapp.com/EFpuxL8qmyY9mpfio9Xnw1?mode=hqrc
+- Follow us on Instagram: https://www.instagram.com/hogwarts.hackathon?igsh=MWtkZmtiaTVvNTByMQ==
+
 Important Notes:
 - You can log in using these credentials on the login page
 - Do not share these credentials with anyone outside your team
+- Join the WhatsApp group and follow our Instagram for updates, announcements, and to connect with fellow participants
 - If you have any issues, please contact the organizers
 
 We look forward to seeing your magical creations!
@@ -527,6 +532,13 @@ def approve_team(team_id):
                 house=team.house
             )
             db.session.add(team_login)
+            login_password = team.utr_transaction_id
+        else:
+            # Update existing login to match current UTR (in case UTR was corrected)
+            existing_login.password = team.utr_transaction_id
+            existing_login.username = team_lead.name
+            existing_login.house = team.house
+            login_password = team.utr_transaction_id
         
         # Update team size based on current member count (in case members were removed)
         current_member_count = Member.query.filter_by(team_id=team_id).count()
@@ -546,7 +558,7 @@ def approve_team(team_id):
                     receiver_email=team_lead.email,
                     team_name=team.team_name,
                     username=team_lead.name,
-                    password=team.utr_transaction_id,
+                    password=login_password,
                     team_lead_name=team_lead.name
                 )
                 if not email_sent:
@@ -585,7 +597,7 @@ def approve_team(team_id):
             'team': team_dict,
             'login': {
                 'username': team_lead.name,
-                'password': team.utr_transaction_id,
+                'password': login_password,
                 'house': team.house
             },
             'email_sent': email_sent
