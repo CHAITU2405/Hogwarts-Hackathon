@@ -351,6 +351,9 @@
                 <button class="action-btn" onclick="openSponsorModal()" style="background: transparent; border: 2px solid var(--gold); color: var(--gold); white-space: nowrap; display: flex !important;">
                     <i class="fa-solid fa-hand-holding-heart me-2"></i> <span>Add Sponsor</span>
                 </button>
+                <button class="action-btn" onclick="openListSponsorsModal()" style="background: transparent; border: 2px solid var(--gold); color: var(--gold); white-space: nowrap; display: flex !important;">
+                    <i class="fa-solid fa-list me-2"></i> <span>List Sponsors</span>
+                </button>
             </div>
 
             <div class="filter-group">
@@ -465,6 +468,18 @@
 
                 <button type="submit" class="submit-seal-btn">Add Sponsor</button>
             </form>
+        </div>
+    </div>
+
+    <div class="parchment-overlay simple-modal-frame" id="listSponsorsModal">
+        <div class="parchment-modal">
+            <button class="close-modal" onclick="closeModal('listSponsorsModal')"><i class="fa-solid fa-xmark"></i></button>
+            <h3 class="scroll-title">Sponsors List</h3>
+            <p style="text-align: center; font-family: 'Crimson Text'; margin-bottom: 20px; color: #5d4037;">Manage your sponsors</p>
+            
+            <ul class="manifest-list" id="sponsorsList">
+                <li class="manifest-item"><span>Loading sponsors...</span></li>
+            </ul>
         </div>
     </div>
 
@@ -1005,6 +1020,120 @@
             } catch (error) {
                 console.error('Error adding sponsor:', error);
                 alert('Error adding sponsor. Please try again.');
+            }
+        }
+
+        // List Sponsors Functions
+        function openListSponsorsModal() {
+            const modal = document.getElementById('listSponsorsModal');
+            if (!modal) {
+                console.error('List sponsors modal not found!');
+                alert('List sponsors modal not found. Please refresh the page.');
+                return;
+            }
+            modal.classList.add('active');
+            loadSponsorsList();
+        }
+
+        async function loadSponsorsList() {
+            const list = document.getElementById('sponsorsList');
+            if (!list) {
+                console.error('Sponsors list element not found!');
+                return;
+            }
+            
+            list.innerHTML = '<li class="manifest-item"><span>Loading sponsors...</span></li>';
+            
+            try {
+                const response = await fetch('/api/admin/sponsors', {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                if (data.success && data.sponsors) {
+                    if (data.sponsors.length === 0) {
+                        list.innerHTML = '<li class="manifest-item"><span>No sponsors found. Add one to get started!</span></li>';
+                        return;
+                    }
+                    
+                    list.innerHTML = '';
+                    data.sponsors.forEach(sponsor => {
+                        const item = document.createElement('li');
+                        item.className = 'manifest-item';
+                        item.setAttribute('data-sponsor-id', sponsor.id);
+                        
+                        // Get logo URL
+                        let logoUrl = sponsor.logo_path || '';
+                        if (logoUrl.startsWith('uploads/')) {
+                            logoUrl = '/api/' + logoUrl;
+                        } else if (logoUrl && !logoUrl.startsWith('http') && !logoUrl.startsWith('/')) {
+                            logoUrl = logoUrl.startsWith('assets/') ? logoUrl : 'assets/' + logoUrl;
+                        }
+                        
+                        item.innerHTML = `
+                            <div class="team-info" style="display: flex; align-items: center; gap: 15px;">
+                                ${logoUrl ? `<img src="${logoUrl}" alt="${sponsor.name || 'Sponsor'}" style="width: 50px; height: 50px; object-fit: contain; border-radius: 4px;">` : ''}
+                                <div>
+                                    <span class="team-name" style="display: block; font-weight: bold;">${sponsor.name || 'Sponsor'}</span>
+                                    ${sponsor.redirect_url ? `<span class="quest-name" style="font-size: 0.85rem; color: #5d4037;">${sponsor.redirect_url}</span>` : ''}
+                                </div>
+                            </div>
+                            <div class="approval-actions">
+                                <button class="btn-reject" onclick="deleteSponsor(${sponsor.id}, this)" title="Delete Sponsor">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
+                        `;
+                        list.appendChild(item);
+                    });
+                } else {
+                    list.innerHTML = '<li class="manifest-item"><span>Error loading sponsors: ' + (data.error || 'Unknown error') + '</span></li>';
+                }
+            } catch (error) {
+                console.error('Error loading sponsors:', error);
+                list.innerHTML = '<li class="manifest-item"><span>Error loading sponsors. Please try again.</span></li>';
+            }
+        }
+
+        async function deleteSponsor(sponsorId, btn) {
+            if (!confirm('Are you sure you want to delete this sponsor? This action cannot be undone.')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/admin/sponsors/${sponsorId}`, {
+                    method: 'DELETE',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    // Remove the item from the list
+                    const item = btn.closest('.manifest-item');
+                    if (item) {
+                        item.style.transition = '0.5s';
+                        item.style.opacity = '0';
+                        item.style.transform = 'translateX(-20px)';
+                        setTimeout(() => {
+                            item.remove();
+                            // Reload the list to refresh
+                            loadSponsorsList();
+                        }, 500);
+                    }
+                    alert('Sponsor deleted successfully!');
+                } else {
+                    alert(data.error || 'Failed to delete sponsor');
+                }
+            } catch (error) {
+                console.error('Error deleting sponsor:', error);
+                alert('Error deleting sponsor. Please try again.');
             }
         }
 

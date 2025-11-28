@@ -1728,11 +1728,15 @@ def delete_sponsor(sponsor_id):
         sponsor = Sponsor.query.get_or_404(sponsor_id)
         
         # Delete logo file if it exists
-        if sponsor.logo_path and os.path.exists(sponsor.logo_path):
-            try:
-                os.remove(sponsor.logo_path)
-            except:
-                pass
+        if sponsor.logo_path:
+            # Construct full path - logo_path is stored as 'uploads/sponsors/filename.jpg'
+            logo_full_path = Config.BASE_DIR / sponsor.logo_path
+            if logo_full_path.exists():
+                try:
+                    os.remove(str(logo_full_path))
+                except Exception as e:
+                    print(f"Warning: Could not delete logo file {logo_full_path}: {e}")
+                    pass
         
         db.session.delete(sponsor)
         db.session.commit()
