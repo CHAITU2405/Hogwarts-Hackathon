@@ -349,6 +349,15 @@ def register_team():
 @api_bp.route('/teams', methods=['GET'])
 def get_teams():
     try:
+        # Check if teams page is enabled
+        setting = AdminSettings.query.filter_by(key='teams_enabled').first()
+        if not setting or setting.value.lower() != 'true':
+            return jsonify({
+                'success': False,
+                'error': 'Teams page is currently disabled',
+                'enabled': False
+            }), 403
+        
         house_filter = request.args.get('house', '').strip()
         search_term = request.args.get('search', '').strip()
         
@@ -837,6 +846,48 @@ def toggle_registration():
             'success': True,
             'enabled': enabled,
             'message': f'Registration is now {"enabled" if enabled else "disabled"}'
+        }), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@api_bp.route('/admin/teams-toggle', methods=['GET'])
+def get_teams_toggle():
+    """Get current teams toggle status"""
+    try:
+        setting = AdminSettings.query.filter_by(key='teams_enabled').first()
+        if not setting:
+            # Default to disabled
+            setting = AdminSettings(key='teams_enabled', value='false')
+            db.session.add(setting)
+            db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'enabled': setting.value.lower() == 'true'
+        }), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@api_bp.route('/admin/teams-toggle', methods=['POST'])
+def toggle_teams():
+    """Toggle teams page visibility"""
+    try:
+        data = request.get_json()
+        enabled = data.get('enabled', False)
+        
+        setting = AdminSettings.query.filter_by(key='teams_enabled').first()
+        if not setting:
+            setting = AdminSettings(key='teams_enabled', value='false')
+            db.session.add(setting)
+        
+        setting.value = 'true' if enabled else 'false'
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'enabled': enabled,
+            'message': f'Teams page is now {"enabled" if enabled else "disabled"}'
         }), 200
     except Exception as e:
         db.session.rollback()

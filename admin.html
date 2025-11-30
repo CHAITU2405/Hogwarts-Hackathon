@@ -345,6 +345,9 @@
                 <button class="action-btn" id="registrationToggleBtn" onclick="toggleRegistration()" style="background: transparent; border: 2px solid var(--gold); color: var(--gold);">
                     <i class="fa-solid fa-scroll me-2"></i> <span id="registrationToggleText">Enable Registration</span>
                 </button>
+                <button class="action-btn" id="teamsToggleBtn" onclick="toggleTeams()" style="background: transparent; border: 2px solid var(--gold); color: var(--gold);">
+                    <i class="fa-solid fa-users me-2"></i> <span id="teamsToggleText">Enable Teams</span>
+                </button>
                 <button class="action-btn" onclick="downloadDatabase()" style="background: transparent; border: 2px solid var(--gold); color: var(--gold);">
                     <i class="fa-solid fa-database me-2"></i> Download Database
                 </button>
@@ -792,6 +795,54 @@
             } catch (error) {
                 console.error('Error toggling registration:', error);
                 alert('Error toggling registration. Please try again.');
+            }
+        }
+        
+        // Check teams toggle status
+        async function checkTeamsToggle() {
+            try {
+                const response = await fetch('/api/admin/teams-toggle');
+                const data = await response.json();
+                if (data.success) {
+                    const btn = document.getElementById('teamsToggleBtn');
+                    const text = document.getElementById('teamsToggleText');
+                    if (data.enabled) {
+                        btn.style.background = 'var(--gold)';
+                        btn.style.color = '#000';
+                        text.textContent = 'Disable Teams';
+                    } else {
+                        btn.style.background = 'transparent';
+                        btn.style.color = 'var(--gold)';
+                        text.textContent = 'Enable Teams';
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking teams toggle:', error);
+            }
+        }
+        
+        checkTeamsToggle();
+        
+        // Toggle teams
+        async function toggleTeams() {
+            try {
+                const response = await fetch('/api/admin/teams-toggle');
+                const data = await response.json();
+                if (data.success) {
+                    const newState = !data.enabled;
+                    const toggleResponse = await fetch('/api/admin/teams-toggle', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ enabled: newState })
+                    });
+                    const toggleData = await toggleResponse.json();
+                    if (toggleData.success) {
+                        checkTeamsToggle();
+                    }
+                }
+            } catch (error) {
+                console.error('Error toggling teams:', error);
+                alert('Error toggling teams. Please try again.');
             }
         }
         

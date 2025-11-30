@@ -323,14 +323,37 @@ async function loadTeamsFromAPI() {
             credentials: 'same-origin'
         });
         
+        const data = await response.json();
+        console.log('Teams data received:', data); // Debug log
+        
+        // Check if teams page is disabled
+        if (response.status === 403 && data.enabled === false) {
+            const teamGrid = document.getElementById('teamGrid');
+            const filterBar = document.getElementById('filterBar');
+            if (teamGrid) {
+                // Hide filter bar
+                if (filterBar) {
+                    filterBar.style.display = 'none';
+                }
+                // Show disabled message
+                teamGrid.innerHTML = `
+                    <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; font-family: 'Cinzel Decorative';">
+                        <i class="fa-solid fa-lock" style="font-size: 4rem; color: var(--gold); margin-bottom: 20px; opacity: 0.7;"></i>
+                        <h2 style="color: var(--gold); font-size: 2rem; margin-bottom: 15px;">Teams Page Disabled</h2>
+                        <p style="color: #aaa; font-family: 'Crimson Text'; font-size: 1.1rem; line-height: 1.6; max-width: 600px; margin: 0 auto;">
+                            The teams page is currently disabled by the administrator. Please check back later.
+                        </p>
+                    </div>
+                `;
+            }
+            return;
+        }
+        
         if (!response.ok) {
             const errorText = await response.text();
             console.error('Response error:', response.status, errorText);
             throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
         }
-        
-        const data = await response.json();
-        console.log('Teams data received:', data); // Debug log
         
         if (data.success && data.teams) {
             renderTeamsFromAPI(data.teams);
@@ -681,7 +704,59 @@ function renderSponsorsFromAPI(sponsors) {
 }
 
 // Initialize on page load
+// Check teams toggle status and hide/show Teams nav link
+async function checkTeamsToggleAndUpdateNav() {
+    try {
+        const response = await fetch('/api/admin/teams-toggle', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            mode: 'cors',
+            credentials: 'same-origin'
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (data.success) {
+                // Find all Teams nav links (links with href="teams.html")
+                const teamsNavLinks = document.querySelectorAll('a.nav-link[href="teams.html"]');
+                const teamsNavItems = Array.from(teamsNavLinks).map(link => link.closest('li.nav-item')).filter(item => item !== null);
+                
+                if (!data.enabled) {
+                    // Hide Teams nav items if disabled
+                    teamsNavItems.forEach(item => {
+                        if (item) {
+                            item.style.display = 'none';
+                        }
+                    });
+                } else {
+                    // Show Teams nav items if enabled
+                    teamsNavItems.forEach(item => {
+                        if (item) {
+                            item.style.display = '';
+                        }
+                    });
+                }
+            }
+        }
+    } catch (error) {
+        // If API call fails, default to hiding teams link (safer)
+        console.error('Error checking teams toggle:', error);
+        const teamsNavLinks = document.querySelectorAll('a.nav-link[href="teams.html"]');
+        const teamsNavItems = Array.from(teamsNavLinks).map(link => link.closest('li.nav-item')).filter(item => item !== null);
+        teamsNavItems.forEach(item => {
+            if (item) {
+                item.style.display = 'none';
+            }
+        });
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
+    // Check teams toggle and update navbar
+    checkTeamsToggleAndUpdateNav();
+    
     // Setup registration form if on registration page
     if (document.getElementById('registrationForm')) {
         setupRegistrationForm();
