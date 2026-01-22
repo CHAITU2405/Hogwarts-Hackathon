@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify, send_from_directory, current_app,
 from werkzeug.utils import secure_filename
 from werkzeug.security import check_password_hash, generate_password_hash
 import os
+import shutil
 from pathlib import Path
 from app.models import db, Team, Member, ProblemStatement, AdminSettings, Admin, TeamLogin, Review, Sponsor
 from app.config import Config
@@ -1392,6 +1393,68 @@ def download_database():
         import traceback
         error_trace = traceback.format_exc()
         print(f"Error downloading database: {error_trace}")
+        return jsonify({'error': str(e)}), 500
+
+@api_bp.route('/admin/upload-database', methods=['POST'])
+def upload_database():
+    """Upload and overwrite the database file (Admin only)"""
+    try:
+        # Check if admin is logged in
+        is_admin_session = session.get('is_admin', False)
+        admin_header = request.headers.get('X-Admin-Auth', '').lower() == 'true'
+        
+        if not is_admin_session and not admin_header:
+            return jsonify({'error': 'Unauthorized. Please log in as admin first.'}), 401
+        
+        # Check if database file is provided
+        if 'database' not in request.files:
+            return jsonify({'error': 'No database file provided'}), 400
+        
+        file = request.files['database']
+        
+        if not file or not file.filename:
+            return jsonify({'error': 'No file selected'}), 400
+        
+        # Validate file extension
+        if not file.filename.endswith('.db'):
+            return jsonify({'error': 'Invalid file type. Please upload a .db file'}), 400
+        
+        db_path = Config.DATABASE_PATH
+        
+        # Create backup of current database before overwriting (optional safety measure)
+        backup_path = None
+        if db_path.exists():
+            try:
+                backup_path = db_path.parent / f'hogwarts_hackathon_backup_{datetime.now().strftime("%Y%m%d_%H%M%S")}.db'
+                shutil.copy2(str(db_path), str(backup_path))
+                print(f"Backup created: {backup_path}")
+            except Exception as backup_error:
+                print(f"Warning: Could not create backup: {backup_error}")
+                # Continue anyway - user has been warned
+        
+        # Close any existing database connections and remove all connections from the engine
+        try:
+            db.session.close()
+            if hasattr(db, 'engine'):
+                db.engine.dispose()
+        except Exception as close_error:
+            print(f"Warning: Error closing database connections: {close_error}")
+        
+        # Save the uploaded file, overwriting the current database
+        file.save(str(db_path))
+        
+        print(f"Database uploaded and overwritten: {db_path}")
+        
+        return jsonify({
+            'success': True,
+            'message': 'Database uploaded and overwritten successfully',
+            'backup_created': backup_path.name if backup_path and backup_path.exists() else None
+        }), 200
+        
+    except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
+        print(f"Error uploading database: {error_trace}")
         return jsonify({'error': str(e)}), 500
 
 @api_bp.route('/admin/all-teams', methods=['GET'])

@@ -351,6 +351,9 @@
                 <button class="action-btn" onclick="downloadDatabase()" style="background: transparent; border: 2px solid var(--gold); color: var(--gold);">
                     <i class="fa-solid fa-database me-2"></i> Download Database
                 </button>
+                <button class="action-btn" onclick="openUploadDatabaseModal()" style="background: transparent; border: 2px solid var(--gold); color: var(--gold);">
+                    <i class="fa-solid fa-upload me-2"></i> Upload Database
+                </button>
                 <button class="action-btn" onclick="openSponsorModal()" style="background: transparent; border: 2px solid var(--gold); color: var(--gold); white-space: nowrap; display: flex !important;">
                     <i class="fa-solid fa-hand-holding-heart me-2"></i> <span>Add Sponsor</span>
                 </button>
@@ -483,6 +486,25 @@
             <ul class="manifest-list" id="sponsorsList">
                 <li class="manifest-item"><span>Loading sponsors...</span></li>
             </ul>
+        </div>
+    </div>
+
+    <div class="parchment-overlay simple-modal-frame" id="uploadDatabaseModal">
+        <div class="parchment-modal">
+            <button class="close-modal" onclick="closeModal('uploadDatabaseModal')"><i class="fa-solid fa-xmark"></i></button>
+            <h3 class="scroll-title">Upload Database</h3>
+            <p style="text-align: center; font-family: 'Crimson Text'; margin-bottom: 20px; color: #5d4037; font-weight: bold;">Warning: This will overwrite the current database!</p>
+            
+            <form id="uploadDatabaseForm" onsubmit="handleUploadDatabase(event)">
+                <div class="form-group">
+                    <label class="ink-label">Database File (.db)</label>
+                    <input type="file" id="databaseFile" accept=".db" class="ink-input" required style="padding: 8px 5px; cursor: pointer; border-bottom: 2px dashed rgba(44, 27, 24, 0.3);">
+                    <small style="color: #5d4037; font-family: 'Crimson Text'; font-size: 0.9rem; display: block; margin-top: 5px;">Select a SQLite database file (.db) to replace the current database</small>
+                    <small id="dbFileName" style="color: #5d4037; font-family: 'Crimson Text'; font-size: 0.85rem; display: none; margin-top: 5px; font-style: italic;"></small>
+                </div>
+
+                <button type="submit" class="submit-seal-btn">Upload & Overwrite Database</button>
+            </form>
         </div>
     </div>
 
@@ -1185,6 +1207,94 @@
             } catch (error) {
                 console.error('Error deleting sponsor:', error);
                 alert('Error deleting sponsor. Please try again.');
+            }
+        }
+
+        // Database Upload Functions
+        function openUploadDatabaseModal() {
+            const modal = document.getElementById('uploadDatabaseModal');
+            if (!modal) {
+                console.error('Upload database modal not found!');
+                alert('Upload database modal not found. Please refresh the page.');
+                return;
+            }
+            modal.classList.add('active');
+        }
+
+        // Show selected file name
+        document.addEventListener('DOMContentLoaded', function() {
+            const dbFileInput = document.getElementById('databaseFile');
+            if (dbFileInput) {
+                dbFileInput.addEventListener('change', function(e) {
+                    const fileNameDisplay = document.getElementById('dbFileName');
+                    if (e.target.files && e.target.files.length > 0) {
+                        if (fileNameDisplay) {
+                            fileNameDisplay.textContent = 'Selected: ' + e.target.files[0].name;
+                            fileNameDisplay.style.display = 'block';
+                        }
+                    } else {
+                        if (fileNameDisplay) {
+                            fileNameDisplay.style.display = 'none';
+                        }
+                    }
+                });
+            }
+        });
+
+        async function handleUploadDatabase(event) {
+            event.preventDefault();
+            
+            const dbFile = document.getElementById('databaseFile').files[0];
+            
+            if (!dbFile) {
+                alert('Please select a database file');
+                return;
+            }
+            
+            // Validate file type
+            if (!dbFile.name.endsWith('.db')) {
+                alert('Please select a valid database file (.db)');
+                return;
+            }
+            
+            // Confirm overwrite
+            if (!confirm('WARNING: This will overwrite the current database with the uploaded file. This action cannot be undone. Are you absolutely sure?')) {
+                return;
+            }
+            
+            try {
+                // Create FormData for file upload
+                const formData = new FormData();
+                formData.append('database', dbFile);
+                
+                const response = await fetch('/api/admin/upload-database', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'include',
+                    headers: {
+                        'X-Admin-Auth': 'true'
+                    }
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    closeModal('uploadDatabaseModal');
+                    document.getElementById('uploadDatabaseForm').reset();
+                    const fileNameDisplay = document.getElementById('dbFileName');
+                    if (fileNameDisplay) {
+                        fileNameDisplay.style.display = 'none';
+                    }
+                    alert('Database uploaded and overwritten successfully! The page will reload to reflect the changes.');
+                    // Reload the page to reflect the new database
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    alert(data.error || 'Failed to upload database');
+                }
+            } catch (error) {
+                console.error('Error uploading database:', error);
+                alert('Error uploading database. Please try again.');
             }
         }
 
